@@ -1,48 +1,48 @@
-# MonoGuard Frontend Setup Guide
+# MonoGuard 前端設定指南
 
-## Project Structure Recommendations
+## 專案結構建議
 
-This guide provides detailed recommendations for setting up the MonoGuard frontend project structure, including directory organization, configuration files, and development workflow setup.
+本指南提供設定 MonoGuard 前端專案結構的詳細建議，包含目錄組織、設定檔案和開發工作流程設定。
 
-## Recommended Project Structure
+## 建議的專案結構
 
 ```
 mono-guard/
-├── frontend/                           # Frontend application root
-│   ├── .env.local                     # Local environment variables
-│   ├── .env.example                   # Environment variables template
-│   ├── .eslintrc.json                 # ESLint configuration
-│   ├── .gitignore                     # Git ignore patterns
-│   ├── .prettierrc                    # Prettier configuration
-│   ├── components.json                # Shadcn/ui configuration
-│   ├── next.config.js                 # Next.js configuration
-│   ├── package.json                   # Dependencies and scripts
-│   ├── playwright.config.ts           # E2E testing configuration
-│   ├── postcss.config.js              # PostCSS configuration
-│   ├── tailwind.config.ts             # Tailwind CSS configuration
-│   ├── tsconfig.json                  # TypeScript configuration
-│   ├── jest.config.js                 # Jest testing configuration
-│   ├── jest.setup.js                  # Jest setup file
-│   ├── src/                           # Source code directory
+├── frontend/                           # 前端應用程式根目錄
+│   ├── .env.local                     # 本機環境變數
+│   ├── .env.example                   # 環境變數範本
+│   ├── .eslintrc.json                 # ESLint 設定
+│   ├── .gitignore                     # Git 忽略模式
+│   ├── .prettierrc                    # Prettier 設定
+│   ├── components.json                # Shadcn/ui 設定
+│   ├── next.config.js                 # Next.js 設定
+│   ├── package.json                   # 相依性與腳本
+│   ├── playwright.config.ts           # 端對端測試設定
+│   ├── postcss.config.js              # PostCSS 設定
+│   ├── tailwind.config.ts             # Tailwind CSS 設定
+│   ├── tsconfig.json                  # TypeScript 設定
+│   ├── jest.config.js                 # Jest 測試設定
+│   ├── jest.setup.js                  # Jest 設定檔
+│   ├── src/                           # 原始碼目錄
 │   │   ├── app/                       # Next.js App Router
-│   │   │   ├── (auth)/               # Route group for auth pages
+│   │   │   ├── (auth)/               # 認證頁面路由群組
 │   │   │   │   ├── login/
 │   │   │   │   │   └── page.tsx
 │   │   │   │   └── register/
 │   │   │   │       └── page.tsx
-│   │   │   ├── dashboard/            # Dashboard pages
-│   │   │   │   ├── loading.tsx       # Loading UI
-│   │   │   │   ├── error.tsx         # Error UI
-│   │   │   │   └── page.tsx          # Dashboard main page
-│   │   │   ├── dependencies/         # Dependency analysis pages
+│   │   │   ├── dashboard/            # 儀表板頁面
+│   │   │   │   ├── loading.tsx       # 載入中 UI
+│   │   │   │   ├── error.tsx         # 錯誤 UI
+│   │   │   │   └── page.tsx          # 儀表板主頁面
+│   │   │   ├── dependencies/         # 依賴分析頁面
 │   │   │   │   ├── loading.tsx
 │   │   │   │   ├── error.tsx
 │   │   │   │   └── page.tsx
-│   │   │   ├── architecture/         # Architecture validation pages
+│   │   │   ├── architecture/         # 架構驗證頁面
 │   │   │   │   ├── loading.tsx
 │   │   │   │   ├── error.tsx
 │   │   │   │   └── page.tsx
-│   │   │   ├── projects/             # Project management pages
+│   │   │   ├── projects/             # 專案管理頁面
 │   │   │   │   ├── [id]/
 │   │   │   │   │   ├── page.tsx     # Project detail page
 │   │   │   │   │   └── settings/
@@ -230,7 +230,7 @@ mono-guard/
 │       └── performance.md  # Performance guide
 ```
 
-## Configuration Files Setup
+## 設定檔案建置
 
 ### 1. Package.json
 ```json

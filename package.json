@@ -1,0 +1,120 @@
+{
+  "name": "@monoguard/monorepo",
+  "version": "0.1.0",
+  "description": "MonoGuard - Comprehensive monorepo architecture analysis and validation tool",
+  "private": true,
+  "packageManager": "pnpm@10.14.0",
+  "scripts": {
+    "build": "nx build",
+    "build:all": "nx run-many --target=build --all",
+    "dev": "nx dev",
+    "dev:frontend": "nx dev frontend",
+    "dev:cli": "nx dev cli",
+    "lint": "nx run-many --target=lint --all",
+    "lint:fix": "nx run-many --target=lint --all --fix",
+    "test": "nx run-many --target=test --all",
+    "test:watch": "nx run-many --target=test --all --watch",
+    "test:coverage": "nx run-many --target=test --all --coverage",
+    "test:e2e": "nx run-many --target=e2e --all",
+    "type-check": "nx run-many --target=type-check --all",
+    "affected:build": "nx affected --target=build",
+    "affected:test": "nx affected --target=test",
+    "affected:lint": "nx affected --target=lint",
+    "clean": "nx reset && pnpm clean:node-modules",
+    "clean:node-modules": "pnpm -r exec rm -rf node_modules && rm -rf node_modules",
+    "graph": "nx graph",
+    "prepare": "husky",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md,yml,yaml}\"",
+    "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,md,yml,yaml}\"",
+    "go:fmt": "find apps/api -name \"*.go\" -exec gofmt -s -w {} \\;",
+    "go:vet": "cd apps/api && go vet ./...",
+    "go:lint": "cd apps/api && golangci-lint run",
+    "pre-commit": "lint-staged"
+  },
+  "keywords": [
+    "monorepo",
+    "architecture",
+    "dependency-analysis",
+    "typescript",
+    "nextjs",
+    "golang"
+  ],
+  "author": "MonoGuard Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@eslint/compat": "^1.1.1",
+    "@eslint/eslintrc": "^2.1.1",
+    "@next/eslint-plugin-next": "^15.2.4",
+    "@nx/devkit": "21.4.1",
+    "@nx/esbuild": "21.4.1",
+    "@nx/eslint": "21.4.1",
+    "@nx/eslint-plugin": "21.4.1",
+    "@nx/jest": "21.4.1",
+    "@nx/js": "21.4.1",
+    "@nx/next": "21.4.1",
+    "@nx/node": "21.4.1",
+    "@nx/playwright": "21.4.1",
+    "@nx/react": "21.4.1",
+    "@nx/workspace": "21.4.1",
+    "@playwright/test": "^1.36.0",
+    "@swc-node/register": "~1.9.1",
+    "@swc/cli": "~0.6.0",
+    "@swc/core": "~1.5.7",
+    "@swc/helpers": "~0.5.11",
+    "@types/node": "24.3.0",
+    "@types/react": "19.0.0",
+    "@types/react-dom": "19.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "esbuild": "^0.19.2",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "^15.2.4",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-import": "2.31.0",
+    "eslint-plugin-jsx-a11y": "6.10.1",
+    "eslint-plugin-playwright": "^1.6.2",
+    "eslint-plugin-react": "7.35.0",
+    "eslint-plugin-react-hooks": "5.0.0",
+    "husky": "^9.0.0",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "lint-staged": "^15.0.0",
+    "nx": "21.4.1",
+    "prettier": "^3.2.0",
+    "prettier-plugin-tailwindcss": "^0.6.0",
+    "tslib": "^2.3.0",
+    "typescript": "5.9.2"
+  },
+  "workspaces": {
+    "packages": [
+      "apps/*",
+      "libs/*",
+      "tools/*"
+    ]
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "dependencies": {
+    "next": "~15.2.4",
+    "react": "19.0.0",
+    "react-dom": "19.0.0"
+  },
+  "lint-staged": {
+    "apps/**/*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "libs/**/*.{js,jsx,ts,tsx}": [
+      "eslint --fix", 
+      "prettier --write"
+    ],
+    "apps/api/**/*.go": [
+      "gofmt -s -w"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ]
+  }
+}

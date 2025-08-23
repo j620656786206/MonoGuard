@@ -1,0 +1,53 @@
+{
+  "name": "@monoguard/cli",
+  "version": "0.1.0",
+  "description": "MonoGuard CLI tool for monorepo architecture analysis and validation",
+  "private": false,
+  "main": "dist/main.js",
+  "bin": {
+    "monoguard": "dist/main.js"
+  },
+  "scripts": {
+    "build": "nx build cli",
+    "dev": "nx serve cli",
+    "start": "node dist/main.js",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "lint": "eslint src --fix",
+    "type-check": "tsc --noEmit"
+  },
+  "keywords": [
+    "monorepo",
+    "architecture",
+    "cli",
+    "dependency-analysis",
+    "validation"
+  ],
+  "author": "MonoGuard Team",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^11.1.0",
+    "chalk": "^4.1.2",
+    "ora": "^5.4.1",
+    "inquirer": "^9.2.0",
+    "fs-extra": "^11.1.1",
+    "glob": "^10.3.0",
+    "yaml": "^2.3.0",
+    "zod": "^3.22.0",
+    "@monoguard/shared-types": "*"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.1",
+    "@types/inquirer": "^9.0.3",
+    "@types/node": "24.3.0",
+    "eslint": "^9.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "jest": "^29.7.0",
+    "@types/jest": "^29.5.0",
+    "typescript": "5.9.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

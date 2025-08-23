@@ -36,7 +36,7 @@
 - **Frontend**: Next.js 14 + TypeScript + Tailwind CSS + Shadcn/ui
 - **Database**: PostgreSQL 15+ with Redis for caching
 - **Visualization**: Chart.js for metrics, D3.js for dependency graphs
-- **DevOps**: Docker + Kubernetes, GitHub Actions for CI/CD
+- **部署**: Zeabur（推薦）、Docker + Kubernetes、GitHub Actions for CI/CD
 - **Meta Architecture**: MonoGuard itself built as a monorepo for self-validation
 
 ### 1.3 Self-Hosting Monorepo Design
@@ -44,20 +44,22 @@
 **MonoGuard Project Structure:**
 ```
 mono-guard/
-├── backend/           # Go services (API + Analysis Engine)
-│   ├── cmd/api/      # API server entry point
-│   ├── cmd/analyzer/ # Analysis engine CLI
-│   └── internal/     # Shared backend code
-├── frontend/          # Next.js web interface
-│   ├── src/components/
-│   ├── src/pages/
-│   └── src/lib/
-├── cli/              # Node.js CLI tool
-│   ├── src/commands/
-│   └── src/lib/
-├── shared/           # Cross-language shared definitions
-│   ├── types/        # TypeScript API contracts
-│   └── configs/      # Shared configurations
+├── apps/              # Applications (Nx workspace pattern)
+│   ├── api/          # Go services (API + Analysis Engine)
+│   │   ├── cmd/api/      # API server entry point
+│   │   ├── cmd/analyzer/ # Analysis engine CLI
+│   │   └── internal/     # Shared backend code
+│   ├── frontend/     # Next.js web interface
+│   │   ├── src/components/
+│   │   ├── src/app/
+│   │   └── src/lib/
+│   └── cli/          # Node.js CLI tool
+│       ├── src/commands/
+│       └── src/lib/
+├── libs/             # Shared libraries (Nx workspace pattern)
+│   └── shared-types/ # Cross-language shared definitions
+│       ├── src/types/    # TypeScript API contracts
+│       └── src/configs/  # Shared configurations
 ├── .monoguard.yml    # Our own architecture rules
 └── tools/            # Development utilities
 ```
@@ -70,29 +72,29 @@ mono-guard/
 
 ### 1.4 Component Responsibilities
 
-#### Analysis Engine (Go)
+#### API Application (`apps/api/` - Go)
 - **AST Parser**: Parse TypeScript/JavaScript files to build dependency trees
 - **Dependency Analyzer**: Detect duplicate dependencies, version conflicts, unused packages
 - **Architecture Checker**: Validate layer architecture rules, detect circular dependencies
+- **API Gateway**: OAuth2 integration, project management, analysis orchestration
 - **Report Generator**: Create analysis reports in JSON/HTML/Markdown formats
 
-#### API Gateway (Go + Gin)
-- **Authentication**: OAuth2 integration with GitHub/GitLab/Bitbucket
-- **Project Management**: CRUD operations for projects and configurations
-- **Analysis Orchestration**: Queue and manage analysis jobs
-- **Report Serving**: Serve analysis results and historical data
-
-#### Web Interface (Next.js)
+#### Frontend Application (`apps/frontend/` - Next.js)
 - **Dashboard**: Health score visualization, trend analysis, issue summaries
 - **Dependency Explorer**: Interactive dependency graphs with D3.js
 - **Architecture Viewer**: Layer architecture visualization and violation reports
 - **Configuration Manager**: YAML-based rule configuration interface
 
-#### CLI Tool (Node.js)
+#### CLI Application (`apps/cli/` - Node.js)
 - **Local Analysis**: Run analysis on local repositories
 - **CI Integration**: Provide exit codes for CI/CD pipelines
 - **Report Export**: Generate reports in multiple formats
 - **Configuration Validation**: Validate .monoguard.yml files
+
+#### Shared Types Library (`libs/shared-types/` - TypeScript)
+- **API Contracts**: Cross-language type definitions for API communication
+- **Domain Models**: Shared business logic types
+- **Configuration Types**: Type definitions for .monoguard.yml and other configs
 
 ## 2. Development Workflow & Task Organization
 
