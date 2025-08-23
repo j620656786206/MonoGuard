@@ -37,8 +37,38 @@
 - **Database**: PostgreSQL 15+ with Redis for caching
 - **Visualization**: Chart.js for metrics, D3.js for dependency graphs
 - **DevOps**: Docker + Kubernetes, GitHub Actions for CI/CD
+- **Meta Architecture**: MonoGuard itself built as a monorepo for self-validation
 
-### 1.3 Component Responsibilities
+### 1.3 Self-Hosting Monorepo Design
+
+**MonoGuard Project Structure:**
+```
+mono-guard/
+├── backend/           # Go services (API + Analysis Engine)
+│   ├── cmd/api/      # API server entry point
+│   ├── cmd/analyzer/ # Analysis engine CLI
+│   └── internal/     # Shared backend code
+├── frontend/          # Next.js web interface
+│   ├── src/components/
+│   ├── src/pages/
+│   └── src/lib/
+├── cli/              # Node.js CLI tool
+│   ├── src/commands/
+│   └── src/lib/
+├── shared/           # Cross-language shared definitions
+│   ├── types/        # TypeScript API contracts
+│   └── configs/      # Shared configurations
+├── .monoguard.yml    # Our own architecture rules
+└── tools/            # Development utilities
+```
+
+**Self-Validation Benefits:**
+1. **Continuous Dogfooding**: Monitor our own architecture health
+2. **Real-world Testing**: Validate with complex multi-language monorepo
+3. **Performance Metrics**: Track our own build and analysis performance
+4. **Feature Validation**: Immediate feedback on new capabilities
+
+### 1.4 Component Responsibilities
 
 #### Analysis Engine (Go)
 - **AST Parser**: Parse TypeScript/JavaScript files to build dependency trees
@@ -528,6 +558,7 @@ jobs:
 | AST parsing complexity too high | Medium | High | Start with common patterns, expand gradually |
 | Large monorepo performance issues | High | Medium | Implement incremental analysis + concurrency |
 | Different toolchain compatibility | Medium | Medium | Focus on mainstream tools (Nx, Lerna, Rush) |
+| Self-hosting monorepo complexity | Medium | Low | Use MonoGuard to monitor its own architecture |
 | Competitor fast-follow | Low | High | Build technical moats, focus on user experience |
 
 #### Operational Risks

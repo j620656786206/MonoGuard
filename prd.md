@@ -781,11 +781,35 @@ type AnalysisRun struct {
 - 動態 import 檢測有限
 - 對 monorepo 工具的深度整合需要時間
 
+**自我參照設計 (Meta Design)：**
+
+MonoGuard 本身也將採用 **Monorepo 架構**，形成有趣的自我參照設計：
+
+```yaml
+設計理念：
+  - 用自己的工具檢查自己的架構健康度
+  - 實際驗證 Monorepo 開發流程的效率與挑戰
+  - 提供真實的使用案例與最佳實務範例
+
+實際架構：
+  mono-guard/
+  ├── backend/     # Go 分析引擎與 API
+  ├── frontend/    # Next.js Web 管理介面  
+  ├── cli/         # Node.js 命令列工具
+  └── .monoguard.yml # 自己的架構規則設定
+
+自我驗證：
+  - 每次 CI 都執行 MonoGuard 自我檢查
+  - 架構違規會直接影響開發者體驗
+  - 效能問題會在開發過程中立即暴露
+  - 成為最真實的產品測試環境
+```
+
 **技術演進計劃：**
 
-- Phase 1: 基礎靜態分析
-- Phase 2: 執行期分析整合
-- Phase 3: AI/ML 驅動的智慧建議
+- Phase 1: 基礎靜態分析 + 自我架構治理
+- Phase 2: 執行期分析整合 + 多語言 Monorepo 支援
+- Phase 3: AI/ML 驅動的智慧建議 + 自我優化能力
 
 ---
 
