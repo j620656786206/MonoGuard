@@ -107,11 +107,13 @@
       "prettier --write"
     ],
     "libs/**/*.{js,jsx,ts,tsx}": [
-      "eslint --fix", 
+      "eslint --fix",
       "prettier --write"
     ],
     "apps/api/**/*.go": [
-      "gofmt -s -w"
+      "gofmt -s -w",
+      "bash -c 'cd apps/api && go vet ./...'",
+      "bash -c 'cd apps/api && golangci-lint run --fix'"
     ],
     "*.{json,md,yml,yaml}": [
       "prettier --write"
