@@ -119,8 +119,8 @@ func (a *App) setupServer() {
 	// Initialize services
 	analyzer := services.NewDependencyAnalyzer(a.logger)
 	projectService := services.NewProjectService(projectRepo, analysisRepo, analyzer, a.logger)
-	circularDetectorService := services.NewCircularDetectorService(*projectRepo, *analysisRepo, a.logger)
-	layerValidatorService := services.NewLayerValidatorService(*projectRepo, *analysisRepo, a.logger)
+	circularDetectorService := services.NewCircularDetectorService(projectRepo, analysisRepo, a.logger)
+	layerValidatorService := services.NewLayerValidatorService(projectRepo, analysisRepo, a.logger)
 
 	// Initialize handlers
 	projectHandler := handlers.NewProjectHandler(projectService, a.logger)

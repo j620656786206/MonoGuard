@@ -17,15 +17,15 @@ import (
 
 // LayerValidatorService handles architecture layer validation
 type LayerValidatorService struct {
-	projectRepo  repository.ProjectRepository
-	analysisRepo repository.AnalysisRepository
+	projectRepo  repository.ProjectRepositoryInterface
+	analysisRepo repository.AnalysisRepositoryInterface
 	logger       *logrus.Logger
 }
 
 // NewLayerValidatorService creates a new layer validator service
 func NewLayerValidatorService(
-	projectRepo repository.ProjectRepository,
-	analysisRepo repository.AnalysisRepository,
+	projectRepo repository.ProjectRepositoryInterface,
+	analysisRepo repository.AnalysisRepositoryInterface,
 	logger *logrus.Logger,
 ) *LayerValidatorService {
 	return &LayerValidatorService{

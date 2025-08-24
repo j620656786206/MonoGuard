@@ -248,7 +248,7 @@ const fetchDashboardData = async () => {
     
     if (data.success && data.data.length > 0) {
       const projects = data.data;
-      const totalHealthScore = projects.reduce((sum, p) => sum + (p.healthScore || 0), 0);
+      const totalHealthScore = projects.reduce((sum: number, p: any) => sum + (p.healthScore || 0), 0);
       const avgHealthScore = Math.round(totalHealthScore / projects.length);
       
       // Get most recent analysis timestamp
