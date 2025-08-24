@@ -76,21 +76,14 @@ func New(cfg *config.DatabaseConfig) (*DB, error) {
 func (db *DB) AutoMigrate() error {
 	log.Println("Running database migrations...")
 	
-	// Migrate models one by one to identify problematic model
-	models := []interface{}{
+	err := db.DB.AutoMigrate(
 		&models.Project{},
 		&models.DependencyAnalysis{},
 		&models.ArchitectureValidation{},
 		&models.HealthScore{},
-	}
-	
-	for i, model := range models {
-		log.Printf("Migrating model %d...", i+1)
-		err := db.DB.AutoMigrate(model)
-		if err != nil {
-			return fmt.Errorf("failed to migrate model %d: %w", i+1, err)
-		}
-		log.Printf("Successfully migrated model %d", i+1)
+	)
+	if err != nil {
+		return fmt.Errorf("failed to run migrations: %w", err)
 	}
 
 	log.Println("Database migrations completed successfully")
