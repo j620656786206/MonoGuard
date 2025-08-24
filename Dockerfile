@@ -1,5 +1,5 @@
 # Multi-stage build for Go API in monorepo
-FROM golang:1.21-alpine AS builder
+FROM golang:1.23-alpine AS builder
 
 # Set working directory
 WORKDIR /app
