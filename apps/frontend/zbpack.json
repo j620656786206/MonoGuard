@@ -6,7 +6,6 @@
   "outputDirectory": ".next",
   "nodeVersion": "18",
   "cache_dependencies": true,
-  "disable_dockerfile": true,
   "env": {
     "NEXT_TELEMETRY_DISABLED": "1"
   }
