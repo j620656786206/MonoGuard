@@ -23,6 +23,14 @@ const nextConfig = {
   // Key configuration for Vercel deployment
   output: 'standalone',
   
+  // Skip static optimization
+  experimental: {
+    appDir: true,
+  },
+  
+  // Force disable static exports
+  distDir: '.next',
+  
   // Minimal image optimization to avoid issues
   images: {
     unoptimized: true,
