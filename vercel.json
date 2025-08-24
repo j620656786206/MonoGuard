@@ -1,0 +1,20 @@
+{
+  "buildCommand": "pnpm nx build frontend",
+  "outputDirectory": "apps/frontend/.next",
+  "installCommand": "pnpm install",
+  "framework": "nextjs",
+  "projectSettings": {
+    "framework": "nextjs",
+    "buildCommand": "pnpm nx build frontend",
+    "outputDirectory": "apps/frontend/.next",
+    "installCommand": "pnpm install"
+  },
+  "functions": {
+    "apps/frontend/src/app/api/**": {
+      "runtime": "nodejs18.x"
+    }
+  },
+  "env": {
+    "NEXT_PUBLIC_API_URL": "https://monoguard-api.up.railway.app"
+  }
+}
