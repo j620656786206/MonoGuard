@@ -1,3 +1,6 @@
 {
-  "cache_dependencies": true
+  "app_dir": "apps/api",
+  "go": {
+    "entry": "cmd/server/main.go"
+  }
 }
