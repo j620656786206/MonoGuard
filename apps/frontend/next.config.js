@@ -19,8 +19,7 @@ const nextConfig = {
     typedRoutes: true,
   },
   
-  // Enable SWC compiler for better performance
-  swcMinify: true,
+  // SWC is enabled by default in Next.js 15
   
   // Image optimization
   images: {
