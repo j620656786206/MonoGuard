@@ -1,7 +1,5 @@
 {
   "app_dir": "apps/api",
-  "disable_auto_detect": true,
-  "go": {
-    "entry": "cmd/server/main.go"
-  }
+  "disable_node_modules": true,
+  "dockerfile": "apps/api/Dockerfile"
 }
