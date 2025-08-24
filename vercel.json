@@ -1,8 +1,4 @@
 {
-  "buildCommand": "pnpm nx build frontend",
-  "outputDirectory": "apps/frontend/.next",
-  "installCommand": "pnpm install",
-  "framework": "nextjs",
   "functions": {
     "apps/frontend/src/app/api/**": {
       "runtime": "nodejs18.x"
