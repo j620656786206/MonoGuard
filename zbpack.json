@@ -1,3 +1,5 @@
 {
-  "dockerfile": "Dockerfile"
+  "dockerfile": "Dockerfile",
+  "cache_dependencies": false,
+  "disable_auto_install": true
 }
