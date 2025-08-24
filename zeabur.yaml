@@ -20,8 +20,8 @@ services:
     source:
       directory: ./apps/api
     dockerfile: ./apps/api/Dockerfile
-    buildCommand: cd apps/api && go build -o main cmd/server/main.go
-    startCommand: ./main
+    watchPaths:
+      - 'apps/api/**'
     env:
       DATABASE_URL: postgresql://${postgres.POSTGRES_USER}:${postgres.POSTGRES_PASSWORD}@${postgres.HOST}:${postgres.PORT}/${postgres.POSTGRES_DB}
       REDIS_URL: redis://:${redis.REDIS_PASSWORD}@${redis.HOST}:${redis.PORT}
@@ -37,8 +37,9 @@ services:
     source:
       directory: ./apps/frontend
     dockerfile: ./apps/frontend/Dockerfile
-    buildCommand: cd apps/frontend && pnpm install && pnpm build
-    startCommand: cd apps/frontend && pnpm start
+    watchPaths:
+      - 'apps/frontend/**'
+      - 'libs/shared-types/**'
     env:
       NEXT_PUBLIC_API_URL: https://${api.HOST}
       NEXTAUTH_URL: https://${ZEABUR_DOMAIN}

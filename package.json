@@ -5,7 +5,7 @@
   "private": true,
   "packageManager": "pnpm@10.14.0",
   "scripts": {
-    "build": "nx build",
+    "build": "echo 'This is a monorepo - individual services should be built separately'",
     "build:all": "nx run-many --target=build --all",
     "dev": "nx dev",
     "dev:frontend": "nx dev frontend",
