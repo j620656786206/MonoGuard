@@ -5,8 +5,8 @@
   "private": true,
   "packageManager": "pnpm@10.14.0",
   "scripts": {
-    "build": "echo 'This is a monorepo - individual services should be built separately'",
-    "start": "echo 'This is a monorepo - individual services should be started separately'",
+    "build": "cd apps/api && go build -o main cmd/server/main.go",
+    "start": "cd apps/api && ./main",
     "build:all": "nx run-many --target=build --all",
     "dev": "nx dev",
     "dev:frontend": "nx dev frontend",
