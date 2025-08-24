@@ -1,9 +1,7 @@
 {
-  "functions": {
-    "apps/frontend/src/app/api/**": {
-      "runtime": "nodejs18.x"
-    }
-  },
+  "buildCommand": "pnpm nx build frontend",
+  "outputDirectory": "dist/apps/frontend",
+  "installCommand": "pnpm install --frozen-lockfile",
   "env": {
     "NEXT_PUBLIC_API_URL": "https://monoguard-api.up.railway.app"
   }
