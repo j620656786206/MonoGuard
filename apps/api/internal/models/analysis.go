@@ -189,7 +189,7 @@ type HealthScore struct {
 	Performance    float64         `json:"performance"`
 	LastUpdated    time.Time       `json:"lastUpdated" gorm:"column:last_updated"`
 	Trend          string          `json:"trend"` // "improving", "stable", "declining"
-	Factors        []HealthFactor  `json:"factors" gorm:"type:jsonb"`
+	Factors        []HealthFactor  `json:"factors" gorm:"type:jsonb;serializer:json"`
 	CreatedAt      time.Time       `json:"createdAt" gorm:"column:created_at"`
 	UpdatedAt      time.Time       `json:"updatedAt" gorm:"column:updated_at"`
 

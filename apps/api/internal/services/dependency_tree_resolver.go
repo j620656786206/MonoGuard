@@ -111,8 +111,8 @@ const (
 
 // ResolverCache provides caching for resolved packages
 type ResolverCache struct {
-	packageCache map[string]*CacheEntry `json:"packageCache"`
-	treesCache   map[string]*DependencyTree `json:"treesCache"`
+	packageCache map[string]*CacheEntry
+	treesCache   map[string]*DependencyTree
 	mutex        sync.RWMutex
 	ttl          time.Duration
 }

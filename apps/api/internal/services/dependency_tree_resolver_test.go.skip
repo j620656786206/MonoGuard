@@ -85,7 +85,7 @@ func (m *mockExternalResolver) addPackage(name, version string, deps map[string]
 	}
 	
 	// Add version to versions list
-	versionObj := &Version{
+	versionObj := &SemanticVersion{
 		Raw:   version,
 		Major: extractMajorVersion(version),
 		Minor: extractMinorVersion(version),
@@ -223,9 +223,10 @@ func TestDependencyTreeResolver_BuildTree(t *testing.T) {
 			
 			// Create a new resolver with mock
 			dtr := &DependencyTreeResolver{
-				logger:           logger,
-				externalResolver: mockResolver,
-				cache:           NewResolutionCache(logger),
+				logger:   logger,
+				cache:    NewResolverCache(logger),
+				registry: NewPackageRegistry(logger),
+				metrics:  NewResolverMetrics(),
 			}
 
 			tree, err := dtr.BuildTree(context.Background(), tt.packages, tt.options)

@@ -65,12 +65,12 @@ type MockAnalysisRepository struct {
 	mock.Mock
 }
 
-func (m *MockAnalysisRepository) Create(ctx context.Context, analysis *models.DependencyAnalysis) error {
+func (m *MockAnalysisRepository) CreateDependencyAnalysis(ctx context.Context, analysis *models.DependencyAnalysis) error {
 	args := m.Called(ctx, analysis)
 	return args.Error(0)
 }
 
-func (m *MockAnalysisRepository) GetByID(ctx context.Context, id string) (*models.DependencyAnalysis, error) {
+func (m *MockAnalysisRepository) GetDependencyAnalysisByID(ctx context.Context, id string) (*models.DependencyAnalysis, error) {
 	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -78,13 +78,8 @@ func (m *MockAnalysisRepository) GetByID(ctx context.Context, id string) (*model
 	return args.Get(0).(*models.DependencyAnalysis), args.Error(1)
 }
 
-func (m *MockAnalysisRepository) Update(ctx context.Context, analysis *models.DependencyAnalysis) error {
-	args := m.Called(ctx, analysis)
-	return args.Error(0)
-}
-
-func (m *MockAnalysisRepository) GetProjectAnalyses(ctx context.Context, projectID string, limit, offset int) ([]*models.DependencyAnalysis, int64, error) {
-	args := m.Called(ctx, projectID, limit, offset)
+func (m *MockAnalysisRepository) GetDependencyAnalysesByProjectID(ctx context.Context, projectID string, params *repository.QueryParams) ([]*models.DependencyAnalysis, int64, error) {
+	args := m.Called(ctx, projectID, params)
 	return args.Get(0).([]*models.DependencyAnalysis), args.Get(1).(int64), args.Error(2)
 }
 
@@ -119,6 +114,32 @@ func (m *MockAnalysisRepository) UpdateArchitectureValidation(ctx context.Contex
 	return args.Error(0)
 }
 
+func (m *MockAnalysisRepository) GetArchitectureValidationByID(ctx context.Context, id string) (*models.ArchitectureValidation, error) {
+	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.ArchitectureValidation), args.Error(1)
+}
+
+func (m *MockAnalysisRepository) CreateHealthScore(ctx context.Context, healthScore *models.HealthScore) error {
+	args := m.Called(ctx, healthScore)
+	return args.Error(0)
+}
+
+func (m *MockAnalysisRepository) GetLatestHealthScore(ctx context.Context, projectID string) (*models.HealthScore, error) {
+	args := m.Called(ctx, projectID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.HealthScore), args.Error(1)
+}
+
+func (m *MockAnalysisRepository) UpdateHealthScore(ctx context.Context, id string, updates map[string]interface{}) error {
+	args := m.Called(ctx, id, updates)
+	return args.Error(0)
+}
+
 func TestCircularDetectorService_DetectCircularDependencies(t *testing.T) {
 	// Setup
 	mockProjectRepo := new(MockProjectRepository)
@@ -144,8 +165,8 @@ func TestCircularDetectorService_DetectCircularDependencies(t *testing.T) {
 	
 	// Setup mocks
 	mockProjectRepo.On("GetByID", ctx, projectID).Return(project, nil)
-	mockAnalysisRepo.On("Create", ctx, mock.AnythingOfType("*models.DependencyAnalysis")).Return(nil)
-	mockAnalysisRepo.On("Update", ctx, mock.AnythingOfType("*models.DependencyAnalysis")).Return(nil)
+	mockAnalysisRepo.On("CreateDependencyAnalysis", ctx, mock.AnythingOfType("*models.DependencyAnalysis")).Return(nil)
+	mockAnalysisRepo.On("UpdateDependencyAnalysis", ctx, mock.AnythingOfType("string"), mock.AnythingOfType("map[string]interface {}")).Return(nil)
 	
 	// Execute
 	result, err := service.DetectCircularDependencies(ctx, projectID, repoPath)
@@ -169,7 +190,7 @@ func TestCircularDetectorService_detectCircularDepsWithDFS(t *testing.T) {
 	
 	// Test case 1: Simple circular dependency A -> B -> A
 	graph1 := &PackageGraph{
-		Nodes: map[string]*PackageNode{
+		Nodes: map[string]*CircularPackageNode{
 			"A": {Name: "A"},
 			"B": {Name: "B"},
 		},
@@ -185,7 +206,7 @@ func TestCircularDetectorService_detectCircularDepsWithDFS(t *testing.T) {
 	
 	// Test case 2: No circular dependencies
 	graph2 := &PackageGraph{
-		Nodes: map[string]*PackageNode{
+		Nodes: map[string]*CircularPackageNode{
 			"A": {Name: "A"},
 			"B": {Name: "B"},
 			"C": {Name: "C"},
@@ -202,7 +223,7 @@ func TestCircularDetectorService_detectCircularDepsWithDFS(t *testing.T) {
 	
 	// Test case 3: Complex circular dependency A -> B -> C -> A
 	graph3 := &PackageGraph{
-		Nodes: map[string]*PackageNode{
+		Nodes: map[string]*CircularPackageNode{
 			"A": {Name: "A"},
 			"B": {Name: "B"},
 			"C": {Name: "C"},
