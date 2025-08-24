@@ -2,7 +2,7 @@
   "name": "@monoguard/cli",
   "version": "0.1.0",
   "description": "MonoGuard CLI tool for monorepo architecture analysis and validation",
-  "private": false,
+  "private": true,
   "main": "dist/main.js",
   "bin": {
     "monoguard": "dist/main.js"
