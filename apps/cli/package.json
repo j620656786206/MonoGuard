@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "description": "MonoGuard CLI tool for monorepo architecture analysis and validation",
   "private": true,
-  "main": "dist/main.js",
+  "main": "../../dist/apps/cli/main.js",
   "bin": {
-    "monoguard": "dist/main.js"
+    "monoguard": "../../dist/apps/cli/main.js"
   },
   "scripts": {
     "build": "nx build cli",
