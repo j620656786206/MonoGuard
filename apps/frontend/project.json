@@ -7,12 +7,11 @@
   "targets": {
     "build": {
       "executor": "@nx/next:build",
-      "outputs": [
-        "{options.outputPath}"
-      ],
+      "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {
-        "outputPath": "dist/apps/frontend"
+        "outputPath": "dist/apps/frontend",
+        "root": "apps/frontend"
       },
       "configurations": {
         "development": {

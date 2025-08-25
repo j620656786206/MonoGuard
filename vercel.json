@@ -1,6 +1,6 @@
 {
-  "buildCommand": "NODE_ENV=production pnpm nx build frontend",
-  "outputDirectory": "dist/apps/frontend",
+  "buildCommand": "cd apps/frontend && pnpm build",
+  "outputDirectory": "apps/frontend/.next",
   "installCommand": "pnpm install --frozen-lockfile",
   "env": {
     "NODE_ENV": "production",
