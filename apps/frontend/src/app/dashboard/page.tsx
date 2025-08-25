@@ -1,6 +1,9 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 // Temporary inline components until UI library is properly built
 const Card = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
   <div className={`rounded-lg border bg-card text-card-foreground shadow-sm ${className}`}>

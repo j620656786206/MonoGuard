@@ -1,8 +1,9 @@
 {
-  "buildCommand": "pnpm nx build frontend",
+  "buildCommand": "NODE_ENV=production pnpm nx build frontend",
   "outputDirectory": "dist/apps/frontend",
   "installCommand": "pnpm install --frozen-lockfile",
   "env": {
+    "NODE_ENV": "production",
     "NEXT_PUBLIC_API_URL": "https://monoguard-api.up.railway.app"
   }
 }

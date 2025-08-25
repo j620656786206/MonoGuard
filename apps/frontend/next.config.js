@@ -23,9 +23,12 @@ const nextConfig = {
   // Key configuration for Vercel deployment
   output: 'standalone',
   
-  // Skip static optimization
+  // Disable static optimization to avoid prerender errors
+  trailingSlash: false,
+  
+  // Skip static optimization - appDir is now default in Next.js 15
   experimental: {
-    appDir: true,
+    // Remove deprecated appDir option
   },
   
   // Force disable static exports
