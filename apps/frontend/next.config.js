@@ -12,30 +12,28 @@ const nextConfig = {
     svgr: false,
   },
   
-  // Build configuration
+  // Build configuration - fix issues instead of ignoring
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: true, // Keep for now, will fix gradually
   },
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: true, // Keep for now, will fix gradually
   },
   
-  // Completely disable static generation
-  output: 'export',
-  trailingSlash: true,
-  skipTrailingSlashRedirect: true,
+  // Enable proper SSR with dynamic rendering
+  trailingSlash: false,
   
-  // Disable image optimization for static export
+  // Re-enable image optimization
   images: {
-    unoptimized: true,
+    unoptimized: false,
   },
   
-  // Disable static page generation
+  // Clean experimental config - let Next.js handle defaults
   experimental: {
-    appDir: false,
+    // Keep empty or add valid Next.js 15 experimental features only
   },
   
-  // Redirects
+  // Redirects - these work with SSR
   async redirects() {
     return [
       {
