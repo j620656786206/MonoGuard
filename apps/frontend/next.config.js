@@ -20,23 +20,19 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   
-  // Key configuration for Vercel deployment
-  output: 'standalone',
+  // Completely disable static generation
+  output: 'export',
+  trailingSlash: true,
+  skipTrailingSlashRedirect: true,
   
-  // Disable static optimization to avoid prerender errors
-  trailingSlash: false,
-  
-  // Skip static optimization - appDir is now default in Next.js 15
-  experimental: {
-    // Remove deprecated appDir option
-  },
-  
-  // Force disable static exports
-  distDir: '.next',
-  
-  // Minimal image optimization to avoid issues
+  // Disable image optimization for static export
   images: {
     unoptimized: true,
+  },
+  
+  // Disable static page generation
+  experimental: {
+    appDir: false,
   },
   
   // Redirects
