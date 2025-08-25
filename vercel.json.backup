@@ -1,5 +1,5 @@
 {
-  "buildCommand": "cd apps/frontend && pnpm build",
+  "buildCommand": "npx nx build frontend --prod",
   "outputDirectory": "apps/frontend/.next",
   "installCommand": "pnpm install --frozen-lockfile",
   "env": {
