@@ -302,3 +302,32 @@ func (s *UploadService) CleanupOldFiles(olderThan time.Duration) error {
 	s.logger.Infof("Cleaned up %d old files", len(oldFiles))
 	return nil
 }
+
+// CreateProcessingResult creates a processing result from package.json files
+func (s *UploadService) CreateProcessingResult(packageJsonFiles []models.PackageJsonFile) (*models.FileProcessingResult, error) {
+	// Create processing result record
+	processingResult := &models.FileProcessingResult{
+		ID:          uuid.New().String(),
+		ProcessedAt: time.Now(),
+		Errors:      "",
+		PackageJsonFiles: packageJsonFiles,
+	}
+
+	// Update processing result ID for all package.json files
+	for i := range packageJsonFiles {
+		packageJsonFiles[i].ID = uuid.New().String()
+		packageJsonFiles[i].ProcessingResultID = processingResult.ID
+	}
+
+	// Save to database
+	if err := s.db.Create(processingResult).Error; err != nil {
+		return nil, fmt.Errorf("failed to save processing result to database: %w", err)
+	}
+
+	s.logger.WithFields(logrus.Fields{
+		"processing_result_id": processingResult.ID,
+		"package_json_count":   len(packageJsonFiles),
+	}).Info("Created processing result from GitHub")
+
+	return processingResult, nil
+}

@@ -2,7 +2,9 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -161,13 +163,8 @@ func (s *CircularDetectorService) DetectCircularDependencies(ctx context.Context
 	analysis.CompletedAt = &now
 	analysis.Status = models.StatusCompleted
 
-	// Update analysis
-	if err := s.analysisRepo.UpdateDependencyAnalysis(ctx, analysis.ID, map[string]interface{}{
-		"status":       analysis.Status,
-		"completed_at": analysis.CompletedAt,
-		"results":      analysis.Results,
-		"metadata":     analysis.Metadata,
-	}); err != nil {
+	// Update analysis using Save instead of Updates to handle complex types
+	if err := s.analysisRepo.SaveDependencyAnalysis(ctx, analysis); err != nil {
 		return nil, fmt.Errorf("failed to update analysis: %w", err)
 	}
 
@@ -189,40 +186,180 @@ func (s *CircularDetectorService) buildDependencyGraph(repoPath string, excludeP
 		Edges: make(map[string][]string),
 	}
 
-	// For now, create a simple mock graph based on the project structure
-	// In a real implementation, this would parse package.json files and analyze imports
-	mockPackages := []string{
-		"apps/frontend",
-		"apps/api", 
-		"apps/cli",
-		"libs/shared-types",
-		"libs/ui",
+	// Parse all package.json files in the repository
+	packages, err := s.discoverPackages(repoPath, excludePatterns)
+	if err != nil {
+		return nil, fmt.Errorf("failed to discover packages: %w", err)
 	}
 
-	// Create nodes
-	for _, pkg := range mockPackages {
-		graph.Nodes[pkg] = &CircularPackageNode{
-			Name: pkg,
-			Path: filepath.Join(repoPath, pkg),
+	s.logger.WithField("package_count", len(packages)).Info("Discovered packages for dependency graph")
+
+	// Create nodes for all packages
+	for _, pkg := range packages {
+		relativePath, err := filepath.Rel(repoPath, pkg.Path)
+		if err != nil {
+			relativePath = pkg.Path
+		}
+		
+		packageName := pkg.Name
+		if packageName == "" {
+			// Use directory name if no name specified
+			packageName = filepath.Base(filepath.Dir(pkg.Path))
+		}
+
+		graph.Nodes[packageName] = &CircularPackageNode{
+			Name: packageName,
+			Path: relativePath,
 		}
 	}
 
-	// Create mock dependencies (some circular for testing)
-	dependencies := map[string][]string{
-		"apps/frontend":    {"libs/ui", "libs/shared-types"},
-		"apps/api":         {"libs/shared-types"},
-		"apps/cli":         {"libs/shared-types"},
-		"libs/ui":          {"libs/shared-types"},
-		"libs/shared-types": {},
+	// Build dependency edges
+	for _, pkg := range packages {
+		packageName := pkg.Name
+		if packageName == "" {
+			packageName = filepath.Base(filepath.Dir(pkg.Path))
+		}
+
+		var dependencies []string
+		
+		// Add production dependencies that reference other workspace packages
+		for depName := range pkg.Dependencies {
+			if _, exists := graph.Nodes[depName]; exists {
+				dependencies = append(dependencies, depName)
+			}
+		}
+
+		// Add dev dependencies for more complete analysis
+		for depName := range pkg.DevDependencies {
+			if _, exists := graph.Nodes[depName]; exists {
+				dependencies = append(dependencies, depName)
+			}
+		}
+
+		graph.Nodes[packageName].Dependencies = dependencies
+		graph.Edges[packageName] = dependencies
 	}
 
-	// Add dependencies to graph
-	for pkg, deps := range dependencies {
-		graph.Nodes[pkg].Dependencies = deps
-		graph.Edges[pkg] = deps
-	}
+	s.logger.WithFields(logrus.Fields{
+		"total_nodes": len(graph.Nodes),
+		"total_edges": s.countEdges(graph),
+	}).Info("Built dependency graph successfully")
 
 	return graph, nil
+}
+
+// PackageInfo represents a discovered package
+type CircularPackageInfo struct {
+	Name            string            `json:"name"`
+	Version         string            `json:"version"`
+	Path            string            `json:"path"`
+	Dependencies    map[string]string `json:"dependencies"`
+	DevDependencies map[string]string `json:"devDependencies"`
+}
+
+// discoverPackages finds all package.json files in the repository
+func (s *CircularDetectorService) discoverPackages(rootPath string, excludePatterns []string) ([]*CircularPackageInfo, error) {
+	var packages []*CircularPackageInfo
+
+	err := filepath.Walk(rootPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// Skip common directories that shouldn't contain workspace packages
+		if info.IsDir() {
+			dirName := filepath.Base(path)
+			if dirName == "node_modules" || dirName == ".git" || dirName == "dist" || 
+			   dirName == "build" || dirName == ".next" || dirName == "coverage" || 
+			   dirName == "tmp" || dirName == "__pycache__" {
+				return filepath.SkipDir
+			}
+		}
+
+		// Check exclude patterns
+		for _, pattern := range excludePatterns {
+			if matched, _ := filepath.Match(pattern, path); matched {
+				if info.IsDir() {
+					return filepath.SkipDir
+				}
+				return nil
+			}
+		}
+
+		// Process package.json files
+		if info.Name() == "package.json" {
+			pkg, parseErr := s.parsePackageJSON(path)
+			if parseErr != nil {
+				s.logger.WithError(parseErr).WithField("path", path).Warn("Failed to parse package.json, skipping")
+				return nil // Continue processing other files
+			}
+			packages = append(packages, pkg)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("error walking repository: %w", err)
+	}
+
+	return packages, nil
+}
+
+// parsePackageJSON parses a single package.json file
+func (s *CircularDetectorService) parsePackageJSON(filePath string) (*CircularPackageInfo, error) {
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read file: %w", err)
+	}
+
+	var rawPackage map[string]interface{}
+	if err := json.Unmarshal(data, &rawPackage); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal JSON: %w", err)
+	}
+
+	pkg := &CircularPackageInfo{
+		Path:            filePath,
+		Dependencies:    make(map[string]string),
+		DevDependencies: make(map[string]string),
+	}
+
+	// Extract basic package information
+	if name, ok := rawPackage["name"].(string); ok {
+		pkg.Name = name
+	}
+
+	if version, ok := rawPackage["version"].(string); ok {
+		pkg.Version = version
+	}
+
+	// Parse dependencies
+	if deps, ok := rawPackage["dependencies"].(map[string]interface{}); ok {
+		for name, version := range deps {
+			if versionStr, ok := version.(string); ok {
+				pkg.Dependencies[name] = versionStr
+			}
+		}
+	}
+
+	if devDeps, ok := rawPackage["devDependencies"].(map[string]interface{}); ok {
+		for name, version := range devDeps {
+			if versionStr, ok := version.(string); ok {
+				pkg.DevDependencies[name] = versionStr
+			}
+		}
+	}
+
+	return pkg, nil
+}
+
+// countEdges counts the total number of edges in the graph
+func (s *CircularDetectorService) countEdges(graph *PackageGraph) int {
+	count := 0
+	for _, edges := range graph.Edges {
+		count += len(edges)
+	}
+	return count
 }
 
 // detectCircularDepsWithDFS detects circular dependencies using Depth-First Search
