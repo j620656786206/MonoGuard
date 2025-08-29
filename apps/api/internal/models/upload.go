@@ -15,7 +15,7 @@ type UploadedFile struct {
 	FileSize             int64     `json:"fileSize" gorm:"not null"`
 	MimeType             string    `json:"mimeType" gorm:"not null;type:varchar(100)"`
 	FilePath             string    `json:"filePath" gorm:"not null;type:varchar(500)"`
-	Status               string    `json:"status" gorm:"not null;type:varchar(20);default:'uploaded'"`
+	Status               string    `json:"status" gorm:"not null;type:varchar(20);default:\"uploaded\""`
 	UploadedAt           time.Time `json:"uploadedAt" gorm:"not null;autoCreateTime"`
 	ProcessedAt          *time.Time `json:"processedAt,omitempty"`
 	ProcessingResultID   string    `json:"processingResultId" gorm:"type:varchar(36)"`

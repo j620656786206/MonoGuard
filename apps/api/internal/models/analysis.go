@@ -11,7 +11,7 @@ import (
 type DependencyAnalysis struct {
 	ID          string                      `json:"id" gorm:"primaryKey"`
 	ProjectID   string                      `json:"projectId" gorm:"column:project_id;not null"`
-	Status      Status                      `json:"status" gorm:"not null;default:'pending'"`
+	Status      Status                      `json:"status" gorm:"type:varchar(20);not null;default:\"pending\""`
 	StartedAt   time.Time                   `json:"startedAt" gorm:"column:started_at"`
 	CompletedAt *time.Time                  `json:"completedAt,omitempty" gorm:"column:completed_at"`
 	Results     *DependencyAnalysisResults  `json:"results" gorm:"type:jsonb"`
@@ -109,7 +109,7 @@ type AnalysisSummary struct {
 type ArchitectureValidation struct {
 	ID          string                          `json:"id" gorm:"primaryKey"`
 	ProjectID   string                          `json:"projectId" gorm:"column:project_id;not null"`
-	Status      Status                          `json:"status" gorm:"not null;default:'pending'"`
+	Status      Status                          `json:"status" gorm:"type:varchar(20);not null;default:\"pending\""`
 	StartedAt   time.Time                       `json:"startedAt" gorm:"column:started_at"`
 	CompletedAt *time.Time                      `json:"completedAt,omitempty" gorm:"column:completed_at"`
 	Results     *ArchitectureValidationResults  `json:"results" gorm:"type:jsonb"`
@@ -254,7 +254,7 @@ func (HealthScore) TableName() string {
 type PackageJSONAnalysis struct {
 	ID              string                    `json:"id" gorm:"primaryKey"`
 	ProjectID       string                    `json:"projectId" gorm:"column:project_id;not null"`
-	Status          Status                    `json:"status" gorm:"not null;default:'pending'"`
+	Status          Status                    `json:"status" gorm:"type:varchar(20);not null;default:\"pending\""`
 	StartedAt       time.Time                 `json:"startedAt" gorm:"column:started_at"`
 	CompletedAt     *time.Time                `json:"completedAt,omitempty" gorm:"column:completed_at"`
 	Results         *PackageJSONAnalysisResults `json:"results" gorm:"type:jsonb"`
