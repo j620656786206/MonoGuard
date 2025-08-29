@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -244,6 +245,7 @@ import {
 } from "lucide-react";
 
 import { API_CONFIG, API_ENDPOINTS } from '@/lib/api/config';
+import { useHealthScore } from '@/contexts/HealthScoreContext';
 
 // API client function
 const fetchDashboardData = async () => {
@@ -258,13 +260,13 @@ const fetchDashboardData = async () => {
       
       // Get most recent analysis timestamp
       const lastAnalysisTimestamp = projects
-        .map(p => p.lastAnalysisAt)
+        .map((p: any) => p.lastAnalysisAt)
         .filter(Boolean)
         .sort()
         .pop();
       
       // Build recent analyses from actual projects
-      const recentAnalyses = projects.slice(0, 3).map((project, index) => ({
+      const recentAnalyses = projects.slice(0, 3).map((project: any, index: number) => ({
         id: project.id,
         projectName: project.name,
         status: project.status === "pending" ? "in-progress" : 
@@ -287,7 +289,7 @@ const fetchDashboardData = async () => {
           // Keep mock issues for now since we don't have analysis results yet
           {
             type: "Pending Analysis",
-            count: projects.filter(p => p.status === "pending").length,
+            count: projects.filter((p: any) => p.status === "pending").length,
             severity: "medium"
           },
           {
@@ -374,30 +376,40 @@ const fallbackData = {
 };
 
 export default function DashboardPage() {
+  const router = useRouter();
+  const { setHealthScore, setIsLoading } = useHealthScore();
   const [isAnalysisLoading, setIsAnalysisLoading] = useState(false);
-  const [dashboardData, setDashboardData] = useState(null);
+  const [dashboardData, setDashboardData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   // Load dashboard data on component mount
   useEffect(() => {
     const loadDashboardData = async () => {
       try {
         setLoading(true);
+        setIsLoading(true);
         const data = await fetchDashboardData();
         if (data) {
           setDashboardData(data);
+          setHealthScore(data.overview.healthScore);
+        } else {
+          // Use fallback data health score if no real data
+          setHealthScore(fallbackData.overview.healthScore);
         }
-      } catch (err) {
+      } catch (err: unknown) {
         console.error('Error loading dashboard data:', err);
-        setError(err.message);
+        setError(err instanceof Error ? err.message : 'Unknown error occurred');
+        // Use fallback data health score on error
+        setHealthScore(fallbackData.overview.healthScore);
       } finally {
         setLoading(false);
+        setIsLoading(false);
       }
     };
 
     loadDashboardData();
-  }, []);
+  }, [setHealthScore, setIsLoading]);
 
   const handleRunAnalysis = async () => {
     setIsAnalysisLoading(true);
@@ -409,10 +421,15 @@ export default function DashboardPage() {
         const data = await fetchDashboardData();
         if (data) {
           setDashboardData(data);
+          setHealthScore(data.overview.healthScore);
         }
       };
       refreshData();
     }, 3000);
+  };
+
+  const handleNavigateToUpload = () => {
+    router.push('/upload');
   };
 
   // Use real data if available, otherwise fallback to mock data
@@ -521,7 +538,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
-              {displayData.recentAnalyses.map((analysis) => (
+              {displayData.recentAnalyses.map((analysis: any) => (
                 <div key={analysis.id} className="flex items-center justify-between p-4 border rounded-lg hover:border-primary/20 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2" tabIndex={0} role="button" aria-label={`View analysis for ${analysis.projectName}`}>
                   <div className="flex items-center space-x-4">
                     <div className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-100">
@@ -568,11 +585,11 @@ export default function DashboardPage() {
                 {dashboardData ? "Current status from live data" : "Issues requiring immediate attention"}
               </CardDescription>
             </div>
-            <Dropdown />
+            <Dropdown children={<></>} />
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {displayData.topIssues.length > 0 ? displayData.topIssues.map((issue, index) => (
+              {displayData.topIssues.length > 0 ? displayData.topIssues.map((issue: any, index: number) => (
                 <div key={index} className="relative">
                   {/* Color Bar on Left */}
                   <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l ${
@@ -654,7 +671,7 @@ export default function DashboardPage() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <Button variant="outline" className="flex items-center gap-2 h-20 flex-col" aria-label="Start analyzing a new project">
+            <Button variant="outline" className="flex items-center gap-2 h-20 flex-col" aria-label="Start analyzing a new project" onClick={handleNavigateToUpload}>
               <Package className="w-6 h-6" />
               <span>Analyze New Project</span>
             </Button>

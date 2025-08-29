@@ -10,8 +10,10 @@ import {
   TrendingUp,
   ChevronRight,
   Menu,
-  X
+  X,
+  Upload
 } from 'lucide-react';
+import { HealthScoreProvider, useHealthScore } from '@/contexts/HealthScoreContext';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -24,6 +26,12 @@ const navigationItems = [
     href: '/dashboard', 
     icon: LayoutDashboard, 
     current: true 
+  },
+  { 
+    name: 'Upload Project', 
+    href: '/upload', 
+    icon: Upload, 
+    current: false 
   },
   { 
     name: 'Dependencies', 
@@ -45,7 +53,46 @@ const navigationItems = [
   },
 ];
 
-export default function DashboardLayout({ children }: DashboardLayoutProps) {
+// Health indicator component that consumes the context
+function HealthIndicator() {
+  const { healthScore, isLoading } = useHealthScore();
+  
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center space-x-2 px-3 py-1 bg-gray-50 text-gray-700 rounded-full">
+        <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></div>
+        <span className="text-sm font-medium hidden sm:inline">Health: </span>
+        <span className="text-sm font-medium">--</span>
+        <TrendingUp className="w-4 h-4 hidden sm:block" />
+      </div>
+    );
+  }
+
+  // Determine health color based on score
+  const getHealthColor = (score: number) => {
+    if (score >= 80) return "bg-green-50 text-green-700";
+    if (score >= 50) return "bg-yellow-50 text-yellow-700";
+    return "bg-red-50 text-red-700";
+  };
+
+  const getHealthDotColor = (score: number) => {
+    if (score >= 80) return "bg-green-500";
+    if (score >= 50) return "bg-yellow-500";
+    return "bg-red-500";
+  };
+
+  return (
+    <div className={`flex items-center space-x-2 px-3 py-1 rounded-full ${getHealthColor(healthScore)}`}>
+      <div className={`w-2 h-2 rounded-full ${getHealthDotColor(healthScore)}`}></div>
+      <span className="text-sm font-medium hidden sm:inline">Health: </span>
+      <span className="text-sm font-medium">{healthScore}</span>
+      <TrendingUp className="w-4 h-4 hidden sm:block" />
+    </div>
+  );
+}
+
+function DashboardLayoutContent({ children }: DashboardLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
@@ -84,12 +131,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           
           {/* Global Health Indicator */}
           <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2 px-3 py-1 bg-green-50 text-green-700 rounded-full">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span className="text-sm font-medium hidden sm:inline">Health: </span>
-              <span className="text-sm font-medium">87</span>
-              <TrendingUp className="w-4 h-4 hidden sm:block" />
-            </div>
+            <HealthIndicator />
           </div>
         </div>
       </div>
@@ -157,5 +199,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function DashboardLayout({ children }: DashboardLayoutProps) {
+  return (
+    <HealthScoreProvider>
+      <DashboardLayoutContent>{children}</DashboardLayoutContent>
+    </HealthScoreProvider>
   );
 }
