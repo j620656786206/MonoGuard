@@ -67,7 +67,7 @@ export const createPaginationParams = (
  * Error handling utility
  */
 export const handleApiError = (error: unknown): string => {
-  if (error instanceof ApiError) {
+  if (error instanceof Error && error.name === 'ApiError') {
     return error.message;
   }
   
@@ -82,14 +82,15 @@ export const handleApiError = (error: unknown): string => {
  * Response validation utility
  */
 export const validateApiResponse = <T>(
-  response: ApiResponse<T>,
+  response: any,
   expectedStatus: number = 200
 ): T => {
   if (response.status !== expectedStatus) {
-    throw new ApiError(
-      response.message || `Expected status ${expectedStatus}, got ${response.status}`,
-      response.status
+    const error = new Error(
+      response.message || `Expected status ${expectedStatus}, got ${response.status}`
     );
+    error.name = 'ApiError';
+    throw error;
   }
   
   return response.data;

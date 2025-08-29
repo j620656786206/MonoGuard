@@ -1,6 +1,10 @@
 import { apiClient, ApiResponse, PaginatedResponse } from '../client';
 import { API_ENDPOINTS } from '../config';
-import { DependencyAnalysis, ArchitectureValidation } from '@monoguard/shared-types';
+import { 
+  DependencyAnalysis, 
+  ArchitectureValidation, 
+  ComprehensiveAnalysisResult 
+} from '@monoguard/shared-types';
 
 /**
  * Analysis status enum
@@ -85,7 +89,15 @@ export class AnalysisService {
     }
 
     const url = `${API_ENDPOINTS.ANALYSIS.LIST}?${queryParams.toString()}`;
-    return apiClient.get<AnalysisResult[]>(url);
+    return {
+      ...await apiClient.get<AnalysisResult[]>(url),
+      pagination: {
+        page: 1,
+        limit: 10,
+        total: 0,
+        totalPages: 1
+      }
+    };
   }
 
   /**
@@ -212,6 +224,86 @@ export class AnalysisService {
     };
   }>> {
     return apiClient.get(`/analysis/compare?analysis1=${analysisId1}&analysis2=${analysisId2}`);
+  }
+
+  /**
+   * Start comprehensive analysis for uploaded files
+   */
+  static async startComprehensiveAnalysis(uploadId: string): Promise<ApiResponse<ComprehensiveAnalysisResult>> {
+    return apiClient.post<ComprehensiveAnalysisResult>(
+      API_ENDPOINTS.ANALYSIS.COMPREHENSIVE(uploadId),
+      {}
+    );
+  }
+
+  /**
+   * Get comprehensive analysis results
+   */
+  static async getComprehensiveAnalysis(analysisId: string): Promise<ApiResponse<ComprehensiveAnalysisResult>> {
+    return apiClient.get<ComprehensiveAnalysisResult>(
+      API_ENDPOINTS.ANALYSIS.GET(analysisId)
+    );
+  }
+
+  /**
+   * Get real-time analysis progress
+   */
+  static async getAnalysisProgressDetailed(analysisId: string): Promise<ApiResponse<{
+    id: string;
+    status: AnalysisStatus;
+    progress: number;
+    currentStep: string;
+    steps: {
+      name: string;
+      status: 'pending' | 'running' | 'completed' | 'failed';
+      startedAt?: string;
+      completedAt?: string;
+      progress: number;
+    }[];
+    estimatedCompletion?: string;
+    error?: string;
+  }>> {
+    return apiClient.get(API_ENDPOINTS.ANALYSIS.PROGRESS(analysisId));
+  }
+
+  /**
+   * Poll for analysis completion with timeout
+   */
+  static async pollAnalysisCompletion(
+    analysisId: string, 
+    timeoutMs: number = 300000 // 5 minutes
+  ): Promise<ComprehensiveAnalysisResult> {
+    const startTime = Date.now();
+    
+    return new Promise((resolve, reject) => {
+      const poll = async () => {
+        try {
+          if (Date.now() - startTime > timeoutMs) {
+            reject(new Error('Analysis polling timeout'));
+            return;
+          }
+
+          const response = await this.getComprehensiveAnalysis(analysisId);
+          
+          if (response.data.status === 'completed') {
+            resolve(response.data);
+            return;
+          }
+          
+          if (response.data.status === 'failed') {
+            reject(new Error(response.data.error || 'Analysis failed'));
+            return;
+          }
+
+          // Continue polling
+          setTimeout(poll, 2000); // Poll every 2 seconds
+        } catch (error) {
+          reject(error);
+        }
+      };
+
+      poll();
+    });
   }
 }
 

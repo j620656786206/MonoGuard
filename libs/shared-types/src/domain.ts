@@ -220,6 +220,100 @@ export interface HealthFactor {
   recommendations: string[];
 }
 
+// Comprehensive analysis results for frontend display
+export interface ComprehensiveAnalysisResult {
+  id: ID;
+  uploadId: ID;
+  status: Status;
+  startedAt: ISODateString;
+  completedAt?: ISODateString;
+  progress: number;
+  currentStep?: string;
+  results?: {
+    dependencyAnalysis?: DependencyAnalysisResults;
+    architectureValidation?: ArchitectureValidationResults;
+    healthScore?: HealthScore;
+    bundleImpact?: BundleImpactReport;
+    duplicateDetection?: DuplicateDetectionResults;
+  };
+  error?: string;
+  warnings?: string[];
+}
+
+// Enhanced duplicate detection results
+export interface DuplicateDetectionResults {
+  totalDuplicates: number;
+  potentialSavings: string;
+  duplicateGroups: DuplicateGroup[];
+  recommendations: DuplicateRecommendation[];
+}
+
+export interface DuplicateGroup {
+  packageName: string;
+  versions: DuplicateVersionInfo[];
+  totalSize: string;
+  wastedSize: string;
+  riskLevel: RiskLevel;
+  affectedPackages: string[];
+}
+
+export interface DuplicateVersionInfo {
+  version: string;
+  size: string;
+  usageCount: number;
+  packages: string[];
+  isRecommended: boolean;
+}
+
+export interface DuplicateRecommendation {
+  type: 'consolidate' | 'upgrade' | 'replace' | 'remove';
+  packageName: string;
+  description: string;
+  estimatedSavings: string;
+  difficulty: 'easy' | 'medium' | 'hard';
+  steps: string[];
+}
+
+// File processing result extension for analysis
+export interface FileProcessingResult {
+  uploadId: ID;
+  files: UploadedFile[];
+  packageJsonFiles: PackageJsonFile[];
+  analysisReady: boolean;
+  errors?: string[];
+  metadata: {
+    totalSize: number;
+    processedAt: ISODateString;
+    processingDuration: number;
+  };
+}
+
+export interface UploadedFile {
+  filename: string;
+  originalName: string;
+  fileSize: number;
+  mimeType: string;
+  path: string;
+  extractedFiles?: number;
+}
+
+export interface PackageJsonFile {
+  name?: string;
+  version?: string;
+  path: string;
+  dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
+  peerDependencies?: Record<string, string>;
+  optionalDependencies?: Record<string, string>;
+  scripts?: Record<string, string>;
+  metadata?: {
+    fileSize: number;
+    lastModified: string;
+    dependencyCount: number;
+    devDependencyCount: number;
+  };
+}
+
 // Zod Schemas
 export const ProjectSchema = z.object({
   id: z.union([z.string(), z.number()]),

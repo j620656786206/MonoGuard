@@ -15,7 +15,15 @@ export type {
   Project,
   DependencyAnalysis,
   ArchitectureValidation,
-  HealthScore
+  HealthScore,
+  ComprehensiveAnalysisResult,
+  FileProcessingResult,
+  PackageJsonFile,
+  UploadedFile,
+  DuplicateDetectionResults,
+  DuplicateGroup,
+  BundleImpactReport,
+  BundleBreakdown
 } from './domain';
 
 export type {

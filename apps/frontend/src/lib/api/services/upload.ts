@@ -1,4 +1,4 @@
-import { ApiResponse, FileProcessingResult } from '@mono-guard/shared-types';
+import { ApiResponse, FileProcessingResult } from '@monoguard/shared-types';
 import { apiClient } from '../client';
 
 export interface UploadProgress {
@@ -45,7 +45,9 @@ export class UploadService {
         }
       );
 
-      return response.data.data;
+      // Ensure we handle the response structure properly
+      console.log('Upload response:', response.data);
+      return response.data.data || response.data;
     } catch (error) {
       console.error('Upload failed:', error);
       throw error;

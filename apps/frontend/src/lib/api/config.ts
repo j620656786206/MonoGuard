@@ -37,6 +37,9 @@ export const API_ENDPOINTS = {
     RESULTS: (id: string) => `/api/v1/analysis/${id}/results`,
     DEPENDENCIES: (id: string) => `/api/v1/analysis/${id}/dependencies`,
     ARCHITECTURE: (id: string) => `/api/v1/analysis/${id}/architecture`,
+    UPLOAD: '/api/v1/analysis/upload',
+    COMPREHENSIVE: (uploadId: string) => `/api/v1/analysis/comprehensive/${uploadId}`,
+    PROGRESS: (analysisId: string) => `/api/v1/analysis/${analysisId}/progress`,
   },
 
   // Health

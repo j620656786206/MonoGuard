@@ -112,9 +112,10 @@ class ApiClient {
    */
   private createApiError(error: AxiosError): ApiError {
     const response = error.response;
-    const message = response?.data?.message || error.message || 'An error occurred';
+    const responseData = response?.data as any;
+    const message = responseData?.message || error.message || 'An error occurred';
     const status = response?.status;
-    const code = response?.data?.code;
+    const code = responseData?.code;
     
     return new ApiError(message, status, code, response?.data);
   }

@@ -67,7 +67,15 @@ export class ProjectsService {
     }
 
     const url = `${API_ENDPOINTS.PROJECTS.LIST}?${queryParams.toString()}`;
-    return apiClient.get<Project[]>(url);
+    return {
+      ...await apiClient.get<Project[]>(url),
+      pagination: {
+        page: 1,
+        limit: 10,
+        total: 0,
+        totalPages: 1
+      }
+    };
   }
 
   /**

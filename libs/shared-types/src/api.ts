@@ -93,10 +93,3 @@ export interface PackageJsonFile {
   devDependencies?: Record<string, string>;
 }
 
-export interface FileProcessingResult {
-  id: string;
-  files: UploadedFile[];
-  packageJsonFiles: PackageJsonFile[];
-  processedAt: string;
-  errors?: string[];
-}
