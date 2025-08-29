@@ -243,10 +243,12 @@ import {
   Filter
 } from "lucide-react";
 
+import { API_CONFIG, API_ENDPOINTS } from '@/lib/api/config';
+
 // API client function
 const fetchDashboardData = async () => {
   try {
-    const response = await fetch('http://localhost:8080/api/v1/projects');
+    const response = await fetch(`${API_CONFIG.BASE_URL}${API_ENDPOINTS.PROJECTS.LIST}`);
     const data = await response.json();
     
     if (data.success && data.data.length > 0) {
