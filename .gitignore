@@ -63,3 +63,12 @@ Thumbs.db
 go.work
 vendor/
 bin/
+apps/api/server
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Upload files
+apps/api/uploads/
