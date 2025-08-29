@@ -8,6 +8,7 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata = {
   title: 'MonoGuard - Comprehensive Monorepo Architecture Analysis',
   description: 'Comprehensive monorepo architecture analysis and validation tool for modern development teams',
+  // Updated to use Railway API backend
   keywords: ['monorepo', 'architecture', 'dependency-analysis', 'typescript', 'nextjs'],
   authors: [{ name: 'MonoGuard Team' }],
   creator: 'MonoGuard Team',
