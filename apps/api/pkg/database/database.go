@@ -81,6 +81,9 @@ func (db *DB) AutoMigrate() error {
 		&models.DependencyAnalysis{},
 		&models.ArchitectureValidation{},
 		&models.HealthScore{},
+		&models.UploadedFile{},
+		&models.FileProcessingResult{},
+		&models.PackageJsonFile{},
 	)
 	if err != nil {
 		return fmt.Errorf("failed to run migrations: %w", err)

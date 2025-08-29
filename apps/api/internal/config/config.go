@@ -17,6 +17,7 @@ type Config struct {
 	Redis    RedisConfig    `validate:"required"`
 	App      AppConfig      `validate:"required"`
 	Auth     AuthConfig     `validate:"required"`
+	Upload   UploadConfig   `validate:"required"`
 }
 
 // ServerConfig holds server configuration
@@ -63,6 +64,12 @@ type AuthConfig struct {
 	TokenDuration int    `validate:"required,min=1"`
 }
 
+// UploadConfig holds file upload configuration
+type UploadConfig struct {
+	Directory string `validate:"required"`
+	MaxSize   int64  `validate:"min=1"`
+}
+
 // Load loads configuration from environment variables
 func Load() (*Config, error) {
 	// Load .env file if it exists
@@ -102,6 +109,10 @@ func Load() (*Config, error) {
 		Auth: AuthConfig{
 			JWTSecret:     getEnvString("JWT_SECRET", generateDefaultSecret()),
 			TokenDuration: getEnvInt("JWT_DURATION_HOURS", 24),
+		},
+		Upload: UploadConfig{
+			Directory: getEnvString("UPLOAD_DIR", "./uploads"),
+			MaxSize:   int64(getEnvInt("UPLOAD_MAX_SIZE_MB", 50)) * 1024 * 1024, // Convert MB to bytes
 		},
 	}
 

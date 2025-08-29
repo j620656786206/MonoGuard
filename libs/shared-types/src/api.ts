@@ -65,3 +65,38 @@ export interface ApiEndpoint {
   authenticated?: boolean;
   roles?: string[];
 }
+
+// File Upload Types
+export interface UploadedFile {
+  id: string;
+  originalName: string;
+  fileName: string;
+  fileSize: number;
+  mimeType: string;
+  filePath: string;
+  uploadedAt: string;
+  status: 'uploaded' | 'processing' | 'completed' | 'error';
+}
+
+export interface FileUploadResponse {
+  files: UploadedFile[];
+  totalFiles: number;
+  totalSize: number;
+}
+
+export interface PackageJsonFile {
+  path: string;
+  content: Record<string, any>;
+  name?: string;
+  version?: string;
+  dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
+}
+
+export interface FileProcessingResult {
+  id: string;
+  files: UploadedFile[];
+  packageJsonFiles: PackageJsonFile[];
+  processedAt: string;
+  errors?: string[];
+}
