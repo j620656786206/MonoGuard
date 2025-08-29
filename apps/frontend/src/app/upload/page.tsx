@@ -59,16 +59,21 @@ export default function UploadPage() {
   }, []);
 
   const handleAnalyzeDependencies = useCallback(async () => {
-    if (!uploadResult) return;
+    if (!uploadResult || !uploadResult.uploadId) return;
     
     setCurrentStep('analyze');
     setAnalysisError(null);
     
     try {
       // Start comprehensive analysis
-      const response = await AnalysisService.startComprehensiveAnalysis(uploadResult.uploadId.toString());
+      const uploadId = uploadResult.uploadId.toString();
+      const response = await AnalysisService.startComprehensiveAnalysis(uploadId);
       
       // Poll for completion
+      if (!response.data.id) {
+        throw new Error('Invalid response: missing analysis ID');
+      }
+      
       const completedAnalysis = await AnalysisService.pollAnalysisCompletion(response.data.id.toString());
       
       setAnalysisResult(completedAnalysis);
