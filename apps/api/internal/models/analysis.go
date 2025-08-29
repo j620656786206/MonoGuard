@@ -14,8 +14,8 @@ type DependencyAnalysis struct {
 	Status      Status                      `json:"status" gorm:"not null;default:'pending'"`
 	StartedAt   time.Time                   `json:"startedAt" gorm:"column:started_at"`
 	CompletedAt *time.Time                  `json:"completedAt,omitempty" gorm:"column:completed_at"`
-	Results     *DependencyAnalysisResults  `json:"results" gorm:"type:jsonb;serializer:json"`
-	Metadata    *AnalysisMetadata           `json:"metadata" gorm:"type:jsonb;serializer:json"`
+	Results     *DependencyAnalysisResults  `json:"results" gorm:"type:jsonb"`
+	Metadata    *AnalysisMetadata           `json:"metadata" gorm:"type:jsonb"`
 	CreatedAt   time.Time                   `json:"createdAt" gorm:"column:created_at"`
 	UpdatedAt   time.Time                   `json:"updatedAt" gorm:"column:updated_at"`
 
