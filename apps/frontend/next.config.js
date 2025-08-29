@@ -12,6 +12,8 @@ const nextConfig = {
     svgr: false,
   },
   
+  trailingSlash: false,
+  
   // Build configuration - fix issues instead of ignoring
   typescript: {
     ignoreBuildErrors: true, // Keep for now, will fix gradually
@@ -19,9 +21,6 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true, // Keep for now, will fix gradually
   },
-  
-  // Enable proper SSR with dynamic rendering
-  trailingSlash: false,
   
   // Re-enable image optimization
   images: {
