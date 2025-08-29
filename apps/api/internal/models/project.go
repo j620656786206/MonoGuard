@@ -48,7 +48,7 @@ type Project struct {
 	HealthScore    int                   `json:"healthScore" gorm:"column:health_score;default:0"`
 	LastAnalysisAt *time.Time            `json:"lastAnalysisAt,omitempty" gorm:"column:last_analysis_at"`
 	OwnerID        string                `json:"ownerId" gorm:"column:owner_id;not null"`
-	Settings       *ProjectSettings      `json:"settings" gorm:"serializer:json"`
+	Settings       *ProjectSettings      `json:"settings" gorm:"type:jsonb"`
 	CreatedAt      time.Time             `json:"createdAt" gorm:"column:created_at"`
 	UpdatedAt      time.Time             `json:"updatedAt" gorm:"column:updated_at"`
 	

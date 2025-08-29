@@ -185,9 +185,9 @@ export default function UploadPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <button 
               onClick={handleAnalyzeDependencies}
-              disabled={!uploadResult || currentStep !== 'upload'}
+              disabled={!uploadResult || !uploadResult.uploadId || currentStep !== 'upload'}
               className={`text-left p-4 bg-white rounded-lg border transition-all ${
-                !uploadResult || currentStep !== 'upload'
+                !uploadResult || !uploadResult.uploadId || currentStep !== 'upload'
                   ? 'border-gray-200 text-gray-400 cursor-not-allowed'
                   : 'border-gray-200 hover:border-blue-300 hover:shadow-sm'
               }`}
@@ -209,9 +209,9 @@ export default function UploadPage() {
             
             <button 
               onClick={handleCheckArchitecture}
-              disabled={!uploadResult || currentStep !== 'upload'}
+              disabled={!uploadResult || !uploadResult.uploadId || currentStep !== 'upload'}
               className={`text-left p-4 bg-white rounded-lg border transition-all ${
-                !uploadResult || currentStep !== 'upload'
+                !uploadResult || !uploadResult.uploadId || currentStep !== 'upload'
                   ? 'border-gray-200 text-gray-400 cursor-not-allowed'
                   : 'border-gray-200 hover:border-blue-300 hover:shadow-sm'
               }`}
