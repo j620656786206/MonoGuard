@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { FileProcessingResult } from '@mono-guard/shared-types';
+import { FileProcessingResult } from '@monoguard/shared-types';
 import { UploadService, UploadProgress } from '@/lib/api/services/upload';
 
 export interface UseFileUploadState {
@@ -62,7 +62,7 @@ export const useFileUpload = (): UseFileUploadReturn => {
         isUploading: false,
         result,
         progress: null,
-        errors: result.errors || [],
+        errors: [],
       }));
 
     } catch (error: any) {

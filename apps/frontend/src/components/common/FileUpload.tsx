@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef, ChangeEvent } from 'react';
-import { FileProcessingResult } from '@mono-guard/shared-types';
+import { FileProcessingResult } from '@monoguard/shared-types';
 import { useFileUpload } from '@/hooks/api/useFileUpload';
 import { useDragAndDrop } from '@/hooks/ui/useDragAndDrop';
 import { cn } from '@/lib/utils';
@@ -89,13 +89,13 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     if (result && !isUploading) {
       onUploadComplete?.(result);
     }
-  }, [result, isUploading, onUploadComplete]);
+  }, [result, isUploading]);
 
   React.useEffect(() => {
     if (errors.length > 0 && !isUploading) {
       onUploadError?.(errors);
     }
-  }, [errors, isUploading, onUploadError]);
+  }, [errors, isUploading]);
 
   const acceptString = accept.join(',');
   
@@ -290,7 +290,7 @@ const UploadResults: React.FC<UploadResultsProps> = ({ result, onReset }) => (
         <div className="mt-3">
           <p className="text-amber-700 font-medium mb-1">Warnings:</p>
           <ul className="text-amber-600 text-xs space-y-1">
-            {result.errors.map((error, index) => (
+            {result.errors.map((error: any, index: number) => (
               <li key={index}>• {error}</li>
             ))}
           </ul>
