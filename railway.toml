@@ -1,6 +1,7 @@
 [build]
 builder = "dockerfile"
-dockerfilePath = "apps/api/Dockerfile"
+dockerfilePath = "Dockerfile"
+watchPaths = ["apps/api/**"]
 
 [deploy]
 startCommand = "./main"

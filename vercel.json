@@ -3,6 +3,6 @@
   "outputDirectory": "apps/frontend/.next",
   "installCommand": "pnpm install --frozen-lockfile",
   "env": {
-    "NEXT_PUBLIC_API_URL": "https://monoguard-api.up.railway.app"
+    "NEXT_PUBLIC_API_URL": "https://monoguard-production.up.railway.app"
   }
 }
