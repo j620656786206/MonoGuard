@@ -122,13 +122,24 @@ func (a *App) setupServer() {
 	circularDetectorService := services.NewCircularDetectorService(projectRepo, analysisRepo, a.logger)
 	layerValidatorService := services.NewLayerValidatorService(projectRepo, analysisRepo, a.logger)
 	uploadService := services.NewUploadService(a.db, a.logger)
+	basicEngine := services.NewBasicAnalysisEngine(a.logger)
+	integratedAnalysis := services.NewIntegratedAnalysisService(
+		basicEngine,
+		circularDetectorService,
+		layerValidatorService,
+		uploadService,
+		projectRepo,
+		analysisRepo,
+		a.logger,
+	)
 
 	// Initialize handlers
 	projectHandler := handlers.NewProjectHandler(projectService, a.logger)
-	analysisHandler := handlers.NewAnalysisHandler(analysisRepo, a.logger)
+	analysisHandler := handlers.NewAnalysisHandler(analysisRepo, integratedAnalysis, a.logger)
 	circularHandler := handlers.NewCircularHandler(circularDetectorService, a.logger)
 	architectureHandler := handlers.NewArchitectureHandler(layerValidatorService, a.logger)
 	uploadHandler := handlers.NewUploadHandler(uploadService, a.logger, a.config.Upload.Directory)
+	githubHandler := handlers.NewGitHubHandler(integratedAnalysis, uploadService, a.logger)
 
 	// API routes
 	v1 := router.Group("/api/v1")
@@ -167,6 +178,9 @@ func (a *App) setupServer() {
 		{
 			analysis.GET("/dependencies/:id", analysisHandler.GetDependencyAnalysis)
 			analysis.GET("/architecture/:id", analysisHandler.GetArchitectureValidation)
+			analysis.POST("/comprehensive/:uploadId", analysisHandler.StartComprehensiveAnalysis)
+			analysis.POST("/upload", analysisHandler.AnalyzeUploadedFiles)
+			analysis.POST("/github", githubHandler.AnalyzeGitHubRepository)
 		}
 
 		// Upload routes

@@ -5,20 +5,23 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/monoguard/api/internal/repository"
+	"github.com/monoguard/api/internal/services"
 	"github.com/sirupsen/logrus"
 )
 
 // AnalysisHandler handles analysis-related HTTP requests
 type AnalysisHandler struct {
-	analysisRepo *repository.AnalysisRepository
-	logger       *logrus.Logger
+	analysisRepo          *repository.AnalysisRepository
+	integratedAnalysis    *services.IntegratedAnalysisService
+	logger                *logrus.Logger
 }
 
 // NewAnalysisHandler creates a new analysis handler
-func NewAnalysisHandler(analysisRepo *repository.AnalysisRepository, logger *logrus.Logger) *AnalysisHandler {
+func NewAnalysisHandler(analysisRepo *repository.AnalysisRepository, integratedAnalysis *services.IntegratedAnalysisService, logger *logrus.Logger) *AnalysisHandler {
 	return &AnalysisHandler{
-		analysisRepo: analysisRepo,
-		logger:       logger,
+		analysisRepo:       analysisRepo,
+		integratedAnalysis: integratedAnalysis,
+		logger:             logger,
 	}
 }
 
@@ -129,6 +132,126 @@ func (h *AnalysisHandler) GetLatestHealthScore(c *gin.Context) {
 	}
 
 	Success(c, healthScore, "Latest health score retrieved successfully")
+}
+
+// AnalyzeUploadRequest represents the request body for analyzing uploaded files
+type AnalyzeUploadRequest struct {
+	ProcessingResultID  string `json:"processing_result_id" binding:"required"`
+	IncludeCircular     bool   `json:"include_circular"`
+	IncludeArchitecture bool   `json:"include_architecture"`
+	SeverityThreshold   string `json:"severity_threshold"`
+	ConfigPath          string `json:"config_path"`
+}
+
+// StartComprehensiveAnalysis triggers comprehensive analysis on uploaded files by processing result ID
+// @Summary Start comprehensive analysis
+// @Description Triggers comprehensive dependency analysis on uploaded files
+// @Tags analysis
+// @Accept json
+// @Produce json
+// @Param uploadId path string true "Processing Result ID"
+// @Success 202 {object} Response{data=models.DependencyAnalysis}
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /api/v1/analysis/comprehensive/{uploadId} [post]
+func (h *AnalysisHandler) StartComprehensiveAnalysis(c *gin.Context) {
+	uploadId := c.Param("uploadId")
+	if uploadId == "" {
+		BadRequest(c, "Upload ID is required", nil)
+		return
+	}
+
+	h.logger.WithFields(logrus.Fields{
+		"upload_id": uploadId,
+	}).Info("Starting comprehensive analysis")
+
+	// Use default analysis options
+	options := services.AnalysisOptions{
+		IncludeCircular:     true,
+		IncludeArchitecture: true,
+		SeverityThreshold:   "warning",
+	}
+
+	// Start analysis (this is async but we return immediately)
+	analysis, err := h.integratedAnalysis.AnalyzeProcessingResult(
+		c.Request.Context(),
+		uploadId,
+		options,
+	)
+	if err != nil {
+		h.logger.WithError(err).Error("Failed to start comprehensive analysis")
+		InternalError(c, "Failed to start analysis")
+		return
+	}
+
+	// Return 202 Accepted with analysis ID
+	c.JSON(202, gin.H{
+		"success": true,
+		"message": "Analysis started successfully",
+		"data": gin.H{
+			"id": analysis.ID,
+		},
+	})
+}
+
+// AnalyzeUploadedFiles triggers comprehensive analysis on uploaded files
+// @Summary Analyze uploaded files
+// @Description Triggers comprehensive dependency analysis on uploaded files
+// @Tags analysis
+// @Accept json
+// @Produce json
+// @Param request body AnalyzeUploadRequest true "Analysis request"
+// @Success 202 {object} Response{data=models.DependencyAnalysis}
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /api/v1/analysis/upload [post]
+func (h *AnalysisHandler) AnalyzeUploadedFiles(c *gin.Context) {
+	var req AnalyzeUploadRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		h.logger.WithError(err).Warning("Invalid request body")
+		BadRequest(c, "Invalid request body", err.Error())
+		return
+	}
+
+	// Set defaults
+	if req.SeverityThreshold == "" {
+		req.SeverityThreshold = "warning"
+	}
+
+	h.logger.WithFields(logrus.Fields{
+		"processing_result_id": req.ProcessingResultID,
+		"include_circular":     req.IncludeCircular,
+		"include_architecture": req.IncludeArchitecture,
+		"severity_threshold":   req.SeverityThreshold,
+	}).Info("Starting analysis of uploaded files")
+
+	// Convert to analysis options
+	options := services.AnalysisOptions{
+		IncludeCircular:     req.IncludeCircular,
+		IncludeArchitecture: req.IncludeArchitecture,
+		SeverityThreshold:   req.SeverityThreshold,
+		ConfigPath:          req.ConfigPath,
+	}
+
+	// Start analysis (this is async but we return immediately)
+	analysis, err := h.integratedAnalysis.AnalyzeProcessingResult(
+		c.Request.Context(),
+		req.ProcessingResultID,
+		options,
+	)
+	if err != nil {
+		h.logger.WithError(err).Error("Failed to analyze uploaded files")
+		InternalError(c, "Failed to start analysis")
+		return
+	}
+
+	// Return 202 Accepted with analysis ID
+	c.JSON(202, gin.H{
+		"success": true,
+		"message": "Analysis started successfully",
+		"data":    analysis,
+	})
 }
 
 // parseQueryParams parses common query parameters for analysis endpoints

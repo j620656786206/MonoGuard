@@ -3,7 +3,10 @@ package handlers
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -61,7 +64,7 @@ func (h *UploadHandler) UploadFiles(c *gin.Context) {
 		return
 	}
 
-	Success(c, result, fmt.Sprintf("Successfully uploaded %d files", len(result.Files)))
+	Success(c, result.ToResponse(), fmt.Sprintf("Successfully uploaded %d files", len(result.Files)))
 }
 
 // GetUploadResult retrieves an upload result by ID
@@ -88,7 +91,7 @@ func (h *UploadHandler) GetUploadResult(c *gin.Context) {
 		return
 	}
 
-	Success(c, result, "")
+	Success(c, result.ToResponse(), "")
 }
 
 // GetUploadedFile serves an uploaded file
@@ -107,10 +110,27 @@ func (h *UploadHandler) GetUploadedFile(c *gin.Context) {
 		return
 	}
 
-	filePath := filepath.Join(h.uploadDir, filename)
+	// Security check - clean the file path and ensure it's within upload directory
+	cleanedFilename := filepath.Clean(filename)
+	if strings.Contains(cleanedFilename, "..") || filepath.IsAbs(cleanedFilename) {
+		BadRequest(c, "Invalid file path", nil)
+		return
+	}
 	
-	// Security check - ensure file is within upload directory
-	if !filepath.HasPrefix(filePath, h.uploadDir) {
+	filePath := filepath.Join(h.uploadDir, cleanedFilename)
+	uploadDirAbs, err := filepath.Abs(h.uploadDir)
+	if err != nil {
+		InternalError(c, "Failed to resolve upload directory")
+		return
+	}
+	
+	filePathAbs, err := filepath.Abs(filePath)
+	if err != nil {
+		BadRequest(c, "Invalid file path", nil)
+		return
+	}
+	
+	if !strings.HasPrefix(filePathAbs, uploadDirAbs+string(os.PathSeparator)) {
 		BadRequest(c, "Invalid file path", nil)
 		return
 	}
@@ -130,8 +150,8 @@ func (h *UploadHandler) GetUploadedFile(c *gin.Context) {
 func (h *UploadHandler) CleanupOldFiles(c *gin.Context) {
 	days := 7 // default
 	if daysParam := c.Query("days"); daysParam != "" {
-		if parsedDays, err := time.ParseDuration(daysParam + "d"); err == nil {
-			days = int(parsedDays.Hours() / 24)
+		if parsedDays, err := strconv.Atoi(daysParam); err == nil && parsedDays > 0 {
+			days = parsedDays
 		}
 	}
 
