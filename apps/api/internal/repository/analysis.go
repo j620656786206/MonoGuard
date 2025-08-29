@@ -98,6 +98,14 @@ func (r *AnalysisRepository) UpdateDependencyAnalysis(ctx context.Context, id st
 	return nil
 }
 
+// SaveDependencyAnalysis saves a dependency analysis using GORM Save method
+func (r *AnalysisRepository) SaveDependencyAnalysis(ctx context.Context, analysis *models.DependencyAnalysis) error {
+	if err := r.db.WithContext(ctx).Save(analysis).Error; err != nil {
+		return fmt.Errorf("failed to save dependency analysis: %w", err)
+	}
+	return nil
+}
+
 // GetLatestDependencyAnalysis gets the latest dependency analysis for a project
 func (r *AnalysisRepository) GetLatestDependencyAnalysis(ctx context.Context, projectID string) (*models.DependencyAnalysis, error) {
 	var analysis models.DependencyAnalysis

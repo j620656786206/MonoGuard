@@ -14,8 +14,8 @@ type DependencyAnalysis struct {
 	Status      Status                      `json:"status" gorm:"not null;default:'pending'"`
 	StartedAt   time.Time                   `json:"startedAt" gorm:"column:started_at"`
 	CompletedAt *time.Time                  `json:"completedAt,omitempty" gorm:"column:completed_at"`
-	Results     *DependencyAnalysisResults  `json:"results" gorm:"type:jsonb"`
-	Metadata    *AnalysisMetadata           `json:"metadata" gorm:"type:jsonb"`
+	Results     *DependencyAnalysisResults  `json:"results" gorm:"serializer:json"`
+	Metadata    *AnalysisMetadata           `json:"metadata" gorm:"serializer:json"`
 	CreatedAt   time.Time                   `json:"createdAt" gorm:"column:created_at"`
 	UpdatedAt   time.Time                   `json:"updatedAt" gorm:"column:updated_at"`
 
@@ -112,8 +112,8 @@ type ArchitectureValidation struct {
 	Status      Status                          `json:"status" gorm:"not null;default:'pending'"`
 	StartedAt   time.Time                       `json:"startedAt" gorm:"column:started_at"`
 	CompletedAt *time.Time                      `json:"completedAt,omitempty" gorm:"column:completed_at"`
-	Results     *ArchitectureValidationResults  `json:"results" gorm:"type:jsonb;serializer:json"`
-	Metadata    *AnalysisMetadata               `json:"metadata" gorm:"type:jsonb;serializer:json"`
+	Results     *ArchitectureValidationResults  `json:"results" gorm:"serializer:json"`
+	Metadata    *AnalysisMetadata               `json:"metadata" gorm:"serializer:json"`
 	CreatedAt   time.Time                       `json:"createdAt" gorm:"column:created_at"`
 	UpdatedAt   time.Time                       `json:"updatedAt" gorm:"column:updated_at"`
 
@@ -189,7 +189,7 @@ type HealthScore struct {
 	Performance    float64         `json:"performance"`
 	LastUpdated    time.Time       `json:"lastUpdated" gorm:"column:last_updated"`
 	Trend          string          `json:"trend"` // "improving", "stable", "declining"
-	Factors        []HealthFactor  `json:"factors" gorm:"type:jsonb;serializer:json"`
+	Factors        []HealthFactor  `json:"factors" gorm:"serializer:json"`
 	CreatedAt      time.Time       `json:"createdAt" gorm:"column:created_at"`
 	UpdatedAt      time.Time       `json:"updatedAt" gorm:"column:updated_at"`
 
@@ -257,9 +257,9 @@ type PackageJSONAnalysis struct {
 	Status          Status                    `json:"status" gorm:"not null;default:'pending'"`
 	StartedAt       time.Time                 `json:"startedAt" gorm:"column:started_at"`
 	CompletedAt     *time.Time                `json:"completedAt,omitempty" gorm:"column:completed_at"`
-	Results         *PackageJSONAnalysisResults `json:"results" gorm:"type:jsonb;serializer:json"`
-	WorkspaceConfig *WorkspaceAnalysisResults `json:"workspaceConfig" gorm:"type:jsonb;serializer:json"`
-	Metadata        *AnalysisMetadata         `json:"metadata" gorm:"type:jsonb;serializer:json"`
+	Results         *PackageJSONAnalysisResults `json:"results" gorm:"serializer:json"`
+	WorkspaceConfig *WorkspaceAnalysisResults `json:"workspaceConfig" gorm:"serializer:json"`
+	Metadata        *AnalysisMetadata         `json:"metadata" gorm:"serializer:json"`
 	CreatedAt       time.Time                 `json:"createdAt" gorm:"column:created_at"`
 	UpdatedAt       time.Time                 `json:"updatedAt" gorm:"column:updated_at"`
 

@@ -1,6 +1,7 @@
 package models
 
 import (
+	"encoding/json"
 	"time"
 
 	"gorm.io/gorm"
@@ -67,6 +68,102 @@ func (UploadedFile) TableName() string {
 // TableName overrides the table name for FileProcessingResult
 func (FileProcessingResult) TableName() string {
 	return "file_processing_results"
+}
+
+// PackageJsonFileResponse is used for API responses with proper JSON structure
+type PackageJsonFileResponse struct {
+	ID                   string                 `json:"id"`
+	ProcessingResultID   string                 `json:"processingResultId"`
+	Path                 string                 `json:"path"`
+	Content              map[string]interface{} `json:"content"`
+	Name                 *string                `json:"name,omitempty"`
+	Version              *string                `json:"version,omitempty"`
+	Dependencies         map[string]string      `json:"dependencies,omitempty"`
+	DevDependencies      map[string]string      `json:"devDependencies,omitempty"`
+	CreatedAt            time.Time              `json:"createdAt"`
+	UpdatedAt            time.Time              `json:"updatedAt"`
+}
+
+// ToResponse converts PackageJsonFile to response format with parsed JSON fields
+func (p PackageJsonFile) ToResponse() PackageJsonFileResponse {
+	response := PackageJsonFileResponse{
+		ID:                 p.ID,
+		ProcessingResultID: p.ProcessingResultID,
+		Path:               p.Path,
+		Name:               p.Name,
+		Version:            p.Version,
+		CreatedAt:          p.CreatedAt,
+		UpdatedAt:          p.UpdatedAt,
+		Dependencies:       make(map[string]string),
+		DevDependencies:    make(map[string]string),
+	}
+
+	// Parse content JSON
+	if p.Content != "" {
+		var content map[string]interface{}
+		if err := json.Unmarshal([]byte(p.Content), &content); err == nil {
+			response.Content = content
+		}
+	}
+
+	// Parse dependencies JSON
+	if p.Dependencies != "" {
+		var deps map[string]string
+		if err := json.Unmarshal([]byte(p.Dependencies), &deps); err == nil {
+			response.Dependencies = deps
+		}
+	}
+
+	// Parse devDependencies JSON
+	if p.DevDependencies != "" {
+		var devDeps map[string]string
+		if err := json.Unmarshal([]byte(p.DevDependencies), &devDeps); err == nil {
+			response.DevDependencies = devDeps
+		}
+	}
+
+	return response
+}
+
+// FileProcessingResultResponse is used for API responses with properly converted PackageJsonFiles
+type FileProcessingResultResponse struct {
+	ID               string                     `json:"id"`
+	Files            []UploadedFile             `json:"files"`
+	PackageJsonFiles []PackageJsonFileResponse  `json:"packageJsonFiles"`
+	ProcessedAt      time.Time                  `json:"processedAt"`
+	Errors           []string                   `json:"errors,omitempty"`
+	CreatedAt        time.Time                  `json:"createdAt"`
+	UpdatedAt        time.Time                  `json:"updatedAt"`
+}
+
+// ToResponse converts FileProcessingResult to response format
+func (f FileProcessingResult) ToResponse() FileProcessingResultResponse {
+	response := FileProcessingResultResponse{
+		ID:          f.ID,
+		Files:       f.Files,
+		ProcessedAt: f.ProcessedAt,
+		CreatedAt:   f.CreatedAt,
+		UpdatedAt:   f.UpdatedAt,
+	}
+
+	// Convert PackageJsonFiles to response format
+	response.PackageJsonFiles = make([]PackageJsonFileResponse, len(f.PackageJsonFiles))
+	for i, pkg := range f.PackageJsonFiles {
+		response.PackageJsonFiles[i] = pkg.ToResponse()
+	}
+
+	// Parse errors string to array if not empty
+	if f.Errors != "" {
+		var errors []string
+		if err := json.Unmarshal([]byte(f.Errors), &errors); err == nil {
+			response.Errors = errors
+		} else {
+			// If it's not JSON, treat as single error
+			response.Errors = []string{f.Errors}
+		}
+	}
+
+	return response
 }
 
 // TableName overrides the table name for PackageJsonFile

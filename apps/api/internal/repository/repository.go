@@ -41,6 +41,7 @@ type AnalysisRepositoryInterface interface {
 	GetDependencyAnalysisByID(ctx context.Context, id string) (*models.DependencyAnalysis, error)
 	GetDependencyAnalysesByProjectID(ctx context.Context, projectID string, params *QueryParams) ([]*models.DependencyAnalysis, int64, error)
 	UpdateDependencyAnalysis(ctx context.Context, id string, updates map[string]interface{}) error
+	SaveDependencyAnalysis(ctx context.Context, analysis *models.DependencyAnalysis) error
 	GetLatestDependencyAnalysis(ctx context.Context, projectID string) (*models.DependencyAnalysis, error)
 	CreateArchitectureValidation(ctx context.Context, validation *models.ArchitectureValidation) error
 	UpdateArchitectureValidation(ctx context.Context, validation *models.ArchitectureValidation) error
