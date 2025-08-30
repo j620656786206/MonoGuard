@@ -1,10 +1,12 @@
 package models
 
 import (
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"github.com/monoguard/api/internal/constants"
 )
 
 // Status represents the status of an entity
@@ -106,33 +108,45 @@ func (p *Project) BeforeCreate(tx *gorm.DB) error {
 		return nil
 	}
 	
-	// Primary safeguard: Check if hooks are explicitly disabled
+	// Ultra-safe approach: ONLY generate UUID if we're absolutely sure it's a real record creation
+	// First line of defense: Check if hooks are explicitly disabled
 	if tx.Statement != nil && tx.Statement.SkipHooks {
 		return nil
 	}
 	
-	// Secondary safeguard: Check for migration-like contexts
-	stmt := tx.Statement
-	if stmt != nil {
-		// Skip if we don't have proper variables set (indicates inspection query)
-		if stmt.Schema != nil && len(stmt.Vars) == 0 {
-			return nil
-		}
-		
-		// Skip if this appears to be a migration context
-		if stmt.Context != nil && stmt.Context.Value("gorm:auto_migrate") != nil {
-			return nil
-		}
-		
-		// Additional safety: Skip if SQL contains SELECT with LIMIT (inspection pattern)
-		sql := stmt.SQL.String()
-		if sql != "" && stmt.SQL.Len() > 0 {
-			// This is likely an inspection query during migration
-			return nil
-		}
+	// Second line of defense: Check global migration mode
+	if constants.IsMigrationMode() {
+		return nil
 	}
 	
-	// Generate UUID only for legitimate record creation
+	// Third line of defense: Multiple migration context checks
+	stmt := tx.Statement
+	if stmt != nil {
+		// Skip if this is any kind of migration context
+		if stmt.Context != nil {
+			if stmt.Context.Value("gorm:auto_migrate") != nil ||
+			   stmt.Context.Value("migration") != nil ||
+			   stmt.Context.Value("gorm:migration") != nil {
+				return nil
+			}
+		}
+		
+		// Skip if SQL is a SELECT query (inspection queries during migration)
+		sql := stmt.SQL.String()
+		if sql != "" && (
+			strings.Contains(strings.ToUpper(sql), "SELECT") ||
+			strings.Contains(strings.ToUpper(sql), "PRAGMA") ||
+			strings.Contains(strings.ToUpper(sql), "SHOW") ||
+			strings.Contains(strings.ToUpper(sql), "DESCRIBE") ||
+			strings.Contains(strings.ToUpper(sql), "INFORMATION_SCHEMA")) {
+			return nil
+		}
+	} else {
+		// If no statement context, it's likely a migration
+		return nil
+	}
+	
+	// Only generate UUID for confirmed legitimate record creation with INSERT statement
 	p.ID = uuid.New().String()
 	return nil
 }

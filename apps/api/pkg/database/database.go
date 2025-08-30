@@ -4,10 +4,11 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"sync"
+	"strings"
 	"time"
 
 	"github.com/monoguard/api/internal/config"
+	"github.com/monoguard/api/internal/constants"
 	"github.com/monoguard/api/internal/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
@@ -15,25 +16,6 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-// IsMigrationMode indicates if we're currently in migration mode
-var (
-	isMigrationMode bool
-	migrationMutex  sync.RWMutex
-)
-
-// SetMigrationMode sets the migration mode flag
-func SetMigrationMode(mode bool) {
-	migrationMutex.Lock()
-	defer migrationMutex.Unlock()
-	isMigrationMode = mode
-}
-
-// IsMigrationMode returns the current migration mode status
-func IsMigrationMode() bool {
-	migrationMutex.RLock()
-	defer migrationMutex.RUnlock()
-	return isMigrationMode
-}
 
 // DB holds the database connection
 type DB struct {
@@ -108,8 +90,8 @@ func (db *DB) AutoMigrate() error {
 	log.Println("Running database migrations...")
 	
 	// Set migration mode to disable hooks globally
-	SetMigrationMode(true)
-	defer SetMigrationMode(false)
+	constants.SetMigrationMode(true)
+	defer constants.SetMigrationMode(false)
 	
 	// Test database connection first
 	sqlDB, err := db.DB.DB()
@@ -122,10 +104,6 @@ func (db *DB) AutoMigrate() error {
 	}
 	log.Println("Database connection verified")
 
-	// Create a migration session without hooks for extra safety
-	migrationDB := db.DB.Session(&gorm.Session{
-		SkipHooks: true,
-	})
 
 	// Migrate models one by one to identify problematic model
 	models := []interface{}{
@@ -143,8 +121,33 @@ func (db *DB) AutoMigrate() error {
 		modelName := fmt.Sprintf("%T", model)
 		log.Printf("Migrating model %d/%d: %s", i+1, len(models), modelName)
 		
-		if err := migrationDB.AutoMigrate(model); err != nil {
+		// Add extra safety for each model migration
+		if err := func() error {
+			defer func() {
+				if r := recover(); r != nil {
+					log.Printf("Recovered from panic during migration of %s: %v", modelName, r)
+				}
+			}()
+			
+			// Use a fresh session for each model to avoid any cross-contamination
+			freshSession := db.DB.Session(&gorm.Session{
+				SkipHooks:   true,
+				DryRun:      false,
+				PrepareStmt: false,
+				NewDB:       true,
+				Logger:      logger.Default.LogMode(logger.Error),
+			})
+			
+			return freshSession.AutoMigrate(model)
+		}(); err != nil {
 			log.Printf("Migration error for %s: %v", modelName, err)
+			
+			// Try to provide more specific error information
+			if strings.Contains(err.Error(), "insufficient arguments") {
+				log.Printf("Detected 'insufficient arguments' error - likely BeforeCreate hook interference")
+				log.Printf("This suggests the hook protection mechanisms may need strengthening")
+			}
+			
 			return fmt.Errorf("failed to migrate %s: %w", modelName, err)
 		}
 		log.Printf("Successfully migrated: %s", modelName)
