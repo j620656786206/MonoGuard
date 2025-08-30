@@ -124,16 +124,17 @@ func (db *DB) AutoMigrate() error {
 	log.Println("Database connection verified")
 
 
-	// Migrate models one by one to identify problematic model
+	// Test with simplified model first
 	models := []interface{}{
-		&models.Project{},
-		&models.DependencyAnalysis{},
-		&models.ArchitectureValidation{},
-		&models.HealthScore{},
-		&models.UploadedFile{},
-		&models.FileProcessingResult{},
-		&models.PackageJsonFile{},
-		&models.PackageJSONAnalysis{},
+		&models.ProjectSimple{}, // Testing simplified version first
+		// Comment out other models for now to isolate the problem
+		// &models.DependencyAnalysis{},
+		// &models.ArchitectureValidation{},
+		// &models.HealthScore{},
+		// &models.UploadedFile{},
+		// &models.FileProcessingResult{},
+		// &models.PackageJsonFile{},
+		// &models.PackageJSONAnalysis{},
 	}
 
 	for i, model := range models {
