@@ -69,7 +69,7 @@ type NotificationSettings struct {
 	Email        bool       `json:"email"`
 	Webhook      *string    `json:"webhook,omitempty"`
 	SlackWebhook *string    `json:"slackWebhook,omitempty"`
-	Severity     []Severity `json:"severity"`
+	Severity     []string   `json:"severity"` // Temporarily changed to string slice
 }
 
 // ArchitectureRules contains architecture validation rules
@@ -90,7 +90,7 @@ type ArchitectureLayer struct {
 // ArchitectureRule defines an architectural rule
 type ArchitectureRule struct {
 	Name        string   `json:"name"`
-	Severity    Severity `json:"severity"`
+	Severity    string   `json:"severity"` // Temporarily changed to string
 	Description string   `json:"description"`
 	Pattern     *string  `json:"pattern,omitempty"`
 	Enabled     bool     `json:"enabled"`

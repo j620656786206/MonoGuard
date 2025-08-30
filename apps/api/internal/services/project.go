@@ -66,7 +66,7 @@ func (s *ProjectService) CreateProject(ctx context.Context, req *CreateProjectRe
 			AutoAnalysis: true,
 			NotificationSettings: models.NotificationSettings{
 				Email:    false,
-				Severity: []models.Severity{models.SeverityHigh, models.SeverityCritical},
+				Severity: []string{"high", "critical"}, // Temporarily using string values
 			},
 			ExcludePatterns: []string{"node_modules/**", "dist/**", "build/**"},
 			IncludePatterns: []string{"**/*.json"},
