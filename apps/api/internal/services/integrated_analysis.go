@@ -138,10 +138,10 @@ func (s *IntegratedAnalysisService) getOrCreateProject(processingResult *models.
 		Name:        fmt.Sprintf("Analysis-%s", processingResult.ID[:8]),
 		Description: &description,
 		RepositoryURL: "",
-		Settings: &models.ProjectSettings{
-			ExcludePatterns: []string{"node_modules/**", "dist/**", "build/**"},
-			IncludePatterns: []string{"**/*.json"},
-		},
+		// Settings: &models.ProjectSettings{
+		//	ExcludePatterns: []string{"node_modules/**", "dist/**", "build/**"},
+		//	IncludePatterns: []string{"**/*.json"},
+		// }, // Temporarily commented out
 		Status:    models.StatusInProgress,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),

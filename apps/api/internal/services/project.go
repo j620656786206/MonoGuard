@@ -85,7 +85,7 @@ func (s *ProjectService) CreateProject(ctx context.Context, req *CreateProjectRe
 		Status:        models.StatusPending,
 		HealthScore:   0,
 		OwnerID:       req.OwnerID,
-		Settings:      settings,
+		// Settings:      settings, // Temporarily commented out
 	}
 
 	if err := s.projectRepo.Create(ctx, project); err != nil {
@@ -197,8 +197,8 @@ func (s *ProjectService) TriggerAnalysis(ctx context.Context, projectID string, 
 		"repo_path":  repoPath,
 	}).Info("Triggering dependency analysis")
 
-	// Get project to validate it exists
-	project, err := s.GetProject(ctx, projectID)
+	// Get project to validate it exists - temporarily not using project.Settings
+	_, err := s.GetProject(ctx, projectID)
 	if err != nil {
 		return nil, err
 	}
@@ -213,8 +213,8 @@ func (s *ProjectService) TriggerAnalysis(ctx context.Context, projectID string, 
 			FilesProcessed:   0,
 			PackagesAnalyzed: 0,
 			Configuration:    map[string]interface{}{
-				"excludePatterns": project.Settings.ExcludePatterns,
-				"includePatterns": project.Settings.IncludePatterns,
+				"excludePatterns": []string{}, // project.Settings.ExcludePatterns - temporarily disabled
+				"includePatterns": []string{}, // project.Settings.IncludePatterns - temporarily disabled
 			},
 			Environment: models.AnalysisEnvironment{
 				Platform: "linux",

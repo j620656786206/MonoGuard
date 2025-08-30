@@ -91,8 +91,8 @@ func (s *CircularDetectorService) DetectCircularDependencies(ctx context.Context
 		"repo_path":  repoPath,
 	}).Info("Starting circular dependency detection")
 
-	// Get project
-	project, err := s.projectRepo.GetByID(ctx, projectID)
+	// Get project - temporarily not using project.Settings
+	_, err := s.projectRepo.GetByID(ctx, projectID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get project: %w", err)
 	}
@@ -110,8 +110,8 @@ func (s *CircularDetectorService) DetectCircularDependencies(ctx context.Context
 			PackagesAnalyzed: 0,
 			Configuration: map[string]interface{}{
 				"analysis_type":     "circular_dependencies",
-				"exclude_patterns": project.Settings.ExcludePatterns,
-				"include_patterns": project.Settings.IncludePatterns,
+				"exclude_patterns": []string{}, // project.Settings.ExcludePatterns - temporarily disabled
+				"include_patterns": []string{}, // project.Settings.IncludePatterns - temporarily disabled
 			},
 			Environment: models.AnalysisEnvironment{
 				Platform: "linux",
@@ -125,7 +125,7 @@ func (s *CircularDetectorService) DetectCircularDependencies(ctx context.Context
 	}
 
 	// Build dependency graph
-	graph, err := s.buildDependencyGraph(repoPath, project.Settings.ExcludePatterns)
+	graph, err := s.buildDependencyGraph(repoPath, []string{}) // project.Settings.ExcludePatterns - temporarily disabled
 	if err != nil {
 		s.logger.WithError(err).Error("Failed to build dependency graph")
 		analysis.Status = models.StatusFailed
