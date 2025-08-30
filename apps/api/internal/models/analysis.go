@@ -213,24 +213,23 @@ func (da *DependencyAnalysis) BeforeCreate(tx *gorm.DB) error {
 		return nil
 	}
 	
-	// Check if this is a migration operation
-	stmt := tx.Statement
-	if stmt != nil && stmt.Schema != nil {
-		// Only generate UUID for actual record creation, not migrations
-		if stmt.Schema.Table == "dependency_analyses" {
-			da.ID = uuid.New().String()
-			if da.StartedAt.IsZero() {
-				da.StartedAt = time.Now()
-			}
-		}
-	} else {
-		// Fallback: always generate UUID for direct model creation
-		da.ID = uuid.New().String()
-		if da.StartedAt.IsZero() {
-			da.StartedAt = time.Now()
-		}
+	// Check if hooks are disabled (e.g., during migrations)
+	if tx.SkipHooks {
+		return nil
 	}
 	
+	// Check if this is a migration operation by examining statement context
+	stmt := tx.Statement
+	if stmt != nil && stmt.SQL.String() != "" {
+		// Skip UUID generation during migration queries (SELECT, CREATE TABLE, etc.)
+		return nil
+	}
+	
+	// Generate UUID for actual record creation
+	da.ID = uuid.New().String()
+	if da.StartedAt.IsZero() {
+		da.StartedAt = time.Now()
+	}
 	return nil
 }
 
@@ -240,24 +239,23 @@ func (av *ArchitectureValidation) BeforeCreate(tx *gorm.DB) error {
 		return nil
 	}
 	
-	// Check if this is a migration operation
-	stmt := tx.Statement
-	if stmt != nil && stmt.Schema != nil {
-		// Only generate UUID for actual record creation, not migrations
-		if stmt.Schema.Table == "architecture_validations" {
-			av.ID = uuid.New().String()
-			if av.StartedAt.IsZero() {
-				av.StartedAt = time.Now()
-			}
-		}
-	} else {
-		// Fallback: always generate UUID for direct model creation
-		av.ID = uuid.New().String()
-		if av.StartedAt.IsZero() {
-			av.StartedAt = time.Now()
-		}
+	// Check if hooks are disabled (e.g., during migrations)
+	if tx.SkipHooks {
+		return nil
 	}
 	
+	// Check if this is a migration operation by examining statement context
+	stmt := tx.Statement
+	if stmt != nil && stmt.SQL.String() != "" {
+		// Skip UUID generation during migration queries (SELECT, CREATE TABLE, etc.)
+		return nil
+	}
+	
+	// Generate UUID for actual record creation
+	av.ID = uuid.New().String()
+	if av.StartedAt.IsZero() {
+		av.StartedAt = time.Now()
+	}
 	return nil
 }
 
@@ -267,24 +265,23 @@ func (hs *HealthScore) BeforeCreate(tx *gorm.DB) error {
 		return nil
 	}
 	
-	// Check if this is a migration operation
-	stmt := tx.Statement
-	if stmt != nil && stmt.Schema != nil {
-		// Only generate UUID for actual record creation, not migrations
-		if stmt.Schema.Table == "health_scores" {
-			hs.ID = uuid.New().String()
-			if hs.LastUpdated.IsZero() {
-				hs.LastUpdated = time.Now()
-			}
-		}
-	} else {
-		// Fallback: always generate UUID for direct model creation
-		hs.ID = uuid.New().String()
-		if hs.LastUpdated.IsZero() {
-			hs.LastUpdated = time.Now()
-		}
+	// Check if hooks are disabled (e.g., during migrations)
+	if tx.SkipHooks {
+		return nil
 	}
 	
+	// Check if this is a migration operation by examining statement context
+	stmt := tx.Statement
+	if stmt != nil && stmt.SQL.String() != "" {
+		// Skip UUID generation during migration queries (SELECT, CREATE TABLE, etc.)
+		return nil
+	}
+	
+	// Generate UUID for actual record creation
+	hs.ID = uuid.New().String()
+	if hs.LastUpdated.IsZero() {
+		hs.LastUpdated = time.Now()
+	}
 	return nil
 }
 
@@ -957,24 +954,23 @@ func (pja *PackageJSONAnalysis) BeforeCreate(tx *gorm.DB) error {
 		return nil
 	}
 	
-	// Check if this is a migration operation
-	stmt := tx.Statement
-	if stmt != nil && stmt.Schema != nil {
-		// Only generate UUID for actual record creation, not migrations
-		if stmt.Schema.Table == "package_json_analyses" {
-			pja.ID = uuid.New().String()
-			if pja.StartedAt.IsZero() {
-				pja.StartedAt = time.Now()
-			}
-		}
-	} else {
-		// Fallback: always generate UUID for direct model creation
-		pja.ID = uuid.New().String()
-		if pja.StartedAt.IsZero() {
-			pja.StartedAt = time.Now()
-		}
+	// Check if hooks are disabled (e.g., during migrations)
+	if tx.SkipHooks {
+		return nil
 	}
 	
+	// Check if this is a migration operation by examining statement context
+	stmt := tx.Statement
+	if stmt != nil && stmt.SQL.String() != "" {
+		// Skip UUID generation during migration queries (SELECT, CREATE TABLE, etc.)
+		return nil
+	}
+	
+	// Generate UUID for actual record creation
+	pja.ID = uuid.New().String()
+	if pja.StartedAt.IsZero() {
+		pja.StartedAt = time.Now()
+	}
 	return nil
 }
 
