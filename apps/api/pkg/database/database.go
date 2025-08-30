@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"runtime"
+	"runtime/debug"
 	"strings"
 	"time"
 
@@ -22,8 +24,29 @@ type DB struct {
 	*gorm.DB
 }
 
+// logVersionInfo logs GORM and Go version information for debugging
+func logVersionInfo() {
+	log.Printf("=== VERSION INFORMATION ===")
+	log.Printf("Go Version: %s", runtime.Version())
+	log.Printf("GOOS: %s, GOARCH: %s", runtime.GOOS, runtime.GOARCH)
+	
+	info, ok := debug.ReadBuildInfo()
+	if ok {
+		log.Printf("Main Module: %s", info.Main.Path)
+		for _, mod := range info.Deps {
+			if strings.Contains(mod.Path, "gorm") {
+				log.Printf("GORM Module: %s@%s", mod.Path, mod.Version)
+			}
+		}
+	}
+	log.Printf("=== END VERSION INFO ===")
+}
+
 // New creates a new database connection
 func New(cfg *config.DatabaseConfig) (*DB, error) {
+	// Log version information for debugging
+	logVersionInfo()
+	
 	// Configure GORM logger
 	gormLogger := logger.Default
 	gormLogger = gormLogger.LogMode(logger.Info)
