@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/monoguard/api/internal/config"
-	"github.com/monoguard/api/internal/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -107,10 +106,9 @@ func New(cfg *config.DatabaseConfig) (*DB, error) {
 	return &DB{db}, nil
 }
 
-// AutoMigrate runs database migrations
+// AutoMigrate runs database migrations using native SQL to avoid GORM compatibility issues
 func (db *DB) AutoMigrate() error {
-	log.Println("Running database migrations...")
-	// Note: BeforeCreate hooks have been removed, no longer need hook management
+	log.Println("Running database migrations using native SQL...")
 	
 	// Test database connection first
 	sqlDB, err := db.DB.DB()
@@ -123,58 +121,50 @@ func (db *DB) AutoMigrate() error {
 	}
 	log.Println("Database connection verified")
 
-
-	// Test simplified Project model alongside working ProjectSimple
-	models := []interface{}{
-		&models.ProjectSimple{}, // This works - confirmed successful migration
-		&models.Project{}, // Now simplified to match ProjectSimple structure
-		// Comment out other models for now to isolate the problem
-		// &models.DependencyAnalysis{},
-		// &models.ArchitectureValidation{},
-		// &models.HealthScore{},
-		// &models.UploadedFile{},
-		// &models.FileProcessingResult{},
-		// &models.PackageJsonFile{},
-		// &models.PackageJSONAnalysis{},
+	// Create tables using native SQL to avoid GORM "insufficient arguments" issue
+	tables := []struct {
+		name string
+		sql  string
+	}{
+		{
+			name: "projects_simple",
+			sql: `CREATE TABLE IF NOT EXISTS projects_simple (
+				id VARCHAR(255) PRIMARY KEY,
+				name VARCHAR(255) NOT NULL,
+				description TEXT,
+				created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+				updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+			)`,
+		},
+		{
+			name: "projects", 
+			sql: `CREATE TABLE IF NOT EXISTS projects (
+				id VARCHAR(255) PRIMARY KEY,
+				name VARCHAR(255) NOT NULL,
+				description TEXT,
+				repository_url VARCHAR(255),
+				branch VARCHAR(255),
+				status VARCHAR(255),
+				health_score INTEGER DEFAULT 0,
+				owner_id VARCHAR(255),
+				created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+				updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+			)`,
+		},
 	}
 
-	for i, model := range models {
-		modelName := fmt.Sprintf("%T", model)
-		log.Printf("Migrating model %d/%d: %s", i+1, len(models), modelName)
+	for _, table := range tables {
+		log.Printf("Creating table: %s", table.name)
 		
-		// Add extra safety for each model migration
-		if err := func() error {
-			defer func() {
-				if r := recover(); r != nil {
-					log.Printf("Recovered from panic during migration of %s: %v", modelName, r)
-				}
-			}()
-			
-			// Use a fresh session for each model to avoid any cross-contamination
-			freshSession := db.DB.Session(&gorm.Session{
-				SkipHooks:   true,
-				DryRun:      false,
-				PrepareStmt: false,
-				NewDB:       true,
-				Logger:      logger.Default.LogMode(logger.Error),
-			})
-			
-			return freshSession.AutoMigrate(model)
-		}(); err != nil {
-			log.Printf("Migration error for %s: %v", modelName, err)
-			
-			// Try to provide more specific error information
-			if strings.Contains(err.Error(), "insufficient arguments") {
-				log.Printf("Detected 'insufficient arguments' error - likely BeforeCreate hook interference")
-				log.Printf("This suggests the hook protection mechanisms may need strengthening")
-			}
-			
-			return fmt.Errorf("failed to migrate %s: %w", modelName, err)
+		if err := db.Exec(table.sql).Error; err != nil {
+			log.Printf("Failed to create table %s: %v", table.name, err)
+			return fmt.Errorf("failed to create table %s: %w", table.name, err)
 		}
-		log.Printf("Successfully migrated: %s", modelName)
+		
+		log.Printf("Successfully created/verified table: %s", table.name)
 	}
 
-	log.Println("Database migrations completed successfully")
+	log.Println("Database migrations completed successfully using native SQL")
 	return nil
 }
 
