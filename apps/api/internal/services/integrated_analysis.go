@@ -136,7 +136,7 @@ func (s *IntegratedAnalysisService) getOrCreateProject(processingResult *models.
 	project := &models.Project{
 		ID:          uuid.New().String(),
 		Name:        fmt.Sprintf("Analysis-%s", processingResult.ID[:8]),
-		Description: &description,
+		Description: description,
 		RepositoryURL: "",
 		// Settings: &models.ProjectSettings{
 		//	ExcludePatterns: []string{"node_modules/**", "dist/**", "build/**"},

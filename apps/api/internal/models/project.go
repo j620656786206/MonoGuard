@@ -34,24 +34,22 @@ const (
 	RiskLevelCritical RiskLevel = "critical"
 )
 
-// Project represents a project in the system
+// Project represents a project in the system - simplified for Railway compatibility
 type Project struct {
-	ID             string                `json:"id" gorm:"primaryKey"`
-	Name           string                `json:"name" gorm:"not null"`
-	Description    *string               `json:"description,omitempty"`
-	RepositoryURL  string                `json:"repositoryUrl" gorm:"column:repository_url;not null"`
-	Branch         string                `json:"branch" gorm:"not null;default:main"`
-	Status         string                `json:"status" gorm:"type:varchar(20);not null;default:pending"`
-	HealthScore    int                   `json:"healthScore" gorm:"column:health_score;default:0"`
-	LastAnalysisAt *time.Time            `json:"lastAnalysisAt,omitempty" gorm:"column:last_analysis_at"`
-	OwnerID        string                `json:"ownerId" gorm:"column:owner_id;not null"`
-	// Settings       *ProjectSettings      `json:"settings"` // Temporarily completely removed
-	CreatedAt      time.Time             `json:"createdAt" gorm:"column:created_at"`
-	UpdatedAt      time.Time             `json:"updatedAt" gorm:"column:updated_at"`
+	ID             string    `json:"id" gorm:"primaryKey"`
+	Name           string    `json:"name" gorm:"not null"`
+	Description    string    `json:"description"`                     // Changed from *string to string
+	RepositoryURL  string    `json:"repositoryUrl"`                   // Removed custom column name
+	Branch         string    `json:"branch"`                          // Removed default value
+	Status         string    `json:"status"`                          // Simplified, no type constraint or default
+	HealthScore    int       `json:"healthScore"`                     // Removed custom column name
+	OwnerID        string    `json:"ownerId"`                         // Removed custom column name
+	CreatedAt      time.Time `json:"createdAt"`                       // Removed custom column name
+	UpdatedAt      time.Time `json:"updatedAt"`                       // Removed custom column name
 	
-	// Associations - temporarily commented out for testing
-	// DependencyAnalyses     []DependencyAnalysis     `json:"dependencyAnalyses,omitempty" gorm:"foreignKey:ProjectID"`
-	// ArchitectureValidations []ArchitectureValidation `json:"architectureValidations,omitempty" gorm:"foreignKey:ProjectID"`
+	// All complex fields temporarily removed for Railway compatibility
+	// LastAnalysisAt *time.Time            `json:"lastAnalysisAt,omitempty" gorm:"column:last_analysis_at"`
+	// Settings       *ProjectSettings      `json:"settings"`
 }
 
 // ProjectSettings contains project-specific settings

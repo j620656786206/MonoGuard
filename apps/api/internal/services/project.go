@@ -78,15 +78,19 @@ func (s *ProjectService) CreateProject(ctx context.Context, req *CreateProjectRe
 		}
 	}
 
+	description := ""
+	if req.Description != nil {
+		description = *req.Description
+	}
+	
 	project := &models.Project{
 		Name:          req.Name,
-		Description:   req.Description,
+		Description:   description,                    // Now a string, not pointer
 		RepositoryURL: req.RepositoryURL,
 		Branch:        req.Branch,
 		Status:        "pending",
 		HealthScore:   0,
 		OwnerID:       req.OwnerID,
-		// Settings:      settings, // Temporarily commented out
 	}
 
 	// Generate UUID for the project
@@ -156,9 +160,10 @@ func (s *ProjectService) UpdateProject(ctx context.Context, id string, req *Upda
 		updates["branch"] = *req.Branch
 	}
 	
-	if req.Settings != nil {
-		updates["settings"] = *req.Settings
-	}
+	// Settings field temporarily removed for Railway compatibility
+	// if req.Settings != nil {
+	//	updates["settings"] = *req.Settings
+	// }
 	
 	if len(updates) == 0 {
 		return s.GetProject(ctx, id)
