@@ -40,18 +40,18 @@ type Project struct {
 	Name           string                `json:"name" gorm:"not null"`
 	Description    *string               `json:"description,omitempty"`
 	RepositoryURL  string                `json:"repositoryUrl" gorm:"column:repository_url;not null"`
-	Branch         string                `json:"branch" gorm:"not null;default:\"main\""`
-	Status         Status                `json:"status" gorm:"type:varchar(20);not null;default:\"pending\""`
+	Branch         string                `json:"branch" gorm:"not null;default:'main'"`
+	Status         Status                `json:"status" gorm:"type:varchar(20);not null;default:'pending'"`
 	HealthScore    int                   `json:"healthScore" gorm:"column:health_score;default:0"`
 	LastAnalysisAt *time.Time            `json:"lastAnalysisAt,omitempty" gorm:"column:last_analysis_at"`
 	OwnerID        string                `json:"ownerId" gorm:"column:owner_id;not null"`
-	Settings       *ProjectSettings      `json:"settings" gorm:"type:jsonb"`
+	Settings       *ProjectSettings      `json:"settings"` // Temporarily removed jsonb type
 	CreatedAt      time.Time             `json:"createdAt" gorm:"column:created_at"`
 	UpdatedAt      time.Time             `json:"updatedAt" gorm:"column:updated_at"`
 	
-	// Associations
-	DependencyAnalyses     []DependencyAnalysis     `json:"dependencyAnalyses,omitempty" gorm:"foreignKey:ProjectID"`
-	ArchitectureValidations []ArchitectureValidation `json:"architectureValidations,omitempty" gorm:"foreignKey:ProjectID"`
+	// Associations - temporarily commented out for testing
+	// DependencyAnalyses     []DependencyAnalysis     `json:"dependencyAnalyses,omitempty" gorm:"foreignKey:ProjectID"`
+	// ArchitectureValidations []ArchitectureValidation `json:"architectureValidations,omitempty" gorm:"foreignKey:ProjectID"`
 }
 
 // ProjectSettings contains project-specific settings
