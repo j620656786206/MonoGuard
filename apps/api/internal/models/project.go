@@ -106,16 +106,14 @@ func (p *Project) BeforeCreate(tx *gorm.DB) error {
 		return nil
 	}
 	
-	// Check if hooks are disabled (e.g., during migrations)
-	if tx.SkipHooks {
-		return nil
-	}
-	
-	// Check if this is a migration operation by examining statement context
+	// Check if this is a migration operation by examining the statement
 	stmt := tx.Statement
-	if stmt != nil && stmt.SQL.String() != "" {
-		// Skip UUID generation during migration queries (SELECT, CREATE TABLE, etc.)
-		return nil
+	if stmt != nil {
+		// Skip UUID generation during migration queries
+		sql := stmt.SQL.String()
+		if sql != "" || stmt.Schema == nil || len(stmt.Vars) == 0 {
+			return nil
+		}
 	}
 	
 	// Generate UUID for actual record creation
