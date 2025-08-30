@@ -111,6 +111,7 @@ func (a *App) setupServer() {
 	router.GET("/health", healthHandler.Health)
 	router.GET("/ready", healthHandler.Ready)
 	router.GET("/live", healthHandler.Live)
+	router.GET("/debug/db", healthHandler.DebugDB) // Temporary diagnostic endpoint
 
 	// Initialize repositories
 	projectRepo := repository.NewProjectRepository(a.db)

@@ -113,6 +113,40 @@ func (h *HealthHandler) Health(c *gin.Context) {
 	c.JSON(statusCode, healthStatus)
 }
 
+// Debug endpoint to check database tables
+func (h *HealthHandler) DebugDB(c *gin.Context) {
+	var tables []string
+	var projects []map[string]interface{}
+	
+	// Check what tables exist
+	rows, err := h.db.Raw("SELECT tablename FROM pg_tables WHERE schemaname = 'public'").Rows()
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Failed to query tables: " + err.Error()})
+		return
+	}
+	defer rows.Close()
+	
+	for rows.Next() {
+		var table string
+		rows.Scan(&table)
+		tables = append(tables, table)
+	}
+	
+	// Try to query projects table
+	projectErr := ""
+	err = h.db.Raw("SELECT * FROM projects LIMIT 5").Scan(&projects).Error
+	if err != nil {
+		projectErr = err.Error()
+	}
+	
+	c.JSON(200, gin.H{
+		"tables": tables,
+		"projects_query_error": projectErr,
+		"projects_sample": projects,
+		"timestamp": time.Now().Format(time.RFC3339),
+	})
+}
+
 // Ready returns the readiness status of the service
 func (h *HealthHandler) Ready(c *gin.Context) {
 	// Check if all critical services are ready
