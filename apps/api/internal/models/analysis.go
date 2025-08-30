@@ -213,20 +213,35 @@ func (da *DependencyAnalysis) BeforeCreate(tx *gorm.DB) error {
 		return nil
 	}
 	
-	// Check if this is a migration operation by examining the statement
+	// Check if this is a migration operation
+	// During AutoMigrate, GORM creates test queries without proper context
 	stmt := tx.Statement
 	if stmt != nil {
-		// Skip UUID generation during migration queries
+		// Check if hooks are disabled (migration context)
+		if stmt.SkipHooks {
+			return nil
+		}
+		
+		// Check if this is a schema operation (table creation/modification)
+		if stmt.Schema != nil && (stmt.Schema.Table == "" || stmt.SQL.Len() == 0) {
+			return nil
+		}
+		
+		// Check if this is a migration-related query
 		sql := stmt.SQL.String()
-		if sql != "" || stmt.Schema == nil || len(stmt.Vars) == 0 {
+		if sql != "" && (
+			stmt.Context.Value("gorm:auto_migrate") != nil ||
+			(stmt.Schema != nil && len(stmt.Vars) == 0)) {
 			return nil
 		}
 	}
 	
-	// Generate UUID for actual record creation
-	da.ID = uuid.New().String()
-	if da.StartedAt.IsZero() {
-		da.StartedAt = time.Now()
+	// Only generate UUID for actual record creation operations
+	if tx.Statement != nil && tx.Statement.Context != nil {
+		da.ID = uuid.New().String()
+		if da.StartedAt.IsZero() {
+			da.StartedAt = time.Now()
+		}
 	}
 	return nil
 }
@@ -237,20 +252,34 @@ func (av *ArchitectureValidation) BeforeCreate(tx *gorm.DB) error {
 		return nil
 	}
 	
-	// Check if this is a migration operation by examining the statement
+	// Check if this is a migration operation
 	stmt := tx.Statement
 	if stmt != nil {
-		// Skip UUID generation during migration queries
+		// Check if hooks are disabled (migration context)
+		if stmt.SkipHooks {
+			return nil
+		}
+		
+		// Check if this is a schema operation
+		if stmt.Schema != nil && (stmt.Schema.Table == "" || stmt.SQL.Len() == 0) {
+			return nil
+		}
+		
+		// Check if this is a migration-related query
 		sql := stmt.SQL.String()
-		if sql != "" || stmt.Schema == nil || len(stmt.Vars) == 0 {
+		if sql != "" && (
+			stmt.Context.Value("gorm:auto_migrate") != nil ||
+			(stmt.Schema != nil && len(stmt.Vars) == 0)) {
 			return nil
 		}
 	}
 	
-	// Generate UUID for actual record creation
-	av.ID = uuid.New().String()
-	if av.StartedAt.IsZero() {
-		av.StartedAt = time.Now()
+	// Only generate UUID for actual record creation operations
+	if tx.Statement != nil && tx.Statement.Context != nil {
+		av.ID = uuid.New().String()
+		if av.StartedAt.IsZero() {
+			av.StartedAt = time.Now()
+		}
 	}
 	return nil
 }
@@ -261,20 +290,34 @@ func (hs *HealthScore) BeforeCreate(tx *gorm.DB) error {
 		return nil
 	}
 	
-	// Check if this is a migration operation by examining the statement
+	// Check if this is a migration operation
 	stmt := tx.Statement
 	if stmt != nil {
-		// Skip UUID generation during migration queries
+		// Check if hooks are disabled (migration context)
+		if stmt.SkipHooks {
+			return nil
+		}
+		
+		// Check if this is a schema operation
+		if stmt.Schema != nil && (stmt.Schema.Table == "" || stmt.SQL.Len() == 0) {
+			return nil
+		}
+		
+		// Check if this is a migration-related query
 		sql := stmt.SQL.String()
-		if sql != "" || stmt.Schema == nil || len(stmt.Vars) == 0 {
+		if sql != "" && (
+			stmt.Context.Value("gorm:auto_migrate") != nil ||
+			(stmt.Schema != nil && len(stmt.Vars) == 0)) {
 			return nil
 		}
 	}
 	
-	// Generate UUID for actual record creation
-	hs.ID = uuid.New().String()
-	if hs.LastUpdated.IsZero() {
-		hs.LastUpdated = time.Now()
+	// Only generate UUID for actual record creation operations
+	if tx.Statement != nil && tx.Statement.Context != nil {
+		hs.ID = uuid.New().String()
+		if hs.LastUpdated.IsZero() {
+			hs.LastUpdated = time.Now()
+		}
 	}
 	return nil
 }
@@ -948,20 +991,34 @@ func (pja *PackageJSONAnalysis) BeforeCreate(tx *gorm.DB) error {
 		return nil
 	}
 	
-	// Check if this is a migration operation by examining the statement
+	// Check if this is a migration operation
 	stmt := tx.Statement
 	if stmt != nil {
-		// Skip UUID generation during migration queries
+		// Check if hooks are disabled (migration context)
+		if stmt.SkipHooks {
+			return nil
+		}
+		
+		// Check if this is a schema operation
+		if stmt.Schema != nil && (stmt.Schema.Table == "" || stmt.SQL.Len() == 0) {
+			return nil
+		}
+		
+		// Check if this is a migration-related query
 		sql := stmt.SQL.String()
-		if sql != "" || stmt.Schema == nil || len(stmt.Vars) == 0 {
+		if sql != "" && (
+			stmt.Context.Value("gorm:auto_migrate") != nil ||
+			(stmt.Schema != nil && len(stmt.Vars) == 0)) {
 			return nil
 		}
 	}
 	
-	// Generate UUID for actual record creation
-	pja.ID = uuid.New().String()
-	if pja.StartedAt.IsZero() {
-		pja.StartedAt = time.Now()
+	// Only generate UUID for actual record creation operations
+	if tx.Statement != nil && tx.Statement.Context != nil {
+		pja.ID = uuid.New().String()
+		if pja.StartedAt.IsZero() {
+			pja.StartedAt = time.Now()
+		}
 	}
 	return nil
 }

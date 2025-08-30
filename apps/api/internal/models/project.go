@@ -106,18 +106,38 @@ func (p *Project) BeforeCreate(tx *gorm.DB) error {
 		return nil
 	}
 	
-	// Check if this is a migration operation by examining the statement
+	// Check if this is a migration operation
+	// During AutoMigrate, GORM creates test queries without proper context
+	// We detect this by checking if SkipHooks is enabled or if this is a schema operation
 	stmt := tx.Statement
 	if stmt != nil {
-		// Skip UUID generation during migration queries
+		// Check if hooks are disabled (migration context)
+		if stmt.SkipHooks {
+			return nil
+		}
+		
+		// Check if this is a schema operation (table creation/modification)
+		if stmt.Schema != nil && (stmt.Schema.Table == "" || stmt.SQL.Len() == 0) {
+			return nil
+		}
+		
+		// Check if this is a migration-related query by examining the SQL
 		sql := stmt.SQL.String()
-		if sql != "" || stmt.Schema == nil || len(stmt.Vars) == 0 {
+		if sql != "" && (
+			// Common migration patterns
+			stmt.Context.Value("gorm:auto_migrate") != nil ||
+			// Or if we're in a transaction without proper variables set
+			(stmt.Schema != nil && len(stmt.Vars) == 0)) {
 			return nil
 		}
 	}
 	
-	// Generate UUID for actual record creation
-	p.ID = uuid.New().String()
+	// Only generate UUID for actual record creation operations
+	// Additional safety check: ensure we have a valid context for record creation
+	if tx.Statement != nil && tx.Statement.Context != nil {
+		p.ID = uuid.New().String()
+	}
+	
 	return nil
 }
 
