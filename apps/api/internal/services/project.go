@@ -7,6 +7,7 @@ import (
 
 	"github.com/monoguard/api/internal/models"
 	"github.com/monoguard/api/internal/repository"
+	"github.com/monoguard/api/internal/utils"
 	"github.com/sirupsen/logrus"
 )
 
@@ -87,6 +88,9 @@ func (s *ProjectService) CreateProject(ctx context.Context, req *CreateProjectRe
 		OwnerID:       req.OwnerID,
 		// Settings:      settings, // Temporarily commented out
 	}
+
+	// Generate UUID for the project
+	utils.GenerateProjectID(project)
 
 	if err := s.projectRepo.Create(ctx, project); err != nil {
 		s.logger.WithError(err).Error("Failed to create project")
