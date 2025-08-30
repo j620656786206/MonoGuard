@@ -44,11 +44,21 @@ func New(cfg *config.DatabaseConfig) (*DB, error) {
 	} else {
 		// PostgreSQL mode
 		dsn := cfg.GetDSN()
+		log.Printf("Connecting to PostgreSQL with DSN: %s (password hidden)", 
+			fmt.Sprintf("host=%s port=%d user=%s dbname=%s sslmode=%s TimeZone=UTC",
+				cfg.Host, cfg.Port, cfg.User, cfg.DBName, cfg.SSLMode))
+		
 		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
 			Logger: gormLogger,
 			NowFunc: func() time.Time {
 				return time.Now().UTC()
 			},
+			// Railway PostgreSQL optimizations
+			DisableForeignKeyConstraintWhenMigrating: true,
+			SkipDefaultTransaction: false,
+			PrepareStmt: false,
+			// Disable automatic pluralization to prevent table name issues
+			NamingStrategy: nil,
 		})
 	}
 	
@@ -76,7 +86,24 @@ func New(cfg *config.DatabaseConfig) (*DB, error) {
 func (db *DB) AutoMigrate() error {
 	log.Println("Running database migrations...")
 	
-	err := db.DB.AutoMigrate(
+	// Test database connection first
+	sqlDB, err := db.DB.DB()
+	if err != nil {
+		return fmt.Errorf("failed to get underlying database connection: %w", err)
+	}
+	
+	if err := sqlDB.Ping(); err != nil {
+		return fmt.Errorf("database ping failed: %w", err)
+	}
+	log.Println("Database connection verified")
+
+	// Create a migration session without hooks
+	migrationDB := db.DB.Session(&gorm.Session{
+		SkipHooks: true,
+	})
+
+	// Migrate models one by one to identify problematic model
+	models := []interface{}{
 		&models.Project{},
 		&models.DependencyAnalysis{},
 		&models.ArchitectureValidation{},
@@ -84,9 +111,18 @@ func (db *DB) AutoMigrate() error {
 		&models.UploadedFile{},
 		&models.FileProcessingResult{},
 		&models.PackageJsonFile{},
-	)
-	if err != nil {
-		return fmt.Errorf("failed to run migrations: %w", err)
+		&models.PackageJSONAnalysis{},
+	}
+
+	for i, model := range models {
+		modelName := fmt.Sprintf("%T", model)
+		log.Printf("Migrating model %d/%d: %s", i+1, len(models), modelName)
+		
+		if err := migrationDB.AutoMigrate(model); err != nil {
+			log.Printf("Migration error for %s: %v", modelName, err)
+			return fmt.Errorf("failed to migrate %s: %w", modelName, err)
+		}
+		log.Printf("Successfully migrated: %s", modelName)
 	}
 
 	log.Println("Database migrations completed successfully")

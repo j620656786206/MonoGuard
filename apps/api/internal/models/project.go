@@ -101,9 +101,23 @@ type ArchitectureRule struct {
 
 // BeforeCreate generates a UUID for the project before creating
 func (p *Project) BeforeCreate(tx *gorm.DB) error {
-	if p.ID == "" {
+	// Skip if ID already exists or during migrations
+	if p.ID != "" {
+		return nil
+	}
+	
+	// Check if this is a migration operation by looking at the statement
+	stmt := tx.Statement
+	if stmt != nil && stmt.Schema != nil {
+		// Only generate UUID for actual record creation, not migrations
+		if stmt.Schema.Table == "projects" {
+			p.ID = uuid.New().String()
+		}
+	} else {
+		// Fallback: always generate UUID for direct model creation
 		p.ID = uuid.New().String()
 	}
+	
 	return nil
 }
 

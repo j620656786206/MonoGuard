@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-	"strings"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/joho/godotenv"
@@ -122,15 +121,33 @@ func Load() (*Config, error) {
 		return nil, fmt.Errorf("configuration validation failed: %w", err)
 	}
 
+	// Additional validation for PostgreSQL (production or when explicitly configured)
+	if config.Database.Host != "sqlite" && config.Database.Host != "" && config.Database.Host != "localhost" {
+		if config.Database.Host == "" || config.Database.User == "" || config.Database.Password == "" || config.Database.DBName == "" {
+			return nil, fmt.Errorf("PostgreSQL configuration incomplete: host=%s, user=%s, dbname=%s (password length=%d)",
+				config.Database.Host, config.Database.User, config.Database.DBName, len(config.Database.Password))
+		}
+		fmt.Printf("PostgreSQL config validated: host=%s, user=%s, dbname=%s, port=%d, sslmode=%s\n",
+			config.Database.Host, config.Database.User, config.Database.DBName, config.Database.Port, config.Database.SSLMode)
+	}
+
 	return config, nil
 }
 
 // GetDSN returns the database connection string
 func (c *DatabaseConfig) GetDSN() string {
-	return fmt.Sprintf(
-		"host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
+	// For Railway PostgreSQL, ensure proper URL encoding and timezone
+	dsn := fmt.Sprintf(
+		"host=%s port=%d user=%s password=%s dbname=%s sslmode=%s TimeZone=UTC connect_timeout=30 statement_timeout=60000",
 		c.Host, c.Port, c.User, c.Password, c.DBName, c.SSLMode,
 	)
+	
+	// Additional PostgreSQL parameters for Railway compatibility
+	if c.Host != "localhost" && c.Host != "127.0.0.1" && c.Host != "sqlite" {
+		dsn += " binary_parameters=yes"
+	}
+	
+	return dsn
 }
 
 // GetRedisAddr returns the Redis address
@@ -155,12 +172,6 @@ func getEnvInt(key string, defaultValue int) int {
 	return defaultValue
 }
 
-func getEnvBool(key string, defaultValue bool) bool {
-	if value := os.Getenv(key); value != "" {
-		return strings.ToLower(value) == "true"
-	}
-	return defaultValue
-}
 
 // generateDefaultSecret generates a default JWT secret for development
 func generateDefaultSecret() string {

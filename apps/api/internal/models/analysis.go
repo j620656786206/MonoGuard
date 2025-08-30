@@ -208,32 +208,83 @@ type HealthFactor struct {
 
 // BeforeCreate generates UUIDs for analysis models before creating
 func (da *DependencyAnalysis) BeforeCreate(tx *gorm.DB) error {
-	if da.ID == "" {
+	// Skip if ID already exists
+	if da.ID != "" {
+		return nil
+	}
+	
+	// Check if this is a migration operation
+	stmt := tx.Statement
+	if stmt != nil && stmt.Schema != nil {
+		// Only generate UUID for actual record creation, not migrations
+		if stmt.Schema.Table == "dependency_analyses" {
+			da.ID = uuid.New().String()
+			if da.StartedAt.IsZero() {
+				da.StartedAt = time.Now()
+			}
+		}
+	} else {
+		// Fallback: always generate UUID for direct model creation
 		da.ID = uuid.New().String()
+		if da.StartedAt.IsZero() {
+			da.StartedAt = time.Now()
+		}
 	}
-	if da.StartedAt.IsZero() {
-		da.StartedAt = time.Now()
-	}
+	
 	return nil
 }
 
 func (av *ArchitectureValidation) BeforeCreate(tx *gorm.DB) error {
-	if av.ID == "" {
+	// Skip if ID already exists
+	if av.ID != "" {
+		return nil
+	}
+	
+	// Check if this is a migration operation
+	stmt := tx.Statement
+	if stmt != nil && stmt.Schema != nil {
+		// Only generate UUID for actual record creation, not migrations
+		if stmt.Schema.Table == "architecture_validations" {
+			av.ID = uuid.New().String()
+			if av.StartedAt.IsZero() {
+				av.StartedAt = time.Now()
+			}
+		}
+	} else {
+		// Fallback: always generate UUID for direct model creation
 		av.ID = uuid.New().String()
+		if av.StartedAt.IsZero() {
+			av.StartedAt = time.Now()
+		}
 	}
-	if av.StartedAt.IsZero() {
-		av.StartedAt = time.Now()
-	}
+	
 	return nil
 }
 
 func (hs *HealthScore) BeforeCreate(tx *gorm.DB) error {
-	if hs.ID == "" {
+	// Skip if ID already exists
+	if hs.ID != "" {
+		return nil
+	}
+	
+	// Check if this is a migration operation
+	stmt := tx.Statement
+	if stmt != nil && stmt.Schema != nil {
+		// Only generate UUID for actual record creation, not migrations
+		if stmt.Schema.Table == "health_scores" {
+			hs.ID = uuid.New().String()
+			if hs.LastUpdated.IsZero() {
+				hs.LastUpdated = time.Now()
+			}
+		}
+	} else {
+		// Fallback: always generate UUID for direct model creation
 		hs.ID = uuid.New().String()
+		if hs.LastUpdated.IsZero() {
+			hs.LastUpdated = time.Now()
+		}
 	}
-	if hs.LastUpdated.IsZero() {
-		hs.LastUpdated = time.Now()
-	}
+	
 	return nil
 }
 
@@ -901,12 +952,29 @@ type ImplementationPhaseInfo struct {
 }
 
 func (pja *PackageJSONAnalysis) BeforeCreate(tx *gorm.DB) error {
-	if pja.ID == "" {
+	// Skip if ID already exists
+	if pja.ID != "" {
+		return nil
+	}
+	
+	// Check if this is a migration operation
+	stmt := tx.Statement
+	if stmt != nil && stmt.Schema != nil {
+		// Only generate UUID for actual record creation, not migrations
+		if stmt.Schema.Table == "package_json_analyses" {
+			pja.ID = uuid.New().String()
+			if pja.StartedAt.IsZero() {
+				pja.StartedAt = time.Now()
+			}
+		}
+	} else {
+		// Fallback: always generate UUID for direct model creation
 		pja.ID = uuid.New().String()
+		if pja.StartedAt.IsZero() {
+			pja.StartedAt = time.Now()
+		}
 	}
-	if pja.StartedAt.IsZero() {
-		pja.StartedAt = time.Now()
-	}
+	
 	return nil
 }
 
