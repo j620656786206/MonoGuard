@@ -82,7 +82,7 @@ func (s *ProjectService) CreateProject(ctx context.Context, req *CreateProjectRe
 		Description:   req.Description,
 		RepositoryURL: req.RepositoryURL,
 		Branch:        req.Branch,
-		Status:        models.StatusPending,
+		Status:        "pending",
 		HealthScore:   0,
 		OwnerID:       req.OwnerID,
 		// Settings:      settings, // Temporarily commented out
@@ -206,7 +206,7 @@ func (s *ProjectService) TriggerAnalysis(ctx context.Context, projectID string, 
 	// Create new analysis record
 	analysis := &models.DependencyAnalysis{
 		ProjectID: projectID,
-		Status:    models.StatusInProgress,
+		Status:    "in_progress",
 		StartedAt: time.Now().UTC(),
 		Metadata: &models.AnalysisMetadata{
 			Version:          "1.0.0",
@@ -228,7 +228,7 @@ func (s *ProjectService) TriggerAnalysis(ctx context.Context, projectID string, 
 
 	// Update project status
 	_ = s.projectRepo.Update(ctx, projectID, map[string]interface{}{
-		"status":           models.StatusInProgress,
+		"status":           "in_progress",
 		"last_analysis_at": time.Now().UTC(),
 	})
 
@@ -257,13 +257,13 @@ func (s *ProjectService) runAnalysis(ctx context.Context, analysis *models.Depen
 		
 		// Update analysis status to failed
 		_ = s.analysisRepo.UpdateDependencyAnalysis(ctx, analysis.ID, map[string]interface{}{
-			"status":       models.StatusFailed,
+			"status":       "failed",
 			"completed_at": time.Now().UTC(),
 		})
 		
 		// Update project status to failed
 		_ = s.projectRepo.Update(ctx, analysis.ProjectID, map[string]interface{}{
-			"status": models.StatusFailed,
+			"status": "failed",
 		})
 		
 		return
@@ -273,7 +273,7 @@ func (s *ProjectService) runAnalysis(ctx context.Context, analysis *models.Depen
 	
 	// Update analysis with results
 	updates := map[string]interface{}{
-		"status":       models.StatusCompleted,
+		"status":       "completed",
 		"completed_at": time.Now().UTC(),
 		"results":      *results,
 		"metadata": models.AnalysisMetadata{
@@ -293,7 +293,7 @@ func (s *ProjectService) runAnalysis(ctx context.Context, analysis *models.Depen
 
 	// Update project status and health score
 	_ = s.projectRepo.Update(ctx, analysis.ProjectID, map[string]interface{}{
-		"status":       models.StatusCompleted,
+		"status":       "completed",
 		"health_score": int(results.Summary.HealthScore),
 	})
 

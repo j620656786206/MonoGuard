@@ -142,7 +142,7 @@ func (s *IntegratedAnalysisService) getOrCreateProject(processingResult *models.
 		//	ExcludePatterns: []string{"node_modules/**", "dist/**", "build/**"},
 		//	IncludePatterns: []string{"**/*.json"},
 		// }, // Temporarily commented out
-		Status:    models.StatusInProgress,
+		Status:    "in_progress",
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
@@ -168,7 +168,7 @@ func (s *IntegratedAnalysisService) runComprehensiveAnalysis(ctx context.Context
 	analysis := &models.DependencyAnalysis{
 		ID:        uuid.New().String(),
 		ProjectID: projectID,
-		Status:    models.StatusInProgress,
+		Status:    "in_progress",
 		StartedAt: time.Now().UTC(),
 		Results:   &models.DependencyAnalysisResults{},
 		Metadata: &models.AnalysisMetadata{
@@ -196,9 +196,9 @@ func (s *IntegratedAnalysisService) runComprehensiveAnalysis(ctx context.Context
 	basicResults, err := s.basicEngine.AnalyzeRepository(ctx, repoPath, projectID)
 	if err != nil {
 		s.logger.WithError(err).Error("Basic analysis failed")
-		analysis.Status = models.StatusFailed
+		analysis.Status = "failed"
 		s.analysisRepo.UpdateDependencyAnalysis(ctx, analysis.ID, map[string]interface{}{
-			"status": models.StatusFailed,
+			"status": "failed",
 		})
 		return nil, fmt.Errorf("basic analysis failed: %w", err)
 	}
@@ -251,7 +251,7 @@ func (s *IntegratedAnalysisService) runComprehensiveAnalysis(ctx context.Context
 	// Mark as completed
 	now := time.Now().UTC()
 	analysis.CompletedAt = &now
-	analysis.Status = models.StatusCompleted
+	analysis.Status = "completed"
 
 	// Update analysis using Save instead of Updates to handle complex types
 	if err := s.analysisRepo.SaveDependencyAnalysis(ctx, analysis); err != nil {

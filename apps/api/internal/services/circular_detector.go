@@ -101,7 +101,7 @@ func (s *CircularDetectorService) DetectCircularDependencies(ctx context.Context
 	analysis := &models.DependencyAnalysis{
 		ID:        uuid.New().String(),
 		ProjectID: projectID,
-		Status:    models.StatusInProgress,
+		Status:    "in_progress",
 		StartedAt: time.Now().UTC(),
 		Results:   &models.DependencyAnalysisResults{},
 		Metadata: &models.AnalysisMetadata{
@@ -128,9 +128,9 @@ func (s *CircularDetectorService) DetectCircularDependencies(ctx context.Context
 	graph, err := s.buildDependencyGraph(repoPath, []string{}) // project.Settings.ExcludePatterns - temporarily disabled
 	if err != nil {
 		s.logger.WithError(err).Error("Failed to build dependency graph")
-		analysis.Status = models.StatusFailed
+		analysis.Status = "failed"
 		s.analysisRepo.UpdateDependencyAnalysis(ctx, analysis.ID, map[string]interface{}{
-			"status": models.StatusFailed,
+			"status": "failed",
 		})
 		return nil, fmt.Errorf("failed to build dependency graph: %w", err)
 	}
@@ -161,7 +161,7 @@ func (s *CircularDetectorService) DetectCircularDependencies(ctx context.Context
 	// Mark as completed
 	now := time.Now().UTC()
 	analysis.CompletedAt = &now
-	analysis.Status = models.StatusCompleted
+	analysis.Status = "completed"
 
 	// Update analysis using Save instead of Updates to handle complex types
 	if err := s.analysisRepo.SaveDependencyAnalysis(ctx, analysis); err != nil {

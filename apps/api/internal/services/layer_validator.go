@@ -101,7 +101,7 @@ func (s *LayerValidatorService) ValidateArchitecture(ctx context.Context, projec
 	validation := &models.ArchitectureValidation{
 		ID:        uuid.New().String(),
 		ProjectID: projectID,
-		Status:    models.StatusInProgress,
+		Status:    "in_progress",
 		StartedAt: time.Now().UTC(),
 		Results:   &models.ArchitectureValidationResults{},
 		Metadata: &models.AnalysisMetadata{
@@ -128,7 +128,7 @@ func (s *LayerValidatorService) ValidateArchitecture(ctx context.Context, projec
 	config, err := s.loadArchitectureConfig(configPath)
 	if err != nil {
 		s.logger.WithError(err).Error("Failed to load architecture configuration")
-		validation.Status = models.StatusFailed
+		validation.Status = "failed"
 		s.analysisRepo.UpdateArchitectureValidation(ctx, validation)
 		return nil, fmt.Errorf("failed to load configuration: %w", err)
 	}
@@ -171,7 +171,7 @@ func (s *LayerValidatorService) ValidateArchitecture(ctx context.Context, projec
 	// Mark as completed
 	now := time.Now().UTC()
 	validation.CompletedAt = &now
-	validation.Status = models.StatusCompleted
+	validation.Status = "completed"
 
 	// Update validation
 	if err := s.analysisRepo.UpdateArchitectureValidation(ctx, validation); err != nil {
