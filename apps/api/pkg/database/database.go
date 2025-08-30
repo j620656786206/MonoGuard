@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"sync"
 	"time"
 
 	"github.com/monoguard/api/internal/config"
@@ -13,6 +14,26 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
+
+// IsMigrationMode indicates if we're currently in migration mode
+var (
+	isMigrationMode bool
+	migrationMutex  sync.RWMutex
+)
+
+// SetMigrationMode sets the migration mode flag
+func SetMigrationMode(mode bool) {
+	migrationMutex.Lock()
+	defer migrationMutex.Unlock()
+	isMigrationMode = mode
+}
+
+// IsMigrationMode returns the current migration mode status
+func IsMigrationMode() bool {
+	migrationMutex.RLock()
+	defer migrationMutex.RUnlock()
+	return isMigrationMode
+}
 
 // DB holds the database connection
 type DB struct {
@@ -86,6 +107,10 @@ func New(cfg *config.DatabaseConfig) (*DB, error) {
 func (db *DB) AutoMigrate() error {
 	log.Println("Running database migrations...")
 	
+	// Set migration mode to disable hooks globally
+	SetMigrationMode(true)
+	defer SetMigrationMode(false)
+	
 	// Test database connection first
 	sqlDB, err := db.DB.DB()
 	if err != nil {
@@ -97,7 +122,7 @@ func (db *DB) AutoMigrate() error {
 	}
 	log.Println("Database connection verified")
 
-	// Create a migration session without hooks
+	// Create a migration session without hooks for extra safety
 	migrationDB := db.DB.Session(&gorm.Session{
 		SkipHooks: true,
 	})

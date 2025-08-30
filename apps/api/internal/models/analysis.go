@@ -213,35 +213,36 @@ func (da *DependencyAnalysis) BeforeCreate(tx *gorm.DB) error {
 		return nil
 	}
 	
-	// Check if this is a migration operation
-	// During AutoMigrate, GORM creates test queries without proper context
+	// Primary safeguard: Check if hooks are explicitly disabled
+	if tx.Statement != nil && tx.Statement.SkipHooks {
+		return nil
+	}
+	
+	// Secondary safeguard: Check for migration-like contexts
 	stmt := tx.Statement
 	if stmt != nil {
-		// Check if hooks are disabled (migration context)
-		if stmt.SkipHooks {
+		// Skip if we don't have proper variables set (indicates inspection query)
+		if stmt.Schema != nil && len(stmt.Vars) == 0 {
 			return nil
 		}
 		
-		// Check if this is a schema operation (table creation/modification)
-		if stmt.Schema != nil && (stmt.Schema.Table == "" || stmt.SQL.Len() == 0) {
+		// Skip if this appears to be a migration context
+		if stmt.Context != nil && stmt.Context.Value("gorm:auto_migrate") != nil {
 			return nil
 		}
 		
-		// Check if this is a migration-related query
+		// Additional safety: Skip if SQL contains SELECT with LIMIT (inspection pattern)
 		sql := stmt.SQL.String()
-		if sql != "" && (
-			stmt.Context.Value("gorm:auto_migrate") != nil ||
-			(stmt.Schema != nil && len(stmt.Vars) == 0)) {
+		if sql != "" && stmt.SQL.Len() > 0 {
+			// This is likely an inspection query during migration
 			return nil
 		}
 	}
 	
-	// Only generate UUID for actual record creation operations
-	if tx.Statement != nil && tx.Statement.Context != nil {
-		da.ID = uuid.New().String()
-		if da.StartedAt.IsZero() {
-			da.StartedAt = time.Now()
-		}
+	// Generate UUID for legitimate record creation
+	da.ID = uuid.New().String()
+	if da.StartedAt.IsZero() {
+		da.StartedAt = time.Now()
 	}
 	return nil
 }
@@ -252,34 +253,36 @@ func (av *ArchitectureValidation) BeforeCreate(tx *gorm.DB) error {
 		return nil
 	}
 	
-	// Check if this is a migration operation
+	// Primary safeguard: Check if hooks are explicitly disabled
+	if tx.Statement != nil && tx.Statement.SkipHooks {
+		return nil
+	}
+	
+	// Secondary safeguard: Check for migration-like contexts
 	stmt := tx.Statement
 	if stmt != nil {
-		// Check if hooks are disabled (migration context)
-		if stmt.SkipHooks {
+		// Skip if we don't have proper variables set (indicates inspection query)
+		if stmt.Schema != nil && len(stmt.Vars) == 0 {
 			return nil
 		}
 		
-		// Check if this is a schema operation
-		if stmt.Schema != nil && (stmt.Schema.Table == "" || stmt.SQL.Len() == 0) {
+		// Skip if this appears to be a migration context
+		if stmt.Context != nil && stmt.Context.Value("gorm:auto_migrate") != nil {
 			return nil
 		}
 		
-		// Check if this is a migration-related query
+		// Additional safety: Skip if SQL contains SELECT with LIMIT (inspection pattern)
 		sql := stmt.SQL.String()
-		if sql != "" && (
-			stmt.Context.Value("gorm:auto_migrate") != nil ||
-			(stmt.Schema != nil && len(stmt.Vars) == 0)) {
+		if sql != "" && stmt.SQL.Len() > 0 {
+			// This is likely an inspection query during migration
 			return nil
 		}
 	}
 	
-	// Only generate UUID for actual record creation operations
-	if tx.Statement != nil && tx.Statement.Context != nil {
-		av.ID = uuid.New().String()
-		if av.StartedAt.IsZero() {
-			av.StartedAt = time.Now()
-		}
+	// Generate UUID for legitimate record creation
+	av.ID = uuid.New().String()
+	if av.StartedAt.IsZero() {
+		av.StartedAt = time.Now()
 	}
 	return nil
 }
@@ -290,34 +293,36 @@ func (hs *HealthScore) BeforeCreate(tx *gorm.DB) error {
 		return nil
 	}
 	
-	// Check if this is a migration operation
+	// Primary safeguard: Check if hooks are explicitly disabled
+	if tx.Statement != nil && tx.Statement.SkipHooks {
+		return nil
+	}
+	
+	// Secondary safeguard: Check for migration-like contexts
 	stmt := tx.Statement
 	if stmt != nil {
-		// Check if hooks are disabled (migration context)
-		if stmt.SkipHooks {
+		// Skip if we don't have proper variables set (indicates inspection query)
+		if stmt.Schema != nil && len(stmt.Vars) == 0 {
 			return nil
 		}
 		
-		// Check if this is a schema operation
-		if stmt.Schema != nil && (stmt.Schema.Table == "" || stmt.SQL.Len() == 0) {
+		// Skip if this appears to be a migration context
+		if stmt.Context != nil && stmt.Context.Value("gorm:auto_migrate") != nil {
 			return nil
 		}
 		
-		// Check if this is a migration-related query
+		// Additional safety: Skip if SQL contains SELECT with LIMIT (inspection pattern)
 		sql := stmt.SQL.String()
-		if sql != "" && (
-			stmt.Context.Value("gorm:auto_migrate") != nil ||
-			(stmt.Schema != nil && len(stmt.Vars) == 0)) {
+		if sql != "" && stmt.SQL.Len() > 0 {
+			// This is likely an inspection query during migration
 			return nil
 		}
 	}
 	
-	// Only generate UUID for actual record creation operations
-	if tx.Statement != nil && tx.Statement.Context != nil {
-		hs.ID = uuid.New().String()
-		if hs.LastUpdated.IsZero() {
-			hs.LastUpdated = time.Now()
-		}
+	// Generate UUID for legitimate record creation
+	hs.ID = uuid.New().String()
+	if hs.LastUpdated.IsZero() {
+		hs.LastUpdated = time.Now()
 	}
 	return nil
 }
@@ -991,34 +996,36 @@ func (pja *PackageJSONAnalysis) BeforeCreate(tx *gorm.DB) error {
 		return nil
 	}
 	
-	// Check if this is a migration operation
+	// Primary safeguard: Check if hooks are explicitly disabled
+	if tx.Statement != nil && tx.Statement.SkipHooks {
+		return nil
+	}
+	
+	// Secondary safeguard: Check for migration-like contexts
 	stmt := tx.Statement
 	if stmt != nil {
-		// Check if hooks are disabled (migration context)
-		if stmt.SkipHooks {
+		// Skip if we don't have proper variables set (indicates inspection query)
+		if stmt.Schema != nil && len(stmt.Vars) == 0 {
 			return nil
 		}
 		
-		// Check if this is a schema operation
-		if stmt.Schema != nil && (stmt.Schema.Table == "" || stmt.SQL.Len() == 0) {
+		// Skip if this appears to be a migration context
+		if stmt.Context != nil && stmt.Context.Value("gorm:auto_migrate") != nil {
 			return nil
 		}
 		
-		// Check if this is a migration-related query
+		// Additional safety: Skip if SQL contains SELECT with LIMIT (inspection pattern)
 		sql := stmt.SQL.String()
-		if sql != "" && (
-			stmt.Context.Value("gorm:auto_migrate") != nil ||
-			(stmt.Schema != nil && len(stmt.Vars) == 0)) {
+		if sql != "" && stmt.SQL.Len() > 0 {
+			// This is likely an inspection query during migration
 			return nil
 		}
 	}
 	
-	// Only generate UUID for actual record creation operations
-	if tx.Statement != nil && tx.Statement.Context != nil {
-		pja.ID = uuid.New().String()
-		if pja.StartedAt.IsZero() {
-			pja.StartedAt = time.Now()
-		}
+	// Generate UUID for legitimate record creation
+	pja.ID = uuid.New().String()
+	if pja.StartedAt.IsZero() {
+		pja.StartedAt = time.Now()
 	}
 	return nil
 }

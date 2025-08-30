@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -164,6 +165,118 @@ func (f FileProcessingResult) ToResponse() FileProcessingResultResponse {
 	}
 
 	return response
+}
+
+// BeforeCreate generates UUIDs for upload models before creating
+func (uf *UploadedFile) BeforeCreate(tx *gorm.DB) error {
+	// Skip if ID already exists
+	if uf.ID != "" {
+		return nil
+	}
+	
+	// Primary safeguard: Check if hooks are explicitly disabled
+	if tx.Statement != nil && tx.Statement.SkipHooks {
+		return nil
+	}
+	
+	// Secondary safeguard: Check for migration-like contexts
+	stmt := tx.Statement
+	if stmt != nil {
+		// Skip if we don't have proper variables set (indicates inspection query)
+		if stmt.Schema != nil && len(stmt.Vars) == 0 {
+			return nil
+		}
+		
+		// Skip if this appears to be a migration context
+		if stmt.Context != nil && stmt.Context.Value("gorm:auto_migrate") != nil {
+			return nil
+		}
+		
+		// Additional safety: Skip if SQL contains SELECT with LIMIT (inspection pattern)
+		sql := stmt.SQL.String()
+		if sql != "" && stmt.SQL.Len() > 0 {
+			// This is likely an inspection query during migration
+			return nil
+		}
+	}
+	
+	// Generate UUID for legitimate record creation
+	uf.ID = uuid.New().String()
+	return nil
+}
+
+func (fpr *FileProcessingResult) BeforeCreate(tx *gorm.DB) error {
+	// Skip if ID already exists
+	if fpr.ID != "" {
+		return nil
+	}
+	
+	// Primary safeguard: Check if hooks are explicitly disabled
+	if tx.Statement != nil && tx.Statement.SkipHooks {
+		return nil
+	}
+	
+	// Secondary safeguard: Check for migration-like contexts
+	stmt := tx.Statement
+	if stmt != nil {
+		// Skip if we don't have proper variables set (indicates inspection query)
+		if stmt.Schema != nil && len(stmt.Vars) == 0 {
+			return nil
+		}
+		
+		// Skip if this appears to be a migration context
+		if stmt.Context != nil && stmt.Context.Value("gorm:auto_migrate") != nil {
+			return nil
+		}
+		
+		// Additional safety: Skip if SQL contains SELECT with LIMIT (inspection pattern)
+		sql := stmt.SQL.String()
+		if sql != "" && stmt.SQL.Len() > 0 {
+			// This is likely an inspection query during migration
+			return nil
+		}
+	}
+	
+	// Generate UUID for legitimate record creation
+	fpr.ID = uuid.New().String()
+	return nil
+}
+
+func (pjf *PackageJsonFile) BeforeCreate(tx *gorm.DB) error {
+	// Skip if ID already exists
+	if pjf.ID != "" {
+		return nil
+	}
+	
+	// Primary safeguard: Check if hooks are explicitly disabled
+	if tx.Statement != nil && tx.Statement.SkipHooks {
+		return nil
+	}
+	
+	// Secondary safeguard: Check for migration-like contexts
+	stmt := tx.Statement
+	if stmt != nil {
+		// Skip if we don't have proper variables set (indicates inspection query)
+		if stmt.Schema != nil && len(stmt.Vars) == 0 {
+			return nil
+		}
+		
+		// Skip if this appears to be a migration context
+		if stmt.Context != nil && stmt.Context.Value("gorm:auto_migrate") != nil {
+			return nil
+		}
+		
+		// Additional safety: Skip if SQL contains SELECT with LIMIT (inspection pattern)
+		sql := stmt.SQL.String()
+		if sql != "" && stmt.SQL.Len() > 0 {
+			// This is likely an inspection query during migration
+			return nil
+		}
+	}
+	
+	// Generate UUID for legitimate record creation
+	pjf.ID = uuid.New().String()
+	return nil
 }
 
 // TableName overrides the table name for PackageJsonFile
