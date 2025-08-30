@@ -138,14 +138,9 @@ func Load() (*Config, error) {
 func (c *DatabaseConfig) GetDSN() string {
 	// For Railway PostgreSQL, ensure proper URL encoding and timezone
 	dsn := fmt.Sprintf(
-		"host=%s port=%d user=%s password=%s dbname=%s sslmode=%s TimeZone=UTC connect_timeout=30 statement_timeout=60000",
+		"host=%s port=%d user=%s password=%s dbname=%s sslmode=%s TimeZone=UTC",
 		c.Host, c.Port, c.User, c.Password, c.DBName, c.SSLMode,
 	)
-	
-	// Additional PostgreSQL parameters for Railway compatibility
-	if c.Host != "localhost" && c.Host != "127.0.0.1" && c.Host != "sqlite" {
-		dsn += " binary_parameters=yes"
-	}
 	
 	return dsn
 }
