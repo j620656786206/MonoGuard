@@ -40,8 +40,8 @@ type Project struct {
 	Name           string                `json:"name" gorm:"not null"`
 	Description    *string               `json:"description,omitempty"`
 	RepositoryURL  string                `json:"repositoryUrl" gorm:"column:repository_url;not null"`
-	Branch         string                `json:"branch" gorm:"not null;default:'main'"`
-	Status         string                `json:"status" gorm:"type:varchar(20);not null;default:'pending'"`
+	Branch         string                `json:"branch" gorm:"not null;default:main"`
+	Status         string                `json:"status" gorm:"type:varchar(20);not null;default:pending"`
 	HealthScore    int                   `json:"healthScore" gorm:"column:health_score;default:0"`
 	LastAnalysisAt *time.Time            `json:"lastAnalysisAt,omitempty" gorm:"column:last_analysis_at"`
 	OwnerID        string                `json:"ownerId" gorm:"column:owner_id;not null"`

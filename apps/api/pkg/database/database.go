@@ -124,10 +124,10 @@ func (db *DB) AutoMigrate() error {
 	log.Println("Database connection verified")
 
 
-	// Test fixed Project model
+	// Test both models to isolate the issue
 	models := []interface{}{
+		&models.ProjectSimple{}, // This works - use as baseline
 		&models.Project{}, // Testing fixed Project model with simplified fields
-		// &models.ProjectSimple{}, // This worked, now testing real Project
 		// Comment out other models for now to isolate the problem
 		// &models.DependencyAnalysis{},
 		// &models.ArchitectureValidation{},
