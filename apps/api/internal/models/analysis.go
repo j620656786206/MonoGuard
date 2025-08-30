@@ -1,12 +1,7 @@
 package models
 
 import (
-	"strings"
 	"time"
-
-	"github.com/google/uuid"
-	"gorm.io/gorm"
-	"github.com/monoguard/api/internal/constants"
 )
 
 // DependencyAnalysis represents a dependency analysis result
@@ -208,149 +203,14 @@ type HealthFactor struct {
 	Recommendations []string `json:"recommendations"`
 }
 
-// BeforeCreate generates UUIDs for analysis models before creating
-func (da *DependencyAnalysis) BeforeCreate(tx *gorm.DB) error {
-	// Skip if ID already exists
-	if da.ID != "" {
-		return nil
-	}
-	
-	// First line of defense: Check if hooks are explicitly disabled
-	if tx.Statement != nil && tx.Statement.SkipHooks {
-		return nil
-	}
-	
-	// Second line of defense: Check global migration mode
-	if constants.IsMigrationMode() {
-		return nil
-	}
-	
-	// Third line of defense: Multiple migration context checks
-	stmt := tx.Statement
-	if stmt != nil {
-		// Skip if this is any kind of migration context
-		if stmt.Context != nil {
-			if stmt.Context.Value("gorm:auto_migrate") != nil ||
-			   stmt.Context.Value("migration") != nil ||
-			   stmt.Context.Value("gorm:migration") != nil {
-				return nil
-			}
-		}
-		
-		// Skip if SQL is a SELECT query (inspection queries during migration)
-		sql := stmt.SQL.String()
-		if sql != "" && (
-			strings.Contains(strings.ToUpper(sql), "SELECT") ||
-			strings.Contains(strings.ToUpper(sql), "PRAGMA") ||
-			strings.Contains(strings.ToUpper(sql), "SHOW") ||
-			strings.Contains(strings.ToUpper(sql), "DESCRIBE") ||
-			strings.Contains(strings.ToUpper(sql), "INFORMATION_SCHEMA")) {
-			return nil
-		}
-	} else {
-		// If no statement context, it's likely a migration
-		return nil
-	}
-	
-	// Generate UUID for legitimate record creation
-	da.ID = uuid.New().String()
-	if da.StartedAt.IsZero() {
-		da.StartedAt = time.Now()
-	}
-	return nil
-}
+// Note: BeforeCreate hook removed to avoid Railway PostgreSQL migration issues
+// UUID generation is now handled in service layer
 
-func (av *ArchitectureValidation) BeforeCreate(tx *gorm.DB) error {
-	// Skip if ID already exists
-	if av.ID != "" {
-		return nil
-	}
-	
-	// First line of defense: Check if hooks are explicitly disabled
-	if tx.Statement != nil && tx.Statement.SkipHooks {
-		return nil
-	}
-	
-	// Second line of defense: Check global migration mode
-	if constants.IsMigrationMode() {
-		return nil
-	}
-	
-	// Third line of defense: Multiple migration context checks
-	stmt := tx.Statement
-	if stmt != nil {
-		// Skip if this is any kind of migration context
-		if stmt.Context != nil {
-			if stmt.Context.Value("gorm:auto_migrate") != nil ||
-			   stmt.Context.Value("migration") != nil ||
-			   stmt.Context.Value("gorm:migration") != nil {
-				return nil
-			}
-		}
-		
-		// Skip if SQL is a SELECT query (inspection queries during migration)
-		sql := stmt.SQL.String()
-		if sql != "" && (
-			strings.Contains(strings.ToUpper(sql), "SELECT") ||
-			strings.Contains(strings.ToUpper(sql), "PRAGMA") ||
-			strings.Contains(strings.ToUpper(sql), "SHOW") ||
-			strings.Contains(strings.ToUpper(sql), "DESCRIBE") ||
-			strings.Contains(strings.ToUpper(sql), "INFORMATION_SCHEMA")) {
-			return nil
-		}
-	} else {
-		// If no statement context, it's likely a migration
-		return nil
-	}
-	
-	// Generate UUID for legitimate record creation
-	av.ID = uuid.New().String()
-	if av.StartedAt.IsZero() {
-		av.StartedAt = time.Now()
-	}
-	return nil
-}
+// Note: BeforeCreate hook removed to avoid Railway PostgreSQL migration issues
+// UUID generation is now handled in service layer
 
-func (hs *HealthScore) BeforeCreate(tx *gorm.DB) error {
-	// Skip if ID already exists
-	if hs.ID != "" {
-		return nil
-	}
-	
-	// Primary safeguard: Check if hooks are explicitly disabled
-	if tx.Statement != nil && tx.Statement.SkipHooks {
-		return nil
-	}
-	
-	// Secondary safeguard: Check for migration-like contexts
-	stmt := tx.Statement
-	if stmt != nil {
-		// Skip migration contexts
-		
-		// Skip if this appears to be a migration context
-		if stmt.Context != nil && stmt.Context.Value("gorm:auto_migrate") != nil {
-			return nil
-		}
-		
-		// Skip if SQL is a SELECT query (inspection queries during migration)
-		sql := stmt.SQL.String()
-		if sql != "" && (
-			strings.Contains(strings.ToUpper(sql), "SELECT") ||
-			strings.Contains(strings.ToUpper(sql), "PRAGMA") ||
-			strings.Contains(strings.ToUpper(sql), "SHOW") ||
-			strings.Contains(strings.ToUpper(sql), "DESCRIBE") ||
-			strings.Contains(strings.ToUpper(sql), "INFORMATION_SCHEMA")) {
-			return nil
-		}
-	}
-	
-	// Generate UUID for legitimate record creation
-	hs.ID = uuid.New().String()
-	if hs.LastUpdated.IsZero() {
-		hs.LastUpdated = time.Now()
-	}
-	return nil
-}
+// Note: BeforeCreate hook removed to avoid Railway PostgreSQL migration issues
+// UUID generation is now handled in service layer
 
 // TableName methods
 func (DependencyAnalysis) TableName() string {
@@ -1015,46 +875,8 @@ type ImplementationPhaseInfo struct {
 	RiskMitigation  []string `json:"riskMitigation"`
 }
 
-func (pja *PackageJSONAnalysis) BeforeCreate(tx *gorm.DB) error {
-	// Skip if ID already exists
-	if pja.ID != "" {
-		return nil
-	}
-	
-	// Primary safeguard: Check if hooks are explicitly disabled
-	if tx.Statement != nil && tx.Statement.SkipHooks {
-		return nil
-	}
-	
-	// Secondary safeguard: Check for migration-like contexts
-	stmt := tx.Statement
-	if stmt != nil {
-		// Skip migration contexts
-		
-		// Skip if this appears to be a migration context
-		if stmt.Context != nil && stmt.Context.Value("gorm:auto_migrate") != nil {
-			return nil
-		}
-		
-		// Skip if SQL is a SELECT query (inspection queries during migration)
-		sql := stmt.SQL.String()
-		if sql != "" && (
-			strings.Contains(strings.ToUpper(sql), "SELECT") ||
-			strings.Contains(strings.ToUpper(sql), "PRAGMA") ||
-			strings.Contains(strings.ToUpper(sql), "SHOW") ||
-			strings.Contains(strings.ToUpper(sql), "DESCRIBE") ||
-			strings.Contains(strings.ToUpper(sql), "INFORMATION_SCHEMA")) {
-			return nil
-		}
-	}
-	
-	// Generate UUID for legitimate record creation
-	pja.ID = uuid.New().String()
-	if pja.StartedAt.IsZero() {
-		pja.StartedAt = time.Now()
-	}
-	return nil
-}
+// Note: BeforeCreate hook removed to avoid Railway PostgreSQL migration issues
+// UUID generation is now handled in service layer
 
 func (PackageJSONAnalysis) TableName() string {
 	return "package_json_analyses"

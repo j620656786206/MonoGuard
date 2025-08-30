@@ -1,12 +1,7 @@
 package models
 
 import (
-	"strings"
 	"time"
-
-	"github.com/google/uuid"
-	"gorm.io/gorm"
-	"github.com/monoguard/api/internal/constants"
 )
 
 // Status represents the status of an entity
@@ -101,55 +96,8 @@ type ArchitectureRule struct {
 	Enabled     bool     `json:"enabled"`
 }
 
-// BeforeCreate generates a UUID for the project before creating
-func (p *Project) BeforeCreate(tx *gorm.DB) error {
-	// Skip if ID already exists
-	if p.ID != "" {
-		return nil
-	}
-	
-	// Ultra-safe approach: ONLY generate UUID if we're absolutely sure it's a real record creation
-	// First line of defense: Check if hooks are explicitly disabled
-	if tx.Statement != nil && tx.Statement.SkipHooks {
-		return nil
-	}
-	
-	// Second line of defense: Check global migration mode
-	if constants.IsMigrationMode() {
-		return nil
-	}
-	
-	// Third line of defense: Multiple migration context checks
-	stmt := tx.Statement
-	if stmt != nil {
-		// Skip if this is any kind of migration context
-		if stmt.Context != nil {
-			if stmt.Context.Value("gorm:auto_migrate") != nil ||
-			   stmt.Context.Value("migration") != nil ||
-			   stmt.Context.Value("gorm:migration") != nil {
-				return nil
-			}
-		}
-		
-		// Skip if SQL is a SELECT query (inspection queries during migration)
-		sql := stmt.SQL.String()
-		if sql != "" && (
-			strings.Contains(strings.ToUpper(sql), "SELECT") ||
-			strings.Contains(strings.ToUpper(sql), "PRAGMA") ||
-			strings.Contains(strings.ToUpper(sql), "SHOW") ||
-			strings.Contains(strings.ToUpper(sql), "DESCRIBE") ||
-			strings.Contains(strings.ToUpper(sql), "INFORMATION_SCHEMA")) {
-			return nil
-		}
-	} else {
-		// If no statement context, it's likely a migration
-		return nil
-	}
-	
-	// Only generate UUID for confirmed legitimate record creation with INSERT statement
-	p.ID = uuid.New().String()
-	return nil
-}
+// Note: BeforeCreate hook removed to avoid Railway PostgreSQL migration issues
+// UUID generation is now handled in service layer
 
 // TableName returns the table name for the Project model
 func (Project) TableName() string {

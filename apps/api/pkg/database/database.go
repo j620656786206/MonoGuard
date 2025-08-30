@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/monoguard/api/internal/config"
-	"github.com/monoguard/api/internal/constants"
 	"github.com/monoguard/api/internal/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
@@ -111,10 +110,7 @@ func New(cfg *config.DatabaseConfig) (*DB, error) {
 // AutoMigrate runs database migrations
 func (db *DB) AutoMigrate() error {
 	log.Println("Running database migrations...")
-	
-	// Set migration mode to disable hooks globally
-	constants.SetMigrationMode(true)
-	defer constants.SetMigrationMode(false)
+	// Note: BeforeCreate hooks have been removed, no longer need hook management
 	
 	// Test database connection first
 	sqlDB, err := db.DB.DB()
