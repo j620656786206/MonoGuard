@@ -121,15 +121,13 @@ func Load() (*Config, error) {
 		return nil, fmt.Errorf("configuration validation failed: %w", err)
 	}
 
-	// Additional validation for PostgreSQL (production or when explicitly configured)
-	if config.Database.Host != "sqlite" && config.Database.Host != "" && config.Database.Host != "localhost" {
-		if config.Database.Host == "" || config.Database.User == "" || config.Database.Password == "" || config.Database.DBName == "" {
-			return nil, fmt.Errorf("PostgreSQL configuration incomplete: host=%s, user=%s, dbname=%s (password length=%d)",
-				config.Database.Host, config.Database.User, config.Database.DBName, len(config.Database.Password))
-		}
-		fmt.Printf("PostgreSQL config validated: host=%s, user=%s, dbname=%s, port=%d, sslmode=%s\n",
-			config.Database.Host, config.Database.User, config.Database.DBName, config.Database.Port, config.Database.SSLMode)
+	// Validate PostgreSQL configuration
+	if config.Database.Host == "" || config.Database.User == "" || config.Database.Password == "" || config.Database.DBName == "" {
+		return nil, fmt.Errorf("PostgreSQL configuration incomplete: host=%s, user=%s, dbname=%s (password length=%d)",
+			config.Database.Host, config.Database.User, config.Database.DBName, len(config.Database.Password))
 	}
+	fmt.Printf("PostgreSQL config validated: host=%s, user=%s, dbname=%s, port=%d, sslmode=%s\n",
+		config.Database.Host, config.Database.User, config.Database.DBName, config.Database.Port, config.Database.SSLMode)
 
 	return config, nil
 }

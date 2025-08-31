@@ -1,7 +1,12 @@
 package models
 
 import (
+	"database/sql/driver"
+	"encoding/json"
 	"time"
+	
+	"gorm.io/gorm"
+	"github.com/monoguard/api/internal/utils"
 )
 
 // DependencyAnalysis represents a dependency analysis result
@@ -28,6 +33,27 @@ type DependencyAnalysisResults struct {
 	CircularDependencies  []CircularDependency  `json:"circularDependencies"`
 	BundleImpact          BundleImpactReport    `json:"bundleImpact"`
 	Summary               AnalysisSummary       `json:"summary"`
+}
+
+// Value implements the driver.Valuer interface for PostgreSQL JSONB
+func (dar DependencyAnalysisResults) Value() (driver.Value, error) {
+	return json.Marshal(dar)
+}
+
+// Scan implements the sql.Scanner interface for PostgreSQL JSONB  
+func (dar *DependencyAnalysisResults) Scan(value interface{}) error {
+	if value == nil {
+		return nil
+	}
+	
+	switch v := value.(type) {
+	case []byte:
+		return json.Unmarshal(v, dar)
+	case string:
+		return json.Unmarshal([]byte(v), dar)
+	default:
+		return nil
+	}
 }
 
 // DuplicateDependency represents a duplicate dependency issue
@@ -126,6 +152,27 @@ type ArchitectureValidationResults struct {
 	Summary              ValidationSummary       `json:"summary"`
 }
 
+// Value implements the driver.Valuer interface for PostgreSQL JSONB
+func (avr ArchitectureValidationResults) Value() (driver.Value, error) {
+	return json.Marshal(avr)
+}
+
+// Scan implements the sql.Scanner interface for PostgreSQL JSONB  
+func (avr *ArchitectureValidationResults) Scan(value interface{}) error {
+	if value == nil {
+		return nil
+	}
+	
+	switch v := value.(type) {
+	case []byte:
+		return json.Unmarshal(v, avr)
+	case string:
+		return json.Unmarshal([]byte(v), avr)
+	default:
+		return nil
+	}
+}
+
 // ArchitectureViolation represents an architecture rule violation
 type ArchitectureViolation struct {
 	RuleName         string   `json:"ruleName"`
@@ -166,6 +213,27 @@ type AnalysisMetadata struct {
 	Environment      AnalysisEnvironment    `json:"environment"`
 }
 
+// Value implements the driver.Valuer interface for PostgreSQL JSONB
+func (am AnalysisMetadata) Value() (driver.Value, error) {
+	return json.Marshal(am)
+}
+
+// Scan implements the sql.Scanner interface for PostgreSQL JSONB  
+func (am *AnalysisMetadata) Scan(value interface{}) error {
+	if value == nil {
+		return nil
+	}
+	
+	switch v := value.(type) {
+	case []byte:
+		return json.Unmarshal(v, am)
+	case string:
+		return json.Unmarshal([]byte(v), am)
+	default:
+		return nil
+	}
+}
+
 // AnalysisEnvironment contains environment information
 type AnalysisEnvironment struct {
 	NodeVersion  string `json:"nodeVersion"`
@@ -203,14 +271,26 @@ type HealthFactor struct {
 	Recommendations []string `json:"recommendations"`
 }
 
-// Note: BeforeCreate hook removed to avoid Railway PostgreSQL migration issues
-// UUID generation is now handled in service layer
+// BeforeCreate generates UUIDs for analysis models
+func (d *DependencyAnalysis) BeforeCreate(tx *gorm.DB) error {
+	if d.ID == "" {
+		d.ID = utils.GenerateUUID()
+	}
+	if d.StartedAt.IsZero() {
+		d.StartedAt = time.Now()
+	}
+	return nil
+}
 
-// Note: BeforeCreate hook removed to avoid Railway PostgreSQL migration issues
-// UUID generation is now handled in service layer
-
-// Note: BeforeCreate hook removed to avoid Railway PostgreSQL migration issues
-// UUID generation is now handled in service layer
+func (a *ArchitectureValidation) BeforeCreate(tx *gorm.DB) error {
+	if a.ID == "" {
+		a.ID = utils.GenerateUUID()
+	}
+	if a.StartedAt.IsZero() {
+		a.StartedAt = time.Now()
+	}
+	return nil
+}
 
 // TableName methods
 func (DependencyAnalysis) TableName() string {

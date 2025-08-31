@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/monoguard/api/internal/config"
+	"github.com/monoguard/api/internal/models"
 	"gorm.io/driver/postgres"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
@@ -52,39 +52,22 @@ func New(cfg *config.DatabaseConfig) (*DB, error) {
 	var db *gorm.DB
 	var err error
 
-	// Use SQLite for development, PostgreSQL for production
-	if cfg.Host == "sqlite" || cfg.Host == "" {
-		// SQLite mode for development
-		dbFile := cfg.DBName
-		if dbFile == "" {
-			dbFile = "monoguard.db"
-		}
-		db, err = gorm.Open(sqlite.Open(dbFile), &gorm.Config{
-			Logger: gormLogger,
-			NowFunc: func() time.Time {
-				return time.Now().UTC()
-			},
-		})
-	} else {
-		// PostgreSQL mode
-		dsn := cfg.GetDSN()
-		log.Printf("Connecting to PostgreSQL with DSN: %s (password hidden)", 
-			fmt.Sprintf("host=%s port=%d user=%s dbname=%s sslmode=%s TimeZone=UTC",
-				cfg.Host, cfg.Port, cfg.User, cfg.DBName, cfg.SSLMode))
-		
-		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
-			Logger: gormLogger,
-			NowFunc: func() time.Time {
-				return time.Now().UTC()
-			},
-			// Railway PostgreSQL optimizations
-			DisableForeignKeyConstraintWhenMigrating: true,
-			SkipDefaultTransaction: false,
-			PrepareStmt: false,
-			// Disable automatic pluralization to prevent table name issues
-			NamingStrategy: nil,
-		})
-	}
+	// PostgreSQL only
+	dsn := cfg.GetDSN()
+	log.Printf("Connecting to PostgreSQL with DSN: %s (password hidden)", 
+		fmt.Sprintf("host=%s port=%d user=%s dbname=%s sslmode=%s TimeZone=UTC",
+			cfg.Host, cfg.Port, cfg.User, cfg.DBName, cfg.SSLMode))
+	
+	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
+		Logger: gormLogger,
+		NowFunc: func() time.Time {
+			return time.Now().UTC()
+		},
+		// PostgreSQL optimizations
+		DisableForeignKeyConstraintWhenMigrating: false,
+		SkipDefaultTransaction: false,
+		PrepareStmt: true,
+	})
 	
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to database: %w", err)
@@ -96,19 +79,17 @@ func New(cfg *config.DatabaseConfig) (*DB, error) {
 		return nil, fmt.Errorf("failed to get underlying database connection: %w", err)
 	}
 
-	// Configure connection pool (only for PostgreSQL)
-	if cfg.Host != "sqlite" && cfg.Host != "" {
-		sqlDB.SetMaxOpenConns(cfg.MaxOpen)
-		sqlDB.SetMaxIdleConns(cfg.MaxIdle)
-		sqlDB.SetConnMaxLifetime(time.Hour)
-	}
+	// Configure connection pool
+	sqlDB.SetMaxOpenConns(cfg.MaxOpen)
+	sqlDB.SetMaxIdleConns(cfg.MaxIdle)
+	sqlDB.SetConnMaxLifetime(time.Hour)
 
 	return &DB{db}, nil
 }
 
-// AutoMigrate runs database migrations using native SQL to avoid GORM compatibility issues
+// AutoMigrate runs database migrations using GORM
 func (db *DB) AutoMigrate() error {
-	log.Println("Running database migrations using native SQL...")
+	log.Println("Running GORM database migrations...")
 	
 	// Test database connection first
 	sqlDB, err := db.DB.DB()
@@ -121,50 +102,26 @@ func (db *DB) AutoMigrate() error {
 	}
 	log.Println("Database connection verified")
 
-	// Create tables using native SQL to avoid GORM "insufficient arguments" issue
-	tables := []struct {
-		name string
-		sql  string
-	}{
-		{
-			name: "projects_simple",
-			sql: `CREATE TABLE IF NOT EXISTS projects_simple (
-				id VARCHAR(255) PRIMARY KEY,
-				name VARCHAR(255) NOT NULL,
-				description TEXT,
-				created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-				updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-			)`,
-		},
-		{
-			name: "projects", 
-			sql: `CREATE TABLE IF NOT EXISTS projects (
-				id VARCHAR(255) PRIMARY KEY,
-				name VARCHAR(255) NOT NULL,
-				description TEXT,
-				repository_url VARCHAR(255),
-				branch VARCHAR(255),
-				status VARCHAR(255),
-				health_score INTEGER DEFAULT 0,
-				owner_id VARCHAR(255),
-				created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-				updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-			)`,
-		},
+	// Run GORM migrations using the DB instance properly
+	log.Printf("Running GORM AutoMigrate...")
+	
+	err = db.DB.AutoMigrate(
+		&models.Project{},
+		&models.DependencyAnalysis{},
+		&models.ArchitectureValidation{},
+		&models.FileProcessingResult{},
+		&models.UploadedFile{},
+		&models.PackageJsonFile{},
+	)
+	
+	if err != nil {
+		log.Printf("Migration error: %v", err)
+		return fmt.Errorf("failed to migrate models: %w", err)
 	}
+	
+	log.Printf("Successfully migrated all models")
 
-	for _, table := range tables {
-		log.Printf("Creating table: %s", table.name)
-		
-		if err := db.Exec(table.sql).Error; err != nil {
-			log.Printf("Failed to create table %s: %v", table.name, err)
-			return fmt.Errorf("failed to create table %s: %w", table.name, err)
-		}
-		
-		log.Printf("Successfully created/verified table: %s", table.name)
-	}
-
-	log.Println("Database migrations completed successfully using native SQL")
+	log.Println("GORM database migrations completed successfully")
 	return nil
 }
 

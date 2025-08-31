@@ -1,7 +1,12 @@
 package models
 
 import (
+	"database/sql/driver"
+	"encoding/json"
 	"time"
+	
+	"gorm.io/gorm"
+	"github.com/monoguard/api/internal/utils"
 )
 
 // Status represents the status of an entity
@@ -34,22 +39,24 @@ const (
 	RiskLevelCritical RiskLevel = "critical"
 )
 
-// Project represents a project in the system - simplified for Railway compatibility
+// Project represents a project in the system
 type Project struct {
-	ID             string    `json:"id" gorm:"primaryKey"`
-	Name           string    `json:"name" gorm:"not null"`
-	Description    string    `json:"description"`                     // Changed from *string to string
-	RepositoryURL  string    `json:"repositoryUrl"`                   // Removed custom column name
-	Branch         string    `json:"branch"`                          // Removed default value
-	Status         string    `json:"status"`                          // Simplified, no type constraint or default
-	HealthScore    int       `json:"healthScore"`                     // Removed custom column name
-	OwnerID        string    `json:"ownerId"`                         // Removed custom column name
-	CreatedAt      time.Time `json:"createdAt"`                       // Removed custom column name
-	UpdatedAt      time.Time `json:"updatedAt"`                       // Removed custom column name
-	
-	// All complex fields temporarily removed for Railway compatibility
-	// LastAnalysisAt *time.Time            `json:"lastAnalysisAt,omitempty" gorm:"column:last_analysis_at"`
-	// Settings       *ProjectSettings      `json:"settings"`
+	ID             string           `json:"id" gorm:"primaryKey"`
+	Name           string           `json:"name" gorm:"not null"`
+	Description    *string          `json:"description,omitempty"`
+	RepositoryURL  string           `json:"repositoryUrl" gorm:"column:repository_url"`
+	Branch         string           `json:"branch" gorm:"default:main"`
+	Status         Status           `json:"status" gorm:"type:varchar(20);not null;default:pending"`
+	HealthScore    int              `json:"healthScore" gorm:"column:health_score;default:0"`
+	OwnerID        string           `json:"ownerId" gorm:"column:owner_id"`
+	LastAnalysisAt *time.Time       `json:"lastAnalysisAt,omitempty" gorm:"column:last_analysis_at"`
+	Settings       *ProjectSettings `json:"settings" gorm:"type:jsonb"`
+	CreatedAt      time.Time        `json:"createdAt" gorm:"column:created_at"`
+	UpdatedAt      time.Time        `json:"updatedAt" gorm:"column:updated_at"`
+
+	// Associations
+	DependencyAnalyses      []DependencyAnalysis      `json:"dependencyAnalyses,omitempty" gorm:"foreignKey:ProjectID"`
+	ArchitectureValidations []ArchitectureValidation  `json:"architectureValidations,omitempty" gorm:"foreignKey:ProjectID"`
 }
 
 // ProjectSettings contains project-specific settings
@@ -62,12 +69,33 @@ type ProjectSettings struct {
 	ArchitectureRules    ArchitectureRules        `json:"architectureRules"`
 }
 
+// Value implements the driver.Valuer interface for PostgreSQL JSONB
+func (ps ProjectSettings) Value() (driver.Value, error) {
+	return json.Marshal(ps)
+}
+
+// Scan implements the sql.Scanner interface for PostgreSQL JSONB  
+func (ps *ProjectSettings) Scan(value interface{}) error {
+	if value == nil {
+		return nil
+	}
+	
+	switch v := value.(type) {
+	case []byte:
+		return json.Unmarshal(v, ps)
+	case string:
+		return json.Unmarshal([]byte(v), ps)
+	default:
+		return nil
+	}
+}
+
 // NotificationSettings contains notification configuration
 type NotificationSettings struct {
 	Email        bool       `json:"email"`
 	Webhook      *string    `json:"webhook,omitempty"`
 	SlackWebhook *string    `json:"slackWebhook,omitempty"`
-	Severity     []string   `json:"severity"` // Temporarily changed to string slice
+	Severity     []Severity `json:"severity"`
 }
 
 // ArchitectureRules contains architecture validation rules
@@ -88,14 +116,19 @@ type ArchitectureLayer struct {
 // ArchitectureRule defines an architectural rule
 type ArchitectureRule struct {
 	Name        string   `json:"name"`
-	Severity    string   `json:"severity"` // Temporarily changed to string
+	Severity    Severity `json:"severity"`
 	Description string   `json:"description"`
 	Pattern     *string  `json:"pattern,omitempty"`
 	Enabled     bool     `json:"enabled"`
 }
 
-// Note: BeforeCreate hook removed to avoid Railway PostgreSQL migration issues
-// UUID generation is now handled in service layer
+// BeforeCreate generates a UUID for the project
+func (p *Project) BeforeCreate(tx *gorm.DB) error {
+	if p.ID == "" {
+		p.ID = utils.GenerateUUID()
+	}
+	return nil
+}
 
 // TableName returns the table name for the Project model
 func (Project) TableName() string {

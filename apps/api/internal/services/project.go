@@ -7,7 +7,6 @@ import (
 
 	"github.com/monoguard/api/internal/models"
 	"github.com/monoguard/api/internal/repository"
-	"github.com/monoguard/api/internal/utils"
 	"github.com/sirupsen/logrus"
 )
 
@@ -67,7 +66,7 @@ func (s *ProjectService) CreateProject(ctx context.Context, req *CreateProjectRe
 			AutoAnalysis: true,
 			NotificationSettings: models.NotificationSettings{
 				Email:    false,
-				Severity: []string{"high", "critical"}, // Temporarily using string values
+				Severity: []models.Severity{models.SeverityHigh, models.SeverityCritical},
 			},
 			ExcludePatterns: []string{"node_modules/**", "dist/**", "build/**"},
 			IncludePatterns: []string{"**/*.json"},
@@ -85,7 +84,7 @@ func (s *ProjectService) CreateProject(ctx context.Context, req *CreateProjectRe
 	
 	project := &models.Project{
 		Name:          req.Name,
-		Description:   description,                    // Now a string, not pointer
+		Description:   &description,
 		RepositoryURL: req.RepositoryURL,
 		Branch:        req.Branch,
 		Status:        "pending",
@@ -94,7 +93,7 @@ func (s *ProjectService) CreateProject(ctx context.Context, req *CreateProjectRe
 	}
 
 	// Generate UUID for the project
-	utils.GenerateProjectID(project)
+	// UUID will be generated automatically by BeforeCreate hook
 
 	if err := s.projectRepo.Create(ctx, project); err != nil {
 		s.logger.WithError(err).Error("Failed to create project")

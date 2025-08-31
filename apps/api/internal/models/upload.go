@@ -5,6 +5,7 @@ import (
 	"time"
 	
 	"gorm.io/gorm"
+	"github.com/monoguard/api/internal/utils"
 )
 
 // UploadedFile represents an uploaded file in the system
@@ -59,6 +60,28 @@ const (
 	UploadStatusCompleted  UploadStatus = "completed"
 	UploadStatusError      UploadStatus = "error"
 )
+
+// BeforeCreate generates UUIDs for upload models
+func (u *UploadedFile) BeforeCreate(tx *gorm.DB) error {
+	if u.ID == "" {
+		u.ID = utils.GenerateUUID()
+	}
+	return nil
+}
+
+func (f *FileProcessingResult) BeforeCreate(tx *gorm.DB) error {
+	if f.ID == "" {
+		f.ID = utils.GenerateUUID()
+	}
+	return nil
+}
+
+func (p *PackageJsonFile) BeforeCreate(tx *gorm.DB) error {
+	if p.ID == "" {
+		p.ID = utils.GenerateUUID()
+	}
+	return nil
+}
 
 // TableName overrides the table name for UploadedFile
 func (UploadedFile) TableName() string {
