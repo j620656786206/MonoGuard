@@ -1,6 +1,6 @@
 {
   "name": "@monoguard/monorepo",
-  "version": "0.1.0",
+  "version": "1.0.0-beta.1",
   "description": "MonoGuard - Comprehensive monorepo architecture analysis and validation tool",
   "private": true,
   "packageManager": "pnpm@10.14.0",
@@ -36,12 +36,24 @@
     "monorepo",
     "architecture",
     "dependency-analysis",
+    "security-scanning",
+    "circular-dependencies",
     "typescript",
     "nextjs",
-    "golang"
+    "golang",
+    "developer-tools",
+    "code-quality"
   ],
-  "author": "MonoGuard Team",
+  "author": "Alex Yu <alex@monoguard.dev>",
   "license": "MIT",
+  "homepage": "https://mono-guard-frontend.vercel.app",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alexyu/mono-guard.git"
+  },
+  "bugs": {
+    "url": "https://github.com/alexyu/mono-guard/issues"
+  },
   "devDependencies": {
     "@eslint/compat": "^1.1.1",
     "@eslint/eslintrc": "^2.1.1",
