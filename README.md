@@ -27,8 +27,8 @@ mono-guard/
 - **Node.js** 18+ 與 **pnpm** 8+
 - **Go** 1.21+
 - **Docker** 與 **Docker Compose**
-- **PostgreSQL** 15+ (本機開發不使用 Docker 時需要)
-- **Redis** 7+ (本機開發不使用 Docker 時需要)
+- **PostgreSQL** 15+ (建議使用 Docker Compose 統一環境)
+- **Redis** 7+ (建議使用 Docker Compose 統一環境)
 
 ### 開發環境設定
 
@@ -114,8 +114,9 @@ monoguard validate    # 驗證架構規則
 
 ### 🚀 API (`apps/api`)
 - **技術：** Go with Gin framework
-- **資料庫：** PostgreSQL
-- **快取：** Redis
+- **資料庫：** PostgreSQL 15 (統一開發和生產環境)
+- **快取：** Redis 7
+- **ORM：** GORM with JSONB support
 - **埠號：** 8080
 
 **主要端點：**
@@ -201,6 +202,36 @@ NEXTAUTH_SECRET=your-nextauth-secret
 # 選用：GitHub OAuth
 GITHUB_CLIENT_ID=your-github-client-id
 GITHUB_CLIENT_SECRET=your-github-client-secret
+```
+
+## 🗄️ 資料庫架構
+
+MonoGuard 採用統一的 PostgreSQL 架構，確保開發和生產環境完全一致：
+
+### 統一資料庫策略
+- **開發環境：** Docker Compose PostgreSQL 15
+- **生產環境：** Railway PostgreSQL 15
+- **測試環境：** Docker PostgreSQL (CI/CD)
+
+### 關鍵特性
+- **GORM ORM：** 類型安全的資料庫操作
+- **JSONB 支援：** 複雜數據結構的高效存儲
+- **自動遷移：** 開發時自動同步資料庫結構
+- **連接池：** 高效的資料庫連接管理
+
+### 核心資料表
+- `projects` - 專案主表，支援 JSONB settings
+- `dependency_analyses` - 相依性分析結果
+- `architecture_validations` - 架構驗證報告
+- `health_scores` - 健康指標歷史記錄
+
+### Docker 快速啟動
+```bash
+# 啟動完整開發環境
+docker-compose up -d
+
+# 僅啟動資料庫服務
+docker-compose up -d postgres redis
 ```
 
 ## 🏛️ 架構原則
