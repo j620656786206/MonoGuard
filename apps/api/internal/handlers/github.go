@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"regexp"
 	"strings"
 
@@ -185,7 +186,18 @@ func (h *GitHubHandler) fetchPackageJsonFromGitHub(repoInfo *GitHubRepoInfo) (*m
 func (h *GitHubHandler) getDefaultBranch(repoInfo *GitHubRepoInfo) (string, error) {
 	repoURL := fmt.Sprintf("https://api.github.com/repos/%s/%s", repoInfo.Owner, repoInfo.Repo)
 
-	resp, err := http.Get(repoURL)
+	req, err := http.NewRequest("GET", repoURL, nil)
+	if err != nil {
+		return "", fmt.Errorf("failed to create request: %w", err)
+	}
+
+	// Add GitHub token if available
+	if token := os.Getenv("GITHUB_TOKEN"); token != "" {
+		req.Header.Set("Authorization", "token "+token)
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("failed to fetch repository info: %w", err)
 	}
@@ -237,7 +249,18 @@ func (h *GitHubHandler) findPackageJsonFiles(repoInfo *GitHubRepoInfo) ([]models
 	treeURL := fmt.Sprintf("https://api.github.com/repos/%s/%s/git/trees/%s?recursive=1", 
 		repoInfo.Owner, repoInfo.Repo, repoInfo.Ref)
 
-	resp, err := http.Get(treeURL)
+	req, err := http.NewRequest("GET", treeURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	// Add GitHub token if available
+	if token := os.Getenv("GITHUB_TOKEN"); token != "" {
+		req.Header.Set("Authorization", "token "+token)
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch repository tree: %w", err)
 	}
@@ -326,7 +349,18 @@ func (h *GitHubHandler) fetchFileContent(repoInfo *GitHubRepoInfo, sha string) (
 	blobURL := fmt.Sprintf("https://api.github.com/repos/%s/%s/git/blobs/%s", 
 		repoInfo.Owner, repoInfo.Repo, sha)
 
-	resp, err := http.Get(blobURL)
+	req, err := http.NewRequest("GET", blobURL, nil)
+	if err != nil {
+		return "", fmt.Errorf("failed to create request: %w", err)
+	}
+
+	// Add GitHub token if available
+	if token := os.Getenv("GITHUB_TOKEN"); token != "" {
+		req.Header.Set("Authorization", "token "+token)
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("failed to fetch blob: %w", err)
 	}

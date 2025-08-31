@@ -124,6 +124,7 @@ func (a *App) setupServer() {
 	layerValidatorService := services.NewLayerValidatorService(projectRepo, analysisRepo, a.logger)
 	uploadService := services.NewUploadService(a.db, a.logger)
 	basicEngine := services.NewBasicAnalysisEngine(a.logger)
+	
 	integratedAnalysis := services.NewIntegratedAnalysisService(
 		basicEngine,
 		circularDetectorService,
@@ -142,9 +143,10 @@ func (a *App) setupServer() {
 	uploadHandler := handlers.NewUploadHandler(uploadService, a.logger, a.config.Upload.Directory)
 	githubHandler := handlers.NewGitHubHandler(integratedAnalysis, uploadService, a.logger)
 
-	// API routes
+	// API routes (simplified for MVP - no session management)
 	v1 := router.Group("/api/v1")
 	{
+
 		// Project routes
 		projects := v1.Group("/projects")
 		{

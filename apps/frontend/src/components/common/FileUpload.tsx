@@ -149,13 +149,6 @@ export const FileUpload: React.FC<FileUploadProps> = ({
         )}
       </div>
 
-      {/* Upload Results */}
-      {result && !isUploading && (
-        <UploadResults 
-          result={result} 
-          onReset={handleReset}
-        />
-      )}
 
       {/* Error Messages */}
       {errors.length > 0 && !isUploading && (
@@ -255,49 +248,6 @@ const UploadPrompt: React.FC<UploadPromptProps> = ({ isDragActive, accept, disab
       )}
     </div>
   </>
-);
-
-// Upload Results Component
-interface UploadResultsProps {
-  result: FileProcessingResult;
-  onReset: () => void;
-}
-
-const UploadResults: React.FC<UploadResultsProps> = ({ result, onReset }) => (
-  <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-    <div className="flex items-center justify-between mb-3">
-      <h4 className="font-medium text-green-800">Upload Successful</h4>
-      <button
-        onClick={onReset}
-        className="text-sm text-green-600 hover:text-green-700 underline"
-      >
-        Upload More Files
-      </button>
-    </div>
-    
-    <div className="space-y-2 text-sm">
-      <p className="text-green-700">
-        Uploaded {result.files.length} file{result.files.length !== 1 ? 's' : ''}
-      </p>
-      
-      {result.packageJsonFiles.length > 0 && (
-        <p className="text-green-700">
-          Found {result.packageJsonFiles.length} package.json file{result.packageJsonFiles.length !== 1 ? 's' : ''}
-        </p>
-      )}
-
-      {result.errors && result.errors.length > 0 && (
-        <div className="mt-3">
-          <p className="text-amber-700 font-medium mb-1">Warnings:</p>
-          <ul className="text-amber-600 text-xs space-y-1">
-            {result.errors.map((error: any, index: number) => (
-              <li key={index}>• {error}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </div>
-  </div>
 );
 
 // Error Messages Component

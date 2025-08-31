@@ -284,6 +284,20 @@ class ApiClient {
     link.remove();
     window.URL.revokeObjectURL(downloadUrl);
   }
+
+  /**
+   * Set session token for API requests
+   */
+  public setSessionToken(token: string): void {
+    this.axiosInstance.defaults.headers.common['X-Session-Token'] = token;
+  }
+
+  /**
+   * Clear session token from API requests
+   */
+  public clearSessionToken(): void {
+    delete this.axiosInstance.defaults.headers.common['X-Session-Token'];
+  }
 }
 
 // Create and export a singleton instance

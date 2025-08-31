@@ -96,21 +96,33 @@ func (s *IntegratedAnalysisService) createTempAnalysisDir(processingResult *mode
 
 	// Write package.json files to temp directory
 	for i, pkgFile := range processingResult.PackageJsonFiles {
-		// Create directory structure if path contains subdirectories
-		dir := filepath.Dir(pkgFile.Path)
-		if dir != "." {
+		// Use standard package.json filename for analysis
+		fileName := "package.json"
+		
+		// Create directory structure for multiple package.json files if needed
+		dir := fmt.Sprintf("pkg-%d", i)
+		if len(processingResult.PackageJsonFiles) == 1 {
+			// Single file - put it in root
+			dir = ""
+		}
+		
+		var filePath string
+		if dir != "" {
 			fullDir := filepath.Join(tempDir, dir)
 			if err := os.MkdirAll(fullDir, 0755); err != nil {
 				return "", fmt.Errorf("failed to create directory %s: %w", fullDir, err)
 			}
+			filePath = filepath.Join(fullDir, fileName)
+		} else {
+			filePath = filepath.Join(tempDir, fileName)
 		}
 
-		filePath := filepath.Join(tempDir, pkgFile.Path)
 		if err := ioutil.WriteFile(filePath, []byte(pkgFile.Content), 0644); err != nil {
 			return "", fmt.Errorf("failed to write package.json file %d: %w", i, err)
 		}
 
 		s.logger.WithFields(logrus.Fields{
+			"original_path": pkgFile.Path,
 			"file_path": filePath,
 			"file_size": len(pkgFile.Content),
 		}).Debug("Wrote package.json to temp directory")
@@ -247,6 +259,8 @@ func (s *IntegratedAnalysisService) runComprehensiveAnalysis(ctx context.Context
 
 	// Calculate final metadata
 	analysis.Metadata.Duration = int64(time.Since(analysis.StartedAt).Milliseconds())
+	analysis.Metadata.FilesProcessed = analysis.Results.Summary.TotalPackages
+	analysis.Metadata.PackagesAnalyzed = analysis.Results.Summary.TotalPackages
 
 	// Mark as completed
 	now := time.Now().UTC()

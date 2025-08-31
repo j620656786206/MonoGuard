@@ -46,7 +46,6 @@ export class UploadService {
       );
 
       // Ensure we handle the response structure properly
-      console.log('Upload response:', response.data);
       return response.data.data || response.data;
     } catch (error) {
       console.error('Upload failed:', error);

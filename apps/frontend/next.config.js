@@ -32,12 +32,32 @@ const nextConfig = {
     // Keep empty or add valid Next.js 15 experimental features only
   },
   
-  // Redirects - these work with SSR
+  // Redirects - MVP stage: only allow landing page access
   async redirects() {
     return [
       {
-        source: '/',
-        destination: '/dashboard',
+        source: '/dashboard/:path*',
+        destination: '/',
+        permanent: false,
+      },
+      {
+        source: '/upload/:path*',
+        destination: '/',
+        permanent: false,
+      },
+      {
+        source: '/projects/:path*',
+        destination: '/',
+        permanent: false,
+      },
+      {
+        source: '/analysis/:path*',
+        destination: '/',
+        permanent: false,
+      },
+      {
+        source: '/settings/:path*',
+        destination: '/',
         permanent: false,
       },
     ];
