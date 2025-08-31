@@ -32,6 +32,7 @@ const nextConfig = {
     // Keep empty or add valid Next.js 15 experimental features only
   },
   
+  
   // Redirects - MVP stage: only allow landing page access
   async redirects() {
     return [

@@ -175,7 +175,9 @@ export function FeaturesSection() {
             <button
               onClick={() => {
                 trackClick('get_started_features_cta');
-                document.getElementById('hero-section')?.scrollIntoView({ behavior: 'smooth' });
+                if (typeof window !== 'undefined') {
+                  document.getElementById('hero-section')?.scrollIntoView({ behavior: 'smooth' });
+                }
               }}
               className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-8 rounded-full transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
             >

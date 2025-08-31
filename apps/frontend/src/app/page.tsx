@@ -11,8 +11,6 @@ import { AnalysisResults } from '../components/analysis/AnalysisResults';
 import { FileProcessingResult } from '@monoguard/shared-types';
 import { apiClient } from '../lib/api/client';
 
-// Force dynamic rendering to prevent static generation issues
-export const dynamic = 'force-dynamic';
 
 export default function LandingPage() {
   const [error, setError] = useState<string | null>(null);
@@ -322,15 +320,17 @@ export default function LandingPage() {
                       }
                     };
                     
-                    const blob = new Blob([JSON.stringify(samplePackageJson, null, 2)], { type: 'application/json' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = 'sample-package.json';
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
+                    if (typeof window !== 'undefined') {
+                      const blob = new Blob([JSON.stringify(samplePackageJson, null, 2)], { type: 'application/json' });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = 'sample-package.json';
+                      document.body.appendChild(a);
+                      a.click();
+                      document.body.removeChild(a);
+                      URL.revokeObjectURL(url);
+                    }
                   }}
                   className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded transition-colors"
                 >

@@ -214,7 +214,9 @@ export function SampleResults() {
           <button
             onClick={() => {
               trackClick('try_analysis_sample_results');
-              document.getElementById('hero-section')?.scrollIntoView({ behavior: 'smooth' });
+              if (typeof window !== 'undefined') {
+                document.getElementById('hero-section')?.scrollIntoView({ behavior: 'smooth' });
+              }
             }}
             className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-8 rounded-full transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
           >

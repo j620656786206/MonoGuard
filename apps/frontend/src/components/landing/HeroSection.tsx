@@ -38,9 +38,11 @@ export function HeroSection() {
             <button
               onClick={() => {
                 // Navigate to upload section
-                const uploadSection = document.getElementById('upload-section');
-                if (uploadSection) {
-                  uploadSection.scrollIntoView({ behavior: 'smooth' });
+                if (typeof window !== 'undefined') {
+                  const uploadSection = document.getElementById('upload-section');
+                  if (uploadSection) {
+                    uploadSection.scrollIntoView({ behavior: 'smooth' });
+                  }
                 }
               }}
               className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-4 px-8 rounded-full text-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center"

@@ -61,9 +61,9 @@ export class AnalyticsService {
         value: options?.value,
         duration: options?.duration,
         properties: {
-          url: window.location.href,
-          title: document.title,
-          referrer: document.referrer,
+          url: typeof window !== 'undefined' ? window.location.href : '',
+          title: typeof document !== 'undefined' ? document.title : '',
+          referrer: typeof document !== 'undefined' ? document.referrer : '',
           ...properties,
         },
       });
@@ -77,9 +77,9 @@ export class AnalyticsService {
   static async trackPageView(url?: string, title?: string): Promise<void> {
     try {
       await apiClient.post('/api/v1/analytics/pageview', {
-        url: url || window.location.href,
-        title: title || document.title,
-        referrer: document.referrer,
+        url: url || (typeof window !== 'undefined' ? window.location.href : ''),
+        title: title || (typeof document !== 'undefined' ? document.title : ''),
+        referrer: typeof document !== 'undefined' ? document.referrer : '',
       });
     } catch (error) {
       console.error('Failed to track page view:', error);
@@ -153,7 +153,7 @@ export class AnalyticsService {
       await apiClient.post('/api/v1/analytics/error', {
         errorMessage,
         errorCode,
-        page: page || window.location.href,
+        page: page || (typeof window !== 'undefined' ? window.location.href : ''),
       });
     } catch (error) {
       console.error('Failed to track error:', error);
@@ -165,14 +165,14 @@ export class AnalyticsService {
     return this.trackEvent('click', 'click', properties, {
       element,
       value,
-      page: window.location.pathname,
+      page: typeof window !== 'undefined' ? window.location.pathname : '',
     });
   }
 
   static async trackFormSubmit(formName: string, properties?: EventProperties): Promise<void> {
     return this.trackEvent('form_submit', 'form_submit', properties, {
       element: formName,
-      page: window.location.pathname,
+      page: typeof window !== 'undefined' ? window.location.pathname : '',
     });
   }
 
@@ -180,7 +180,7 @@ export class AnalyticsService {
   static async trackFeatureView(featureName: string, properties?: EventProperties): Promise<void> {
     return this.trackEvent('feature_view', 'feature_view', properties, {
       element: featureName,
-      page: window.location.pathname,
+      page: typeof window !== 'undefined' ? window.location.pathname : '',
     });
   }
 
@@ -246,7 +246,7 @@ export class AnalyticsService {
 
   static async trackAnalysisAbandoned(reason?: string): Promise<void> {
     return this.trackConversionStep('analysis_attempt', 3, false, undefined, {
-      source: window.location.pathname,
+      source: typeof window !== 'undefined' ? window.location.pathname : '',
       context: 'user_abandoned',
       abortReason: reason,
       retryCount: 0,
