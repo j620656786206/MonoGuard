@@ -1,0 +1,41 @@
+{
+  "namespace": "monoguard",
+  "commands": [
+    {
+      "name": "check-architecture",
+      "description": "Validate code against architecture.md requirements"
+    },
+    {
+      "name": "check-context",
+      "description": "Verify code follows project-context.md rules"
+    },
+    {
+      "name": "validate-wasm",
+      "description": "Validate Go WASM code (Result<T>, camelCase JSON)"
+    },
+    {
+      "name": "generate-wasm-bridge",
+      "description": "Generate WASM bridge code template"
+    },
+    {
+      "name": "create-store",
+      "description": "Generate Zustand store with devtools + persist"
+    },
+    {
+      "name": "scaffold-component",
+      "description": "Generate React component with tests and D3 cleanup"
+    },
+    {
+      "name": "create-test",
+      "description": "Generate test file template (WASM/Zustand mocks)"
+    },
+    {
+      "name": "analyze-dependencies",
+      "description": "Analyze project dependency health"
+    },
+    {
+      "name": "check-coverage",
+      "description": "Check if test coverage meets >80% target"
+    }
+  ]
+}

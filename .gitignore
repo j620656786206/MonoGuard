@@ -72,3 +72,6 @@ apps/api/server
 
 # Upload files
 apps/api/uploads/
+
+# Auto Claude data directory
+.auto-claude/

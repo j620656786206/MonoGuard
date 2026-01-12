@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MonoGuard 設計方向探索 | Design Direction Showcase</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f172a;
+      color: #f1f5f9;
+      overflow-x: hidden;
+    }
+
+    .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid #334155;
+      z-index: 1000;
+      padding: 1.5rem 2rem;
+    }
+
+    .header-content {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #3b82f6;
+    }
+
+    .header-subtitle {
+      font-size: 0.875rem;
+      color: #94a3b8;
+      margin-top: 0.25rem;
+    }
+
+    .nav-pills {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .nav-pill {
+      padding: 0.5rem 1rem;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      color: #cbd5e1;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    .nav-pill:hover {
+      background: #334155;
+      border-color: #475569;
+    }
+
+    .nav-pill.active {
+      background: #3b82f6;
+      border-color: #3b82f6;
+      color: white;
+    }
+
+    .container {
+      margin-top: 6rem;
+      padding: 2rem;
+    }
+
+    .intro-section {
+      max-width: 1200px;
+      margin: 0 auto 3rem;
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border: 1px solid #334155;
+      border-radius: 16px;
+      padding: 2rem;
+    }
+
+    .intro-title {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .intro-text {
+      font-size: 1rem;
+      line-height: 1.7;
+      color: #cbd5e1;
+      margin-bottom: 1.5rem;
+    }
+
+    .evaluation-criteria {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    .criteria-item {
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 1rem;
+    }
+
+    .criteria-icon {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .criteria-title {
+      font-weight: 600;
+      color: #f1f5f9;
+      margin-bottom: 0.25rem;
+    }
+
+    .criteria-desc {
+      font-size: 0.875rem;
+      color: #94a3b8;
+    }
+
+    .directions-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+      gap: 2rem;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .direction-card {
+      background: #1e293b;
+      border: 2px solid #334155;
+      border-radius: 16px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .direction-card:hover {
+      border-color: #3b82f6;
+      transform: translateY(-4px);
+      box-shadow: 0 20px 50px rgba(59, 130, 246, 0.2);
+    }
+
+    .direction-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid #334155;
+    }
+
+    .direction-number {
+      display: inline-block;
+      background: #3b82f6;
+      color: white;
+      padding: 0.25rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+    }
+
+    .direction-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #f1f5f9;
+      margin-bottom: 0.5rem;
+    }
+
+    .direction-subtitle {
+      font-size: 0.875rem;
+      color: #94a3b8;
+    }
+
+    .direction-preview {
+      position: relative;
+      width: 100%;
+      height: 350px;
+      background: #0f172a;
+      overflow: hidden;
+    }
+
+    .direction-tags {
+      padding: 1.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .tag {
+      padding: 0.375rem 0.75rem;
+      background: #334155;
+      color: #cbd5e1;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    .direction-description {
+      padding: 0 1.5rem 1.5rem;
+      color: #cbd5e1;
+      line-height: 1.6;
+    }
+
+    .best-for {
+      padding: 0 1.5rem 1.5rem;
+      border-top: 1px solid #334155;
+      margin-top: 1rem;
+    }
+
+    .best-for-title {
+      font-weight: 600;
+      color: #10b981;
+      margin-bottom: 0.5rem;
+      font-size: 0.875rem;
+    }
+
+    .best-for-text {
+      font-size: 0.875rem;
+      color: #94a3b8;
+      line-height: 1.5;
+    }
+
+    /* Direction-specific mockup styles */
+    .mockup {
+      width: 100%;
+      height: 100%;
+      padding: 1rem;
+      font-size: 0.75rem;
+    }
+
+    .mockup-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid #334155;
+    }
+
+    .mockup-score {
+      font-size: 3rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .score-excellent { color: #10b981; }
+    .score-good { color: #22c55e; }
+    .score-fair { color: #eab308; }
+    .score-poor { color: #f97316; }
+    .score-critical { color: #ef4444; }
+
+    .mockup-card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .mockup-card-title {
+      font-weight: 600;
+      color: #f1f5f9;
+      margin-bottom: 0.25rem;
+      font-size: 0.875rem;
+    }
+
+    .mockup-card-text {
+      color: #94a3b8;
+      font-size: 0.75rem;
+    }
+
+    .mockup-sidebar {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 200px;
+      background: #1e293b;
+      border-right: 1px solid #334155;
+      padding: 1rem;
+    }
+
+    .mockup-main {
+      margin-left: 200px;
+      padding: 1rem;
+    }
+
+    .mockup-graph {
+      position: relative;
+      height: 200px;
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border: 1px solid #334155;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1rem;
+    }
+
+    .mockup-graph-text {
+      color: #64748b;
+      font-size: 0.75rem;
+    }
+
+    .mockup-timeline {
+      height: 60px;
+      background: linear-gradient(90deg, #ef4444 0%, #f97316 20%, #eab308 40%, #22c55e 60%, #10b981 100%);
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      position: relative;
+    }
+
+    .mockup-dropzone {
+      height: 250px;
+      border: 2px dashed #475569;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      color: #64748b;
+      transition: all 0.3s;
+    }
+
+    .mockup-dropzone:hover {
+      border-color: #3b82f6;
+      background: rgba(59, 130, 246, 0.05);
+    }
+
+    .mockup-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+
+    .fullscreen-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.95);
+      z-index: 2000;
+      padding: 2rem;
+      overflow-y: auto;
+    }
+
+    .fullscreen-modal.active {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .fullscreen-content {
+      background: #1e293b;
+      border: 2px solid #3b82f6;
+      border-radius: 16px;
+      max-width: 1200px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .fullscreen-header {
+      padding: 2rem;
+      border-bottom: 1px solid #334155;
+      position: sticky;
+      top: 0;
+      background: #1e293b;
+      z-index: 10;
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 1.5rem;
+      right: 1.5rem;
+      background: #334155;
+      border: none;
+      color: white;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.25rem;
+      transition: all 0.2s;
+    }
+
+    .close-btn:hover {
+      background: #475569;
+    }
+
+    .fullscreen-body {
+      padding: 2rem;
+    }
+
+    .fullscreen-mockup {
+      width: 100%;
+      height: 600px;
+      background: #0f172a;
+      border-radius: 12px;
+      margin-bottom: 2rem;
+    }
+
+    .footer {
+      margin-top: 4rem;
+      padding: 2rem;
+      text-align: center;
+      color: #64748b;
+      font-size: 0.875rem;
+      border-top: 1px solid #334155;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-content">
+      <div>
+        <h1>MonoGuard 設計方向探索</h1>
+        <div class="header-subtitle">探索 8 種不同的視覺設計方向 | Design Direction Showcase</div>
+      </div>
+      <div class="nav-pills">
+        <button class="nav-pill active" onclick="scrollToSection('intro')">評估標準</button>
+        <button class="nav-pill" onclick="scrollToSection('directions')">設計方向</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <section class="intro-section" id="intro">
+      <div class="intro-title">🎨 如何評估這些設計方向？</div>
+      <div class="intro-text">
+        每個設計方向都是基於我們建立的視覺基礎（配色、字體、間距）的完整視覺方案。
+        請花時間探索每個方向，思考哪個最符合 MonoGuard 的品牌個性與使用者需求。
+      </div>
+
+      <div class="evaluation-criteria">
+        <div class="criteria-item">
+          <div class="criteria-icon">📊</div>
+          <div class="criteria-title">資訊層次</div>
+          <div class="criteria-desc">哪種資訊層次最符合你的使用場景？</div>
+        </div>
+        <div class="criteria-item">
+          <div class="criteria-icon">🎯</div>
+          <div class="criteria-title">互動風格</div>
+          <div class="criteria-desc">哪種互動模式最適合核心體驗？</div>
+        </div>
+        <div class="criteria-item">
+          <div class="criteria-icon">⚡</div>
+          <div class="criteria-title">視覺密度</div>
+          <div class="criteria-desc">哪種視覺密度最適合你的品牌？</div>
+        </div>
+        <div class="criteria-item">
+          <div class="criteria-icon">🧭</div>
+          <div class="criteria-title">導航方式</div>
+          <div class="criteria-desc">哪種導航模式最符合使用者期待？</div>
+        </div>
+        <div class="criteria-item">
+          <div class="criteria-icon">🎨</div>
+          <div class="criteria-title">品牌對齊</div>
+          <div class="criteria-desc">哪個方向最支持你的情感目標？</div>
+        </div>
+        <div class="criteria-item">
+          <div class="criteria-icon">✨</div>
+          <div class="criteria-title">元件運用</div>
+          <div class="criteria-desc">元件如何支持使用者旅程？</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="directions">
+      <div class="directions-grid">
+        <!-- Direction 1: Minimalist Dashboard -->
+        <div class="direction-card" onclick="openFullscreen(1)">
+          <div class="direction-header">
+            <span class="direction-number">Direction 1</span>
+            <div class="direction-title">極簡儀表板風格</div>
+            <div class="direction-subtitle">Minimalist Dashboard - 聚焦核心數據</div>
+          </div>
+          <div class="direction-preview">
+            <div class="mockup">
+              <div style="text-align: center; padding-top: 2rem;">
+                <div class="mockup-score score-fair">68</div>
+                <div style="color: #94a3b8; margin-top: 0.5rem; font-size: 0.875rem;">架構健康分數</div>
+                <div style="color: #64748b; margin-top: 0.25rem; font-size: 0.75rem;">需要改善</div>
+              </div>
+              <div style="margin-top: 2rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="mockup-card">
+                  <div class="mockup-card-title">3 個循環依賴</div>
+                  <div class="mockup-card-text">影響 12 個檔案</div>
+                </div>
+                <div class="mockup-card">
+                  <div class="mockup-card-title">待修復問題</div>
+                  <div class="mockup-card-text">8 個建議</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="direction-tags">
+            <span class="tag">🎯 低資訊密度</span>
+            <span class="tag">📊 數字優先</span>
+            <span class="tag">✨ 極簡風格</span>
+          </div>
+          <div class="direction-description">
+            大型健康分數為視覺焦點，極簡資訊呈現。適合快速健康檢查場景，一眼就能看到最重要的數據。
+            留白豐富，視覺舒適，減少認知負擔。
+          </div>
+          <div class="best-for">
+            <div class="best-for-title">✅ 最適合：</div>
+            <div class="best-for-text">
+              • 每日快速健康檢查（Sarah 的週例行檢查）<br>
+              • 第一次使用者體驗<br>
+              • 強調「驚喜」情感（看到大型分數數字）
+            </div>
+          </div>
+        </div>
+
+        <!-- Direction 2: Data-Dense Analytics -->
+        <div class="direction-card" onclick="openFullscreen(2)">
+          <div class="direction-header">
+            <span class="direction-number">Direction 2</span>
+            <div class="direction-title">數據密集分析風格</div>
+            <div class="direction-subtitle">Data-Dense Analytics - 資訊豐富</div>
+          </div>
+          <div class="direction-preview">
+            <div class="mockup">
+              <div class="mockup-grid">
+                <div class="mockup-card">
+                  <div class="mockup-card-title">健康分數: 68</div>
+                  <div class="mockup-card-text">↓ 12% vs 上週</div>
+                </div>
+                <div class="mockup-card">
+                  <div class="mockup-card-title">循環依賴</div>
+                  <div class="mockup-card-text">3 個 (+1)</div>
+                </div>
+                <div class="mockup-card">
+                  <div class="mockup-card-title">影響範圍</div>
+                  <div class="mockup-card-text">12 檔案</div>
+                </div>
+                <div class="mockup-card">
+                  <div class="mockup-card-title">修復時間</div>
+                  <div class="mockup-card-text">~30 秒</div>
+                </div>
+              </div>
+              <div class="mockup-graph">
+                <span class="mockup-graph-text">依賴關係圖視覺化</span>
+              </div>
+            </div>
+          </div>
+          <div class="direction-tags">
+            <span class="tag">📈 高資訊密度</span>
+            <span class="tag">📊 多面板布局</span>
+            <span class="tag">🔍 分析優先</span>
+          </div>
+          <div class="direction-description">
+            多面板並排布局，一次呈現所有關鍵指標。適合需要全面了解專案健康狀況的場景。
+            圖表與數據視覺化並重，支持深度分析。
+          </div>
+          <div class="best-for">
+            <div class="best-for-title">✅ 最適合：</div>
+            <div class="best-for-text">
+              • Tech Lead 深度分析（David 的季度報告）<br>
+              • 需要比較多個指標<br>
+              • 強調「信任」情感（完整透明的數據）
+            </div>
+          </div>
+        </div>
+
+        <!-- Direction 3: Progressive Card-Based -->
+        <div class="direction-card" onclick="openFullscreen(3)">
+          <div class="direction-header">
+            <span class="direction-number">Direction 3</span>
+            <div class="direction-title">卡片式漸進披露</div>
+            <div class="direction-subtitle">Progressive Card-Based - 清晰層次</div>
+          </div>
+          <div class="direction-preview">
+            <div class="mockup">
+              <div class="mockup-card" style="margin-bottom: 0.5rem;">
+                <div class="mockup-card-title">🎯 快速概覽</div>
+                <div class="mockup-card-text">健康分數: 68 | 3 個問題</div>
+              </div>
+              <div class="mockup-card" style="margin-bottom: 0.5rem;">
+                <div class="mockup-card-title">⚠️ 循環依賴</div>
+                <div class="mockup-card-text">點擊查看詳細資訊 ›</div>
+              </div>
+              <div class="mockup-card" style="margin-bottom: 0.5rem;">
+                <div class="mockup-card-title">📊 歷史趨勢</div>
+                <div class="mockup-card-text">展開 6 個月數據 ›</div>
+              </div>
+              <div class="mockup-card">
+                <div class="mockup-card-title">🔧 修復建議</div>
+                <div class="mockup-card-text">查看 8 個自動化建議 ›</div>
+              </div>
+            </div>
+          </div>
+          <div class="direction-tags">
+            <span class="tag">📦 卡片為主</span>
+            <span class="tag">🔽 漸進披露</span>
+            <span class="tag">🎯 清晰層次</span>
+          </div>
+          <div class="direction-description">
+            以卡片為主要容器，點擊展開查看更多細節。清晰的視覺層次，從概覽到深度逐步引導。
+            適合首次使用者，降低資訊過載感。
+          </div>
+          <div class="best-for">
+            <div class="best-for-title">✅ 最適合：</div>
+            <div class="best-for-text">
+              • 新使用者引導體驗<br>
+              • 從概覽到細節的探索流程<br>
+              • 移動裝置響應式設計<br>
+              • 支持「好奇 → 理解」情感旅程
+            </div>
+          </div>
+        </div>
+
+        <!-- Direction 4: Sidebar Navigation -->
+        <div class="direction-card" onclick="openFullscreen(4)">
+          <div class="direction-header">
+            <span class="direction-number">Direction 4</span>
+            <div class="direction-title">側邊欄導航風格</div>
+            <div class="direction-subtitle">Sidebar Navigation - 專業工具感</div>
+          </div>
+          <div class="direction-preview">
+            <div class="mockup" style="position: relative; padding: 0;">
+              <div class="mockup-sidebar">
+                <div style="font-weight: 600; margin-bottom: 0.75rem; font-size: 0.875rem;">MonoGuard</div>
+                <div style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 0.5rem; padding: 0.5rem; background: #334155; border-radius: 4px;">
+                  📊 總覽
+                </div>
+                <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.5rem; padding: 0.5rem;">
+                  🔄 循環依賴
+                </div>
+                <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.5rem; padding: 0.5rem;">
+                  📈 歷史趨勢
+                </div>
+                <div style="font-size: 0.75rem; color: #64748b; padding: 0.5rem;">
+                  🔧 修復建議
+                </div>
+              </div>
+              <div class="mockup-main">
+                <div class="mockup-card">
+                  <div class="mockup-card-title">專案總覽</div>
+                  <div class="mockup-card-text">健康分數: 68</div>
+                </div>
+                <div class="mockup-graph">
+                  <span class="mockup-graph-text">主工作區域</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="direction-tags">
+            <span class="tag">🗂️ 固定側邊欄</span>
+            <span class="tag">💼 專業工具</span>
+            <span class="tag">🎯 清晰導航</span>
+          </div>
+          <div class="direction-description">
+            固定側邊欄導航，右側主工作區。類似 VS Code、Linear 的熟悉開發者工具介面。
+            適合長時間使用，清晰的導航結構。
+          </div>
+          <div class="best-for">
+            <div class="best-for-title">✅ 最適合：</div>
+            <div class="best-for-text">
+              • 專業開發者工具定位<br>
+              • 長時間深度分析工作流<br>
+              • 多頁面導航需求<br>
+              • 熟悉 IDE 風格的開發者
+            </div>
+          </div>
+        </div>
+
+        <!-- Direction 5: Graph-First Fullscreen -->
+        <div class="direction-card" onclick="openFullscreen(5)">
+          <div class="direction-header">
+            <span class="direction-number">Direction 5</span>
+            <div class="direction-title">全螢幕依賴圖優先</div>
+            <div class="direction-subtitle">Graph-First Fullscreen - 視覺化探索</div>
+          </div>
+          <div class="direction-preview">
+            <div class="mockup" style="padding: 0;">
+              <div class="mockup-graph" style="height: 100%; margin: 0; border-radius: 0;">
+                <div style="text-align: center;">
+                  <div class="mockup-graph-text" style="font-size: 1rem; margin-bottom: 0.5rem;">
+                    互動式依賴關係圖
+                  </div>
+                  <div style="color: #475569; font-size: 0.625rem;">
+                    拖曳、縮放、點擊節點查看詳細資訊
+                  </div>
+                </div>
+              </div>
+              <div style="position: absolute; top: 1rem; right: 1rem; background: rgba(30, 41, 59, 0.95); padding: 0.75rem; border-radius: 8px; font-size: 0.75rem;">
+                <div style="color: #10b981; font-weight: 700;">68</div>
+                <div style="color: #94a3b8; font-size: 0.625rem;">健康分數</div>
+              </div>
+            </div>
+          </div>
+          <div class="direction-tags">
+            <span class="tag">🌐 圖形優先</span>
+            <span class="tag">🔍 互動探索</span>
+            <span class="tag">🎨 視覺化</span>
+          </div>
+          <div class="direction-description">
+            依賴圖佔據主要畫面空間，側邊浮動面板顯示詳細資訊。
+            強調視覺化探索體驗，適合喜歡互動式圖形的使用者。
+          </div>
+          <div class="best-for">
+            <div class="best-for-title">✅ 最適合：</div>
+            <div class="best-for-text">
+              • 視覺化探索場景<br>
+              • 理解複雜依賴關係<br>
+              • 展示依賴圖核心功能<br>
+              • 支持「探索」使用模式
+            </div>
+          </div>
+        </div>
+
+        <!-- Direction 6: Timeline History -->
+        <div class="direction-card" onclick="openFullscreen(6)">
+          <div class="direction-header">
+            <span class="direction-number">Direction 6</span>
+            <div class="direction-title">時間軸歷史風格</div>
+            <div class="direction-subtitle">Timeline History - 追蹤演進</div>
+          </div>
+          <div class="direction-preview">
+            <div class="mockup">
+              <div style="font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem; color: #f1f5f9;">
+                6 個月架構健康趨勢
+              </div>
+              <div class="mockup-timeline">
+                <div style="position: absolute; top: 50%; left: 10%; transform: translateY(-50%); background: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.625rem; color: #0f172a; font-weight: 700;">
+                  42
+                </div>
+                <div style="position: absolute; top: 50%; left: 90%; transform: translateY(-50%); background: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.625rem; color: #0f172a; font-weight: 700;">
+                  68
+                </div>
+              </div>
+              <div class="mockup-card">
+                <div class="mockup-card-title">改善軌跡</div>
+                <div class="mockup-card-text">從 42 → 68 (+26 分)</div>
+              </div>
+              <div class="mockup-card">
+                <div class="mockup-card-title">關鍵里程碑</div>
+                <div class="mockup-card-text">2 個月前修復循環依賴</div>
+              </div>
+            </div>
+          </div>
+          <div class="direction-tags">
+            <span class="tag">📅 時間軸</span>
+            <span class="tag">📈 歷史趨勢</span>
+            <span class="tag">🎯 追蹤演進</span>
+          </div>
+          <div class="direction-description">
+            強調 6 個月歷史趨勢追蹤，時間軸為主視覺。
+            適合展示架構健康改善過程，凸顯 MonoGuard 的長期價值。
+          </div>
+          <div class="best-for">
+            <div class="best-for-title">✅ 最適合：</div>
+            <div class="best-for-text">
+              • 季度架構健康報告<br>
+              • 展示改善成果<br>
+              • Tech Lead 向團隊展示進度<br>
+              • 支持「成就感」情感
+            </div>
+          </div>
+        </div>
+
+        <!-- Direction 7: Command Palette Driven -->
+        <div class="direction-card" onclick="openFullscreen(7)">
+          <div class="direction-header">
+            <span class="direction-number">Direction 7</span>
+            <div class="direction-title">命令面板驅動</div>
+            <div class="direction-subtitle">Command Palette Driven - 鍵盤優先</div>
+          </div>
+          <div class="direction-preview">
+            <div class="mockup">
+              <div style="background: #1e293b; border: 2px solid #3b82f6; border-radius: 12px; padding: 1rem; margin-bottom: 1rem;">
+                <div style="color: #64748b; font-size: 0.75rem; margin-bottom: 0.5rem;">
+                  ⌘K 快速命令
+                </div>
+                <div style="color: #f1f5f9; font-size: 0.875rem;">
+                  輸入命令...
+                </div>
+              </div>
+              <div style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 0.5rem;">
+                • 分析專案健康<br>
+                • 查看循環依賴<br>
+                • 生成修復 PR<br>
+                • 查看歷史趨勢
+              </div>
+              <div class="mockup-card" style="margin-top: 1rem;">
+                <div class="mockup-card-title">當前專案</div>
+                <div class="mockup-card-text">健康分數: 68</div>
+              </div>
+            </div>
+          </div>
+          <div class="direction-tags">
+            <span class="tag">⌨️ 鍵盤優先</span>
+            <span class="tag">⚡ 快速操作</span>
+            <span class="tag">🎯 極簡 UI</span>
+          </div>
+          <div class="direction-description">
+            Cmd+K 命令面板為核心互動方式，極簡 UI，鍵盤操作優先。
+            適合進階開發者，強調效率與速度。
+          </div>
+          <div class="best-for">
+            <div class="best-for-title">✅ 最適合：</div>
+            <div class="best-for-text">
+              • 進階開發者（鍵盤流）<br>
+              • 強調效率與速度<br>
+              • Linear 風格命令面板愛好者<br>
+              • 支持「專業工具」定位
+            </div>
+          </div>
+        </div>
+
+        <!-- Direction 8: Drag-Drop First -->
+        <div class="direction-card" onclick="openFullscreen(8)">
+          <div class="direction-header">
+            <span class="direction-number">Direction 8</span>
+            <div class="direction-title">拖放優先上傳</div>
+            <div class="direction-subtitle">Drag-Drop First - 無痛開始</div>
+          </div>
+          <div class="direction-preview">
+            <div class="mockup">
+              <div class="mockup-dropzone">
+                <div style="font-size: 2rem;">📁</div>
+                <div style="font-size: 0.875rem; font-weight: 600; color: #cbd5e1;">
+                  拖放專案資料夾到此處
+                </div>
+                <div style="font-size: 0.75rem; color: #64748b;">
+                  或點擊選擇資料夾
+                </div>
+                <div style="margin-top: 0.5rem; padding: 0.5rem 1rem; background: #3b82f6; color: white; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer;">
+                  選擇資料夾
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="direction-tags">
+            <span class="tag">📂 拖放優先</span>
+            <span class="tag">✨ 零門檻</span>
+            <span class="tag">🎯 首次印象</span>
+          </div>
+          <div class="direction-description">
+            超大拖放區域，Vercel 風格的檔案上傳體驗。
+            適合首次使用，降低開始門檻，強調「無痛開始」的第一印象。
+          </div>
+          <div class="best-for">
+            <div class="best-for-title">✅ 最適合：</div>
+            <div class="best-for-text">
+              • 首次使用者體驗<br>
+              • 強調「30 秒開始分析」承諾<br>
+              • Vercel 風格愛好者<br>
+              • 支持「好奇 → 驚喜」情感旅程
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="footer">
+      <p>MonoGuard UX Design Directions | 點擊任何卡片查看全螢幕細節</p>
+      <p style="margin-top: 0.5rem; color: #475569;">
+        基於 Step 8 建立的視覺基礎：Inter + JetBrains Mono 字體 | 8px 網格系統 | 健康分數配色系統
+      </p>
+    </div>
+  </div>
+
+  <!-- Fullscreen Modal -->
+  <div class="fullscreen-modal" id="fullscreenModal">
+    <div class="fullscreen-content">
+      <div class="fullscreen-header">
+        <button class="close-btn" onclick="closeFullscreen()">✕</button>
+        <div class="direction-number" id="modalNumber">Direction 1</div>
+        <div class="direction-title" id="modalTitle">極簡儀表板風格</div>
+        <div class="direction-subtitle" id="modalSubtitle">Minimalist Dashboard</div>
+      </div>
+      <div class="fullscreen-body">
+        <div class="fullscreen-mockup" id="modalMockup">
+          <!-- Full mockup content will be inserted here -->
+        </div>
+        <div id="modalDescription"></div>
+        <div id="modalBestFor"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function scrollToSection(id) {
+      document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+      document.querySelectorAll('.nav-pill').forEach(pill => pill.classList.remove('active'));
+      event.target.classList.add('active');
+    }
+
+    function openFullscreen(directionNum) {
+      const modal = document.getElementById('fullscreenModal');
+      modal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+
+      // Update modal content based on direction number
+      const directions = {
+        1: {
+          number: 'Direction 1',
+          title: '極簡儀表板風格',
+          subtitle: 'Minimalist Dashboard - 聚焦核心數據',
+          description: '大型健康分數為視覺焦點，極簡資訊呈現。適合快速健康檢查場景，一眼就能看到最重要的數據。留白豐富，視覺舒適，減少認知負擔。',
+          bestFor: '最適合每日快速健康檢查、第一次使用者體驗、強調「驚喜」情感'
+        },
+        2: {
+          number: 'Direction 2',
+          title: '數據密集分析風格',
+          subtitle: 'Data-Dense Analytics - 資訊豐富',
+          description: '多面板並排布局，一次呈現所有關鍵指標。適合需要全面了解專案健康狀況的場景。圖表與數據視覺化並重，支持深度分析。',
+          bestFor: '最適合 Tech Lead 深度分析、需要比較多個指標、強調「信任」情感'
+        },
+        3: {
+          number: 'Direction 3',
+          title: '卡片式漸進披露',
+          subtitle: 'Progressive Card-Based - 清晰層次',
+          description: '以卡片為主要容器，點擊展開查看更多細節。清晰的視覺層次，從概覽到深度逐步引導。適合首次使用者，降低資訊過載感。',
+          bestFor: '最適合新使用者引導體驗、從概覽到細節的探索流程、移動裝置響應式設計'
+        },
+        4: {
+          number: 'Direction 4',
+          title: '側邊欄導航風格',
+          subtitle: 'Sidebar Navigation - 專業工具感',
+          description: '固定側邊欄導航，右側主工作區。類似 VS Code、Linear 的熟悉開發者工具介面。適合長時間使用，清晰的導航結構。',
+          bestFor: '最適合專業開發者工具定位、長時間深度分析工作流、熟悉 IDE 風格的開發者'
+        },
+        5: {
+          number: 'Direction 5',
+          title: '全螢幕依賴圖優先',
+          subtitle: 'Graph-First Fullscreen - 視覺化探索',
+          description: '依賴圖佔據主要畫面空間，側邊浮動面板顯示詳細資訊。強調視覺化探索體驗，適合喜歡互動式圖形的使用者。',
+          bestFor: '最適合視覺化探索場景、理解複雜依賴關係、展示依賴圖核心功能'
+        },
+        6: {
+          number: 'Direction 6',
+          title: '時間軸歷史風格',
+          subtitle: 'Timeline History - 追蹤演進',
+          description: '強調 6 個月歷史趨勢追蹤，時間軸為主視覺。適合展示架構健康改善過程，凸顯 MonoGuard 的長期價值。',
+          bestFor: '最適合季度架構健康報告、展示改善成果、Tech Lead 向團隊展示進度'
+        },
+        7: {
+          number: 'Direction 7',
+          title: '命令面板驅動',
+          subtitle: 'Command Palette Driven - 鍵盤優先',
+          description: 'Cmd+K 命令面板為核心互動方式，極簡 UI，鍵盤操作優先。適合進階開發者，強調效率與速度。',
+          bestFor: '最適合進階開發者（鍵盤流）、強調效率與速度、Linear 風格命令面板愛好者'
+        },
+        8: {
+          number: 'Direction 8',
+          title: '拖放優先上傳',
+          subtitle: 'Drag-Drop First - 無痛開始',
+          description: '超大拖放區域，Vercel 風格的檔案上傳體驗。適合首次使用，降低開始門檻，強調「無痛開始」的第一印象。',
+          bestFor: '最適合首次使用者體驗、強調「30 秒開始分析」承諾、Vercel 風格愛好者'
+        }
+      };
+
+      const dir = directions[directionNum];
+      document.getElementById('modalNumber').textContent = dir.number;
+      document.getElementById('modalTitle').textContent = dir.title;
+      document.getElementById('modalSubtitle').textContent = dir.subtitle;
+      document.getElementById('modalDescription').innerHTML = `<p style="color: #cbd5e1; line-height: 1.7; margin-bottom: 1.5rem;">${dir.description}</p>`;
+      document.getElementById('modalBestFor').innerHTML = `<div style="background: #0f172a; border: 1px solid #10b981; border-radius: 8px; padding: 1.5rem;"><div style="font-weight: 600; color: #10b981; margin-bottom: 0.5rem;">✅ 最適合：</div><div style="color: #94a3b8; line-height: 1.6;">${dir.bestFor}</div></div>`;
+    }
+
+    function closeFullscreen() {
+      const modal = document.getElementById('fullscreenModal');
+      modal.classList.remove('active');
+      document.body.style.overflow = 'auto';
+    }
+
+    // Close modal with ESC key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeFullscreen();
+      }
+    });
+  </script>
+</body>
+</html>
