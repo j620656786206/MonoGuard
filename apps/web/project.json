@@ -6,40 +6,43 @@
   "tags": [],
   "targets": {
     "build": {
-      "executor": "@nx/next:build",
-      "outputs": ["{options.outputPath}"],
-      "defaultConfiguration": "production",
+      "executor": "nx:run-commands",
       "options": {
-        "outputPath": "dist/apps/web",
-        "root": "apps/web"
+        "command": "pnpm vite build",
+        "cwd": "apps/web"
       },
-      "configurations": {
-        "development": {
-          "outputPath": "apps/web"
-        },
-        "production": {}
+      "outputs": ["{projectRoot}/.output"]
+    },
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm vite dev --port 3000",
+        "cwd": "apps/web"
       }
     },
     "serve": {
-      "executor": "@nx/next:server",
-      "defaultConfiguration": "development",
+      "executor": "nx:run-commands",
       "options": {
-        "buildTarget": "web:build",
-        "dev": true
-      },
-      "configurations": {
-        "development": {
-          "buildTarget": "web:build:development",
-          "dev": true
-        },
-        "production": {
-          "buildTarget": "web:build:production",
-          "dev": false
-        }
+        "command": "pnpm vite dev --port 3000",
+        "cwd": "apps/web"
+      }
+    },
+    "start": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm vite preview --port 3000",
+        "cwd": "apps/web"
       }
     },
     "lint": {
       "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm vitest run",
+        "cwd": "apps/web"
+      }
     }
   }
 }
