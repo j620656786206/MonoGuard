@@ -1,9 +1,15 @@
 ---
-stepsCompleted: ['step-01-validate-prerequisites', 'step-02-design-epics']
+stepsCompleted: ['step-01-validate-prerequisites', 'step-02-design-epics', 'step-03-create-stories', 'step-04-final-validation']
+workflowComplete: true
+completedDate: '2026-01-14'
 inputDocuments:
   - '_bmad-output/planning-artifacts/prd.md'
   - '_bmad-output/planning-artifacts/architecture.md'
   - '_bmad-output/planning-artifacts/ux-design-specification.md'
+totalEpics: 9
+totalStories: 66
+frCoverage: '48/48'
+nfrIntegration: '17/17'
 ---
 
 # mono-guard - Epic Breakdown
@@ -1541,3 +1547,355 @@ So that **I know what's happening for large monorepos**.
   **And** progress updates don't flood the terminal
   **And** spinner animation for long operations
   **And** final summary includes timing breakdown
+
+---
+
+## Epic 7 Stories: Privacy-First Data Management
+
+### Story 7.1: Implement WASM Local Analysis (Zero Data Upload)
+
+As a **user**,
+I want **all analysis to run entirely in my browser without any data upload**,
+So that **my code never leaves my machine and remains completely private**.
+
+**Acceptance Criteria:**
+
+**Given** I upload workspace files for analysis
+**When** the analysis executes
+**Then** no network requests are made to external servers (verifiable in DevTools Network tab)
+**And** all analysis computation runs in the WASM module locally
+**And** a privacy badge displays "Analyzed locally - no data uploaded"
+**And** the analysis completes successfully even with network disabled
+
+---
+
+### Story 7.2: Implement IndexedDB Browser Storage
+
+As a **user**,
+I want **my analysis results stored locally in my browser**,
+So that **I can access historical results without any cloud storage**.
+
+**Acceptance Criteria:**
+
+**Given** I complete a dependency analysis
+**When** results are saved
+**Then** data is stored in IndexedDB using Dexie.js wrapper
+**And** I can view previous analysis results from history
+**And** stored data includes: timestamp, project path, results, health score
+**And** data persists across browser sessions
+**And** I can manually clear stored data from settings
+
+---
+
+### Story 7.3: Implement CLI Local Directory Storage
+
+As a **CLI user**,
+I want **analysis results stored in a local `.monoguard/` directory**,
+So that **I can access results without any cloud dependency**.
+
+**Acceptance Criteria:**
+
+**Given** I run `monoguard analyze` in a project
+**When** analysis completes
+**Then** results are saved to `.monoguard/` directory in project root
+**And** directory structure includes: `results/`, `config/`, `cache/`
+**And** files are readable JSON format
+**And** `.monoguard/` is automatically added to `.gitignore` (with user confirmation)
+**And** old results are automatically cleaned up (configurable retention)
+
+---
+
+### Story 7.4: Ensure Complete Offline Functionality
+
+As a **user**,
+I want **all core features to work 100% offline**,
+So that **I can use MonoGuard without any network dependency**.
+
+**Acceptance Criteria:**
+
+**Given** I have the web app cached or CLI installed
+**When** I use MonoGuard with no network connection
+**Then** I can:
+- Upload files and run analysis (Web)
+- Run all CLI commands (analyze, check, fix --dry-run)
+- View cached historical results
+- Export reports in all formats
+**And** no features fail due to network unavailability
+**And** Service Worker caches all required assets (Web)
+
+---
+
+### Story 7.5: Implement Opt-in Usage Analytics
+
+As a **user**,
+I want **anonymous usage analytics to be opt-in only**,
+So that **I have full control over what data is collected**.
+
+**Acceptance Criteria:**
+
+**Given** I'm using MonoGuard for the first time
+**When** I haven't explicitly opted in
+**Then** no analytics data is collected or transmitted
+**And** a clear consent banner is shown explaining what would be collected
+**And** I can opt in/out at any time from settings
+**And** if opted in, only anonymous usage patterns are collected (no code, no project names)
+**And** privacy policy link is provided
+
+---
+
+### Story 7.6: Implement Opt-in Error Reporting (Sentry)
+
+As a **user**,
+I want **error reporting to be opt-in only**,
+So that **I control whether crash reports are sent**.
+
+**Acceptance Criteria:**
+
+**Given** error reporting settings
+**When** I haven't explicitly opted in
+**Then** no error reports are sent to Sentry
+**And** consent banner clearly explains error reporting scope
+**And** if opted in, sensitive data is sanitized (no file paths, no project code)
+**And** I can opt out at any time and reporting stops immediately
+**And** local error logs are kept in `.monoguard/errors.log` regardless of opt-in
+
+---
+
+## Epic 8 Stories: Configuration & Customization
+
+### Story 8.1: Implement Configuration File Structure
+
+As a **developer**,
+I want **a `.monoguard.json` configuration file for my project**,
+So that **I can customize analysis behavior consistently across my team**.
+
+**Acceptance Criteria:**
+
+**Given** I want to configure MonoGuard for my project
+**When** I create or generate a `.monoguard.json` file
+**Then** the file supports these top-level sections:
+- `version` - Config schema version
+- `workspaces` - Workspace detection patterns
+- `rules` - Analysis rule configurations
+- `thresholds` - Health score thresholds
+- `exclude` - Exclusion patterns
+- `output` - Output format preferences
+**And** JSON schema is provided for IDE autocomplete
+**And** invalid configuration shows helpful validation errors
+**And** configuration merges with defaults for unspecified values
+
+---
+
+### Story 8.2: Implement Circular Dependency Detection Rules
+
+As a **developer**,
+I want **to configure how circular dependencies are detected and reported**,
+So that **I can customize severity levels for my project's needs**.
+
+**Acceptance Criteria:**
+
+**Given** a `.monoguard.json` with rules configuration
+**When** I set circular dependency rules
+**Then** I can configure:
+- `circularDependencies`: `"error"` | `"warn"` | `"off"`
+- `maxCycleDepth`: maximum cycle depth to report (default: unlimited)
+- `allowedCycles`: array of allowed cycle patterns (exceptions)
+**And** `"error"` causes CLI exit code 1
+**And** `"warn"` reports but doesn't fail
+**And** `"off"` skips circular dependency detection entirely
+
+---
+
+### Story 8.3: Implement Health Score Threshold Configuration
+
+As a **developer**,
+I want **to define custom health score thresholds**,
+So that **I can set quality gates appropriate for my project**.
+
+**Acceptance Criteria:**
+
+**Given** a `.monoguard.json` with thresholds configuration
+**When** I set health score thresholds
+**Then** I can configure:
+- `minHealthScore`: minimum acceptable score (default: 70)
+- `healthWeights`: custom weights for score factors
+  - `circularDependencies`: weight (default: 40)
+  - `versionConflicts`: weight (default: 20)
+  - `dependencyDepth`: weight (default: 20)
+  - `coupling`: weight (default: 20)
+**And** scores below `minHealthScore` fail CI checks
+**And** custom weights sum to 100 (validated)
+
+---
+
+### Story 8.4: Implement Package Exclusion Pattern Configuration
+
+As a **developer**,
+I want **to configure which packages are excluded from analysis**,
+So that **I can skip legacy or irrelevant packages**.
+
+**Acceptance Criteria:**
+
+**Given** a `.monoguard.json` with exclude configuration
+**When** I set exclusion patterns
+**Then** I can configure:
+- Exact package names: `["packages/legacy"]`
+- Glob patterns: `["packages/deprecated-*"]`
+- Regex patterns: `["/^@internal\\/.*/"]`
+**And** excluded packages are grayed out in visualization
+**And** excluded packages don't affect health score
+**And** CLI `--exclude` flag overrides/appends to config
+
+---
+
+### Story 8.5: Implement Workspace Detection Pattern Configuration
+
+As a **developer**,
+I want **to configure how workspaces are detected**,
+So that **MonoGuard works with my custom monorepo structure**.
+
+**Acceptance Criteria:**
+
+**Given** a `.monoguard.json` with workspaces configuration
+**When** I set workspace patterns
+**Then** I can configure:
+- `workspaces`: array of glob patterns (e.g., `["packages/*", "apps/*"]`)
+- `packageManager`: `"auto"` | `"npm"` | `"yarn"` | `"pnpm"`
+- `rootPackageJson`: path to root package.json (default: `"./package.json"`)
+**And** auto-detection can be overridden
+**And** custom patterns work for non-standard structures
+
+---
+
+### Story 8.6: Implement Output Format Configuration
+
+As a **developer**,
+I want **to configure default output formats and preferences**,
+So that **I don't need to specify flags every time**.
+
+**Acceptance Criteria:**
+
+**Given** a `.monoguard.json` with output configuration
+**When** I set output preferences
+**Then** I can configure:
+- `defaultFormat`: `"text"` | `"json"` | `"html"` | `"markdown"`
+- `colorOutput`: `true` | `false` | `"auto"`
+- `verbosity`: `"quiet"` | `"normal"` | `"verbose"`
+- `includeGraph`: whether to include graph data in exports
+**And** CLI flags override config settings
+**And** Web UI respects `colorOutput` and `verbosity` for reports
+
+---
+
+## Epic 9 Stories: Developer API Integration
+
+### Story 9.1: Create @monoguard/wasm npm Package Structure
+
+As a **third-party developer**,
+I want **to install MonoGuard analysis engine as an npm package**,
+So that **I can integrate dependency analysis into my own tools**.
+
+**Acceptance Criteria:**
+
+**Given** I want to use MonoGuard programmatically
+**When** I run `npm install @monoguard/wasm`
+**Then** I receive a package that includes:
+- Compiled WASM module (`monoguard.wasm`)
+- TypeScript type definitions (`.d.ts` files)
+- JavaScript wrapper for WASM loading
+- `wasm_exec.js` Go runtime
+**And** package size is < 3MB (uncompressed)
+**And** package works in both Node.js and browser environments
+**And** ESM and CommonJS exports are supported
+
+---
+
+### Story 9.2: Implement analyze() API Function
+
+As a **third-party developer**,
+I want **to call an `analyze()` function with workspace data**,
+So that **I can get complete dependency analysis results programmatically**.
+
+**Acceptance Criteria:**
+
+**Given** I have imported `@monoguard/wasm`
+**When** I call `await analyzer.analyze(workspaceData)`
+**Then** I receive a `Result<AnalysisResult>` containing:
+- `data.graph`: Complete dependency graph
+- `data.cycles`: Array of circular dependencies
+- `data.conflicts`: Array of version conflicts
+- `data.healthScore`: Numeric score (0-100)
+- `data.metadata`: Analysis metadata (timing, package count)
+**And** errors are returned in `error` field (not thrown)
+**And** function completes in < 5 seconds for 100 packages
+**And** TypeScript provides full autocomplete for all fields
+
+---
+
+### Story 9.3: Implement check() API Function
+
+As a **third-party developer**,
+I want **a lightweight `check()` function for validation only**,
+So that **I can quickly validate dependencies without full analysis overhead**.
+
+**Acceptance Criteria:**
+
+**Given** I have imported `@monoguard/wasm`
+**When** I call `await analyzer.check(workspaceData, options)`
+**Then** I receive a `Result<CheckResult>` containing:
+- `data.passed`: boolean indicating pass/fail
+- `data.errors`: Array of validation errors
+- `data.healthScore`: Numeric score
+- `data.summary`: Brief text summary
+**And** options support `maxCircular`, `minHealthScore` thresholds
+**And** check is faster than full analyze (< 2 seconds for 100 packages)
+**And** suitable for CI/CD integration
+
+---
+
+### Story 9.4: Create Complete TypeScript Type Definitions
+
+As a **third-party developer**,
+I want **complete TypeScript type definitions for all API responses**,
+So that **I have full type safety and IDE support when using the API**.
+
+**Acceptance Criteria:**
+
+**Given** I'm using `@monoguard/wasm` in a TypeScript project
+**When** I import types from the package
+**Then** I have access to these exported types:
+- `WorkspaceData` - Input data structure
+- `AnalysisResult` - Full analysis output
+- `CheckResult` - Validation output
+- `DependencyGraph`, `GraphNode`, `GraphEdge`
+- `CircularDependency`, `VersionConflict`
+- `HealthScore`, `HealthBreakdown`
+- `FixSuggestion`, `FixStrategy`
+- `Result<T>` - Unified result wrapper
+**And** all types use camelCase (matching JSON output)
+**And** types are exported from package root
+**And** JSDoc comments provide inline documentation
+
+---
+
+### Story 9.5: Write API Documentation and Usage Examples
+
+As a **third-party developer**,
+I want **comprehensive API documentation with examples**,
+So that **I can quickly understand how to integrate MonoGuard**.
+
+**Acceptance Criteria:**
+
+**Given** the `@monoguard/wasm` package
+**When** I read the documentation
+**Then** I find:
+- Quick start guide (< 5 minutes to first result)
+- API reference for all exported functions
+- TypeScript usage examples
+- Browser integration example (with WASM loading)
+- Node.js integration example
+- Error handling patterns
+- Performance considerations
+**And** documentation is included in package README
+**And** examples are tested and runnable
+**And** API versioning policy is documented

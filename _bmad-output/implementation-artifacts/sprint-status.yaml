@@ -1,0 +1,141 @@
+# generated: 2026-01-15
+# project: mono-guard
+# tracking_system: file-system
+# story_location: _bmad-output/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - SM typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: 2026-01-15
+project: mono-guard
+tracking_system: file-system
+story_location: _bmad-output/implementation-artifacts
+
+development_status:
+  # Epic 1: Project Foundation & Infrastructure
+  epic-1: in-progress
+  1-1-initialize-nx-monorepo-workspace: done
+  1-2-setup-tanstack-start-web-application: ready-for-dev
+  1-3-setup-go-wasm-analysis-engine-project: ready-for-dev
+  1-4-setup-go-cli-project-with-cobra: ready-for-dev
+  1-5-setup-shared-typescript-types-package: ready-for-dev
+  1-6-configure-github-actions-ci-pipeline: ready-for-dev
+  1-7-configure-cloudflare-pages-deployment: ready-for-dev
+  1-8-setup-testing-framework-and-code-quality: ready-for-dev
+  epic-1-retrospective: optional
+
+  # Epic 2: Core Dependency Analysis Engine
+  epic-2: backlog
+  2-1-implement-workspace-configuration-parser: backlog
+  2-2-build-dependency-graph-data-structure: backlog
+  2-3-implement-circular-dependency-detection-algorithm: backlog
+  2-4-identify-duplicate-dependencies-with-version-conflicts: backlog
+  2-5-calculate-architecture-health-score: backlog
+  2-6-implement-package-exclusion-patterns: backlog
+  2-7-create-typescript-wasm-adapter: backlog
+  epic-2-retrospective: optional
+
+  # Epic 3: Circular Dependency Resolution Engine (Core Differentiator)
+  epic-3: backlog
+  3-1-implement-root-cause-analysis-for-circular-dependencies: backlog
+  3-2-trace-import-statement-paths: backlog
+  3-3-generate-fix-strategy-recommendations: backlog
+  3-4-create-step-by-step-fix-guides: backlog
+  3-5-calculate-refactoring-complexity-scores: backlog
+  3-6-generate-impact-assessment: backlog
+  3-7-provide-before-after-fix-explanations: backlog
+  3-8-integrate-fix-suggestions-with-analysis-results: backlog
+  epic-3-retrospective: optional
+
+  # Epic 4: Interactive Visualization & Reporting
+  epic-4: backlog
+  4-1-implement-d3js-force-directed-dependency-graph: backlog
+  4-2-highlight-circular-dependencies-in-graph: backlog
+  4-3-implement-node-expand-collapse-functionality: backlog
+  4-4-add-zoom-pan-and-navigation-controls: backlog
+  4-5-implement-hover-details-and-tooltips: backlog
+  4-6-export-graph-as-png-svg-images: backlog
+  4-7-export-analysis-reports-in-multiple-formats: backlog
+  4-8-create-detailed-diagnostic-reports: backlog
+  4-9-implement-hybrid-svg-canvas-rendering: backlog
+  epic-4-retrospective: optional
+
+  # Epic 5: Web Interface Experience
+  epic-5: backlog
+  5-1-create-landing-page-with-drag-drop-zone: backlog
+  5-2-implement-file-upload-and-workspace-detection: backlog
+  5-3-implement-wasm-powered-in-browser-analysis: backlog
+  5-4-build-analysis-results-dashboard: backlog
+  5-5-create-fix-suggestions-side-panel: backlog
+  5-6-implement-report-download-functionality: backlog
+  5-7-implement-dark-mode-with-system-detection: backlog
+  5-8-implement-command-palette-cmd-k: backlog
+  5-9-setup-zustand-state-management: backlog
+  5-10-implement-toast-notifications: backlog
+  epic-5-retrospective: optional
+
+  # Epic 6: CLI Tool Experience
+  epic-6: backlog
+  6-1-implement-monoguard-analyze-command: backlog
+  6-2-implement-monoguard-check-command-for-ci-cd: backlog
+  6-3-implement-monoguard-fix-dry-run-command: backlog
+  6-4-implement-monoguard-init-command: backlog
+  6-5-implement-cli-options-for-analysis-configuration: backlog
+  6-6-implement-multi-format-output-export: backlog
+  6-7-implement-progress-and-verbose-output: backlog
+  epic-6-retrospective: optional
+
+  # Epic 7: Privacy-First Data Management
+  epic-7: backlog
+  7-1-implement-wasm-local-analysis-zero-data-upload: backlog
+  7-2-implement-indexeddb-browser-storage: backlog
+  7-3-implement-cli-local-directory-storage: backlog
+  7-4-ensure-complete-offline-functionality: backlog
+  7-5-implement-opt-in-usage-analytics: backlog
+  7-6-implement-opt-in-error-reporting-sentry: backlog
+  epic-7-retrospective: optional
+
+  # Epic 8: Configuration & Customization
+  epic-8: backlog
+  8-1-implement-configuration-file-structure: backlog
+  8-2-implement-circular-dependency-detection-rules: backlog
+  8-3-implement-health-score-threshold-configuration: backlog
+  8-4-implement-package-exclusion-pattern-configuration: backlog
+  8-5-implement-workspace-detection-pattern-configuration: backlog
+  8-6-implement-output-format-configuration: backlog
+  epic-8-retrospective: optional
+
+  # Epic 9: Developer API Integration
+  epic-9: backlog
+  9-1-create-monoguard-wasm-npm-package-structure: backlog
+  9-2-implement-analyze-api-function: backlog
+  9-3-implement-check-api-function: backlog
+  9-4-create-complete-typescript-type-definitions: backlog
+  9-5-write-api-documentation-and-usage-examples: backlog
+  epic-9-retrospective: optional
