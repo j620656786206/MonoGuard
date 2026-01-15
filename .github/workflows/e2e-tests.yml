@@ -1,0 +1,359 @@
+# MonoGuard E2E Test Pipeline
+#
+# Production-ready CI/CD pipeline with:
+# - Parallel test execution (4 shards)
+# - Burn-in testing for flaky detection
+# - Smart caching for fast execution
+# - Failure-only artifact collection
+#
+# Based on TEA Knowledge Base: ci-burn-in.md
+
+name: E2E Tests
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+  # Weekly burn-in schedule
+  schedule:
+    - cron: '0 6 * * 1' # Every Monday at 6am UTC
+
+env:
+  NODE_VERSION_FILE: '.nvmrc'
+  PNPM_VERSION: '10.14.0'
+
+# Cancel in-progress runs for the same branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ============================================
+  # Stage 1: Install & Cache Dependencies
+  # ============================================
+  install:
+    name: Install Dependencies
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ${{ env.NODE_VERSION_FILE }}
+          cache: 'pnpm'
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: pnpm exec playwright install --with-deps chromium firefox webkit
+
+  # ============================================
+  # Stage 2: Lint & Type Check
+  # ============================================
+  lint:
+    name: Lint & Type Check
+    needs: install
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ${{ env.NODE_VERSION_FILE }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run ESLint
+        run: pnpm nx run-many --target=lint --all --parallel=3
+
+      - name: Run Type Check
+        run: pnpm nx run-many --target=type-check --all --parallel=3
+        continue-on-error: true # Type check may not be configured for all projects
+
+  # ============================================
+  # Stage 3: Unit Tests
+  # ============================================
+  unit-tests:
+    name: Unit Tests
+    needs: install
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ${{ env.NODE_VERSION_FILE }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run unit tests
+        run: pnpm nx run-many --target=test --all --parallel=3
+
+  # ============================================
+  # Stage 4: E2E Tests (Parallel Shards)
+  # ============================================
+  e2e-tests:
+    name: E2E Tests (Shard ${{ matrix.shard }}/4)
+    needs: [install, lint]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false # Run all shards even if one fails
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ${{ env.NODE_VERSION_FILE }}
+          cache: 'pnpm'
+
+      - name: Restore Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/pnpm-lock.yaml') }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers (fallback)
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run E2E tests (shard ${{ matrix.shard }}/4)
+        run: pnpm nx run web-e2e:e2e --shard=${{ matrix.shard }}/4
+        env:
+          CI: true
+          BASE_URL: http://localhost:4200
+
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-results-shard-${{ matrix.shard }}
+          path: |
+            apps/web-e2e/test-results/
+            apps/web-e2e/playwright-report/
+          retention-days: 30
+
+  # ============================================
+  # Stage 5: Burn-In Test (PR only)
+  # ============================================
+  burn-in:
+    name: Burn-In Flaky Detection
+    needs: [install, lint]
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    # Only run burn-in on PRs to main/develop or weekly schedule
+    if: github.event_name == 'pull_request' || github.event_name == 'schedule'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Full history for accurate diff
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ${{ env.NODE_VERSION_FILE }}
+          cache: 'pnpm'
+
+      - name: Restore Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/pnpm-lock.yaml') }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers (fallback)
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Detect changed test files
+        id: changed-tests
+        run: |
+          if [ "${{ github.event_name }}" == "schedule" ]; then
+            echo "Weekly burn-in: running all tests"
+            echo "run_all=true" >> $GITHUB_OUTPUT
+          else
+            CHANGED_SPECS=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -E '\.(spec|test)\.(ts|js)$' || echo "")
+            echo "changed_specs=${CHANGED_SPECS}" >> $GITHUB_OUTPUT
+            echo "Changed specs: ${CHANGED_SPECS}"
+          fi
+
+      - name: Run burn-in loop (5 iterations)
+        run: |
+          echo "🔥 Starting burn-in test (5 iterations)"
+          for i in {1..5}; do
+            echo ""
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "🔄 Burn-in iteration $i/5"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            pnpm nx run web-e2e:e2e --project=chromium || {
+              echo "❌ Burn-in failed on iteration $i"
+              exit 1
+            }
+            echo "✅ Iteration $i passed"
+          done
+          echo ""
+          echo "🎉 Burn-in complete: 5/5 iterations passed"
+        env:
+          CI: true
+          BASE_URL: http://localhost:4200
+
+      - name: Upload burn-in failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: burn-in-failures
+          path: |
+            apps/web-e2e/test-results/
+            apps/web-e2e/playwright-report/
+          retention-days: 7
+
+  # ============================================
+  # Stage 6: Merge Reports
+  # ============================================
+  merge-reports:
+    name: Merge Test Reports
+    needs: e2e-tests
+    runs-on: ubuntu-latest
+    if: always() && needs.e2e-tests.result != 'skipped'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ${{ env.NODE_VERSION_FILE }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Download all shard results
+        uses: actions/download-artifact@v4
+        with:
+          pattern: e2e-results-shard-*
+          path: all-results/
+          merge-multiple: true
+
+      - name: Merge HTML reports
+        run: |
+          if [ -d "all-results" ] && [ "$(ls -A all-results)" ]; then
+            echo "Merging test reports..."
+            pnpm exec playwright merge-reports --reporter=html all-results/ || echo "No reports to merge"
+          else
+            echo "No test results to merge"
+          fi
+
+      - name: Upload merged report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: merged-playwright-report
+          path: playwright-report/
+          retention-days: 30
+          if-no-files-found: ignore
+
+  # ============================================
+  # Summary Job
+  # ============================================
+  ci-summary:
+    name: CI Summary
+    needs: [lint, unit-tests, e2e-tests, burn-in]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Check job statuses
+        run: |
+          echo "📊 CI Pipeline Summary"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "Lint:       ${{ needs.lint.result }}"
+          echo "Unit Tests: ${{ needs.unit-tests.result }}"
+          echo "E2E Tests:  ${{ needs.e2e-tests.result }}"
+          echo "Burn-In:    ${{ needs.burn-in.result }}"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+          # Fail if any required job failed
+          if [[ "${{ needs.lint.result }}" == "failure" ]] || \
+             [[ "${{ needs.unit-tests.result }}" == "failure" ]] || \
+             [[ "${{ needs.e2e-tests.result }}" == "failure" ]]; then
+            echo "❌ Pipeline failed"
+            exit 1
+          fi
+
+          echo "✅ Pipeline passed"
