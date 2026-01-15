@@ -1,0 +1,19 @@
+{
+  "name": "@monoguard/analysis-engine",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Go WASM analysis engine for MonoGuard (placeholder for Story 1.3)",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "echo 'Placeholder - Go WASM build will be configured in Story 1.3'",
+    "test": "echo 'Placeholder - Tests will be configured in Story 1.3'"
+  }
+}
