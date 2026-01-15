@@ -70,11 +70,11 @@ services:
       retries: 3
 
   # Frontend Service (Next.js) - Production
-  frontend:
+  web:
     build:
-      context: ./apps/frontend
+      context: ./apps/web
       dockerfile: Dockerfile
-    container_name: monoguard-frontend-prod
+    container_name: monoguard-web-prod
     restart: unless-stopped
     ports:
       - "${FRONTEND_PORT:-3000}:3000"

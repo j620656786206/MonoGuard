@@ -66,11 +66,11 @@ services:
     working_dir: /app
 
   # Frontend Service (Next.js) - Development
-  frontend:
+  web:
     build:
-      context: ./apps/frontend
+      context: ./apps/web
       dockerfile: Dockerfile.dev
-    container_name: monoguard-frontend
+    container_name: monoguard-web
     restart: unless-stopped
     ports:
       - "3000:3000"
@@ -79,7 +79,7 @@ services:
       - NEXT_PUBLIC_WS_URL=ws://localhost:8080/ws
       - NEXT_PUBLIC_APP_ENV=development
     volumes:
-      - ./apps/frontend:/app
+      - ./apps/web:/app
       - /app/node_modules
       - /app/.next
     working_dir: /app
