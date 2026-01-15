@@ -10,21 +10,15 @@
     "importHelpers": true,
     "target": "ES2017",
     "module": "esnext",
-    "lib": [
-      "ES2017",
-      "dom"
-    ],
+    "lib": ["ES2017", "dom"],
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@monoguard/shared-types": [
-        "libs/shared-types/src/index.ts"
-      ]
+      "@monoguard/types": ["packages/types/src/index.ts"],
+      "@monoguard/ui-components": ["packages/ui-components/src/index.ts"],
+      "@monoguard/analysis-engine": ["packages/analysis-engine/src/index.ts"]
     }
   },
-  "exclude": [
-    "node_modules",
-    "tmp"
-  ]
+  "exclude": ["node_modules", "tmp"]
 }

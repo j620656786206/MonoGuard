@@ -34,7 +34,7 @@
     "glob": "^10.3.0",
     "yaml": "^2.3.0",
     "zod": "^3.22.0",
-    "@monoguard/shared-types": "workspace:*"
+    "@monoguard/types": "workspace:*"
   },
   "devDependencies": {
     "@types/fs-extra": "^11.0.1",

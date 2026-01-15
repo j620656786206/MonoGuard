@@ -9,7 +9,7 @@
     "start": "echo 'This is a monorepo - individual services should be started separately'",
     "build:all": "nx run-many --target=build --all",
     "dev": "nx dev",
-    "dev:frontend": "nx dev frontend",
+    "dev:web": "nx dev web",
     "dev:cli": "nx dev cli",
     "lint": "nx run-many --target=lint --all",
     "lint:fix": "nx run-many --target=lint --all --fix",
@@ -17,6 +17,11 @@
     "test:watch": "nx run-many --target=test --all --watch",
     "test:coverage": "nx run-many --target=test --all --coverage",
     "test:e2e": "nx run-many --target=e2e --all",
+    "test:e2e:p0": "pnpm exec playwright test --grep '@P0' --project=chromium",
+    "test:e2e:p1": "pnpm exec playwright test --grep '@P0|@P1' --project=chromium",
+    "test:e2e:burn-in": "bash scripts/burn-in.sh",
+    "test:e2e:changed": "bash scripts/test-changed.sh",
+    "ci:local": "bash scripts/ci-local.sh",
     "type-check": "nx run-many --target=type-check --all",
     "affected:build": "nx affected --target=build",
     "affected:test": "nx affected --target=test",
@@ -101,8 +106,7 @@
   "workspaces": {
     "packages": [
       "apps/*",
-      "libs/*",
-      "tools/*"
+      "packages/*"
     ]
   },
   "engines": {
@@ -120,7 +124,7 @@
       "eslint --fix",
       "prettier --write"
     ],
-    "libs/**/*.{js,jsx,ts,tsx}": [
+    "packages/**/*.{js,jsx,ts,tsx}": [
       "eslint --fix",
       "prettier --write"
     ],
