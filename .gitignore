@@ -75,3 +75,9 @@ apps/api/uploads/
 
 # Auto Claude data directory
 .auto-claude/
+
+# Playwright test artifacts
+test-results/
+playwright-report/
+playwright/.cache/
+**/playwright/.auth/
