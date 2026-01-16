@@ -183,7 +183,7 @@ jobs:
         uses: nrwl/nx-set-shas@v4
 
       - name: Run TypeScript tests (affected)
-        run: pnpm nx affected -t test --parallel=3 --coverage
+        run: pnpm nx affected -t test --parallel=3
 
       - name: Run Go tests
         run: |
