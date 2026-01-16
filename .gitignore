@@ -1,6 +1,7 @@
 # Compiled output
 /dist
 dist/
+.output/
 /tmp
 /out-tsc
 /build
