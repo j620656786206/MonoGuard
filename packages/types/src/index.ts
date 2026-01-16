@@ -4,12 +4,13 @@ export * from './domain';
 export * from './auth';
 export * from './common';
 
+// New WASM-compatible types
+export * from './result';
+export * from './analysis';
+export * from './wasm';
+
 // Re-export commonly used types
-export type { 
-  ApiResponse, 
-  ApiError, 
-  PaginatedResponse 
-} from './api';
+export type { ApiResponse, ApiError, PaginatedResponse } from './api';
 
 export type {
   Project,
@@ -23,11 +24,37 @@ export type {
   DuplicateDetectionResults,
   DuplicateGroup,
   BundleImpactReport,
-  BundleBreakdown
+  BundleBreakdown,
 } from './domain';
 
+export type { User, AuthToken, LoginCredentials } from './auth';
+
+// Re-export new WASM-compatible types
+export type { Result, ResultError, ErrorCode } from './result';
+
+export { ErrorCodes, isSuccess, isError } from './result';
+
 export type {
-  User,
-  AuthToken,
-  LoginCredentials
-} from './auth';
+  DependencyGraph,
+  PackageNode,
+  DependencyEdge,
+  DependencyType,
+  WorkspaceType,
+} from './analysis/graph';
+
+export type {
+  AnalysisResult,
+  CircularDependencyInfo,
+  FixStrategy,
+  CheckResult,
+  ValidationError,
+  ValidationWarning,
+  AnalysisMetadata,
+} from './analysis/results';
+
+export type {
+  MonoGuardAnalyzer,
+  VersionInfo,
+  WasmLoaderOptions,
+  WasmLoadResult,
+} from './wasm/adapter';
