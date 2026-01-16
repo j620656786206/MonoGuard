@@ -1,0 +1,7 @@
+# Build output
+dist/
+
+# Go build artifacts
+*.exe
+*.test
+*.out

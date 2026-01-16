@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MonoGuard WASM Smoke Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+        }
+        pre {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .success {
+            color: #4ec9b0;
+        }
+        .error {
+            color: #f44747;
+        }
+        .info {
+            color: #9cdcfe;
+        }
+        .result {
+            color: #ce9178;
+        }
+    </style>
+</head>
+<body>
+    <h1>MonoGuard WASM Smoke Test</h1>
+    <p>This page tests the Go WASM analysis engine in a browser environment.</p>
+    <pre id="output"></pre>
+
+    <script src="../dist/wasm_exec.js"></script>
+    <script>
+        const output = document.getElementById('output');
+
+        function log(msg, className = '') {
+            const line = document.createElement('span');
+            line.className = className;
+            line.textContent = msg + '\n';
+            output.appendChild(line);
+            console.log(msg);
+        }
+
+        function logJSON(label, json) {
+            log(label, 'info');
+            try {
+                const parsed = JSON.parse(json);
+                log(JSON.stringify(parsed, null, 2), 'result');
+            } catch (e) {
+                log(json, 'result');
+            }
+        }
+
+        async function runTests() {
+            log('🔧 Loading WASM...', 'info');
+
+            try {
+                const go = new Go();
+                const result = await WebAssembly.instantiateStreaming(
+                    fetch('../dist/monoguard.wasm'),
+                    go.importObject
+                );
+                go.run(result.instance);
+                log('✓ WASM loaded successfully!\n', 'success');
+
+                // Test 1: getVersion
+                log('Test 1: MonoGuard.getVersion()', 'info');
+                const versionResult = MonoGuard.getVersion();
+                logJSON('Result:', versionResult);
+                const versionParsed = JSON.parse(versionResult);
+                if (versionParsed.data && versionParsed.data.version) {
+                    log('✓ getVersion test passed\n', 'success');
+                } else {
+                    throw new Error('getVersion returned invalid data');
+                }
+
+                // Test 2: analyze with empty input
+                log('Test 2: MonoGuard.analyze("{}")', 'info');
+                const analyzeResult = MonoGuard.analyze('{}');
+                logJSON('Result:', analyzeResult);
+                const analyzeParsed = JSON.parse(analyzeResult);
+                if (analyzeParsed.data !== null && analyzeParsed.error === null) {
+                    log('✓ analyze test passed\n', 'success');
+                } else {
+                    throw new Error('analyze returned error or null data');
+                }
+
+                // Test 3: analyze with no input (error case)
+                log('Test 3: MonoGuard.analyze() - no input (error case)', 'info');
+                const analyzeNoInput = MonoGuard.analyze();
+                logJSON('Result:', analyzeNoInput);
+                const analyzeNoInputParsed = JSON.parse(analyzeNoInput);
+                if (analyzeNoInputParsed.error && analyzeNoInputParsed.error.code === 'INVALID_INPUT') {
+                    log('✓ analyze error handling test passed\n', 'success');
+                } else {
+                    throw new Error('analyze should return error for missing input');
+                }
+
+                // Test 4: check
+                log('Test 4: MonoGuard.check("{}")', 'info');
+                const checkResult = MonoGuard.check('{}');
+                logJSON('Result:', checkResult);
+                const checkParsed = JSON.parse(checkResult);
+                if (checkParsed.data !== null && checkParsed.data.passed === true) {
+                    log('✓ check test passed\n', 'success');
+                } else {
+                    throw new Error('check returned invalid data');
+                }
+
+                // Test 5: Verify Result<T> structure
+                log('Test 5: Verify Result<T> JSON structure', 'info');
+                const allResults = [versionParsed, analyzeParsed, checkParsed];
+                for (const r of allResults) {
+                    if (!('data' in r) || !('error' in r)) {
+                        throw new Error('Result missing data or error field');
+                    }
+                }
+                log('✓ All results follow Result<T> structure\n', 'success');
+
+                // Summary
+                log('═══════════════════════════════════════', 'success');
+                log('✅ All smoke tests passed!', 'success');
+                log('═══════════════════════════════════════', 'success');
+
+            } catch (err) {
+                log('\n❌ Error: ' + err.message, 'error');
+                console.error(err);
+            }
+        }
+
+        runTests();
+    </script>
+</body>
+</html>

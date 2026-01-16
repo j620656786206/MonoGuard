@@ -1,0 +1,29 @@
+{
+  "name": "@monoguard/analysis-engine",
+  "projectType": "library",
+  "sourceRoot": "packages/analysis-engine",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "make build-wasm",
+        "cwd": "packages/analysis-engine"
+      },
+      "outputs": ["{projectRoot}/dist"]
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "make test",
+        "cwd": "packages/analysis-engine"
+      }
+    },
+    "clean": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "make clean",
+        "cwd": "packages/analysis-engine"
+      }
+    }
+  }
+}
