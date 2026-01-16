@@ -42,8 +42,8 @@ development_status:
   epic-1: in-progress
   1-1-initialize-nx-monorepo-workspace: done
   1-2-setup-tanstack-start-web-application: done
-  1-3-setup-go-wasm-analysis-engine-project: ready-for-dev
-  1-4-setup-go-cli-project-with-cobra: ready-for-dev
+  1-3-setup-go-wasm-analysis-engine-project: review
+  1-4-setup-go-cli-project-with-cobra: done
   1-5-setup-shared-typescript-types-package: ready-for-dev
   1-6-configure-github-actions-ci-pipeline: ready-for-dev
   1-7-configure-cloudflare-pages-deployment: ready-for-dev
