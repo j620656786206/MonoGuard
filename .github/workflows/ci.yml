@@ -136,7 +136,6 @@ jobs:
 
       - name: Run TypeScript type check
         run: pnpm nx affected -t type-check --parallel=3
-        continue-on-error: true # Not all projects may have type-check
 
   # ============================================
   # Test Job - Unit and Integration Tests
@@ -183,12 +182,12 @@ jobs:
         uses: nrwl/nx-set-shas@v4
 
       - name: Run TypeScript tests (affected)
-        run: pnpm nx affected -t test --parallel=3
+        run: pnpm nx affected -t test --parallel=3 --coverage
 
       - name: Run Go tests
         run: |
-          cd packages/analysis-engine && go test -v ./... || true
-          cd ../../apps/cli && go test -v ./... || true
+          cd packages/analysis-engine && go test -v ./...
+          cd ../../apps/cli && go test -v ./...
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4

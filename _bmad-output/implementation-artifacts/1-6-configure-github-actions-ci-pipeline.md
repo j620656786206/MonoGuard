@@ -1,6 +1,6 @@
 # Story 1.6: Configure GitHub Actions CI Pipeline
 
-Status: review
+Status: done
 
 ## Story
 
@@ -575,6 +575,20 @@ Claude Opus 4.5 (claude-opus-4-5-20251101)
 
 ### File List
 
-- .github/workflows/ci.yml (new)
-- .github/BRANCH_PROTECTION.md (new)
+- .github/workflows/ci.yml (new, updated by code review)
+- .github/BRANCH_PROTECTION.md (new, updated by code review)
 - .github/workflows/e2e-tests.yml (modified)
+- apps/web/package.json (modified - added @vitest/coverage-v8)
+- pnpm-lock.yaml (modified)
+
+### Code Review Fixes Applied
+
+**Review Date:** 2026-01-17
+**Reviewer:** Claude Opus 4.5 (Amelia - Dev Agent)
+
+**Issues Fixed:**
+
+1. **[H1] AC4 Coverage** - Installed `@vitest/coverage-v8@3.2.4` and restored `--coverage` flag
+2. **[H2] Go Test Failures** - Removed `|| true` so Go test failures now fail the pipeline
+3. **[M1] Type-check Failures** - Removed `continue-on-error: true` so type errors fail the pipeline
+4. **[M2] Status Check Names** - Corrected BRANCH_PROTECTION.md to use proper capitalized job names (`Lint`, `Test`, `Build`, `CI Summary`)

@@ -29,10 +29,10 @@ The following CI jobs must pass before merging:
 2. **Require status checks to pass before merging**
    - Require branches to be up to date before merging: Yes
    - Status checks that are required:
-     - `lint`
-     - `test`
-     - `build`
-     - `ci-summary`
+     - `Lint`
+     - `Test`
+     - `Build`
+     - `CI Summary`
 
 3. **Require conversation resolution before merging**: Yes
 
@@ -65,10 +65,10 @@ The `develop` branch is the integration branch with similar but slightly relaxed
 
 ```bash
 # For main branch
-gh api repos/{owner}/{repo}/branches/main/protection -X PUT -f required_status_checks='{"strict":true,"contexts":["lint","test","build","ci-summary"]}' -f enforce_admins=true -f required_pull_request_reviews='{"required_approving_review_count":1}'
+gh api repos/{owner}/{repo}/branches/main/protection -X PUT -f required_status_checks='{"strict":true,"contexts":["Lint","Test","Build","CI Summary"]}' -f enforce_admins=true -f required_pull_request_reviews='{"required_approving_review_count":1}'
 
 # For develop branch
-gh api repos/{owner}/{repo}/branches/develop/protection -X PUT -f required_status_checks='{"strict":true,"contexts":["lint","test","build","ci-summary"]}'
+gh api repos/{owner}/{repo}/branches/develop/protection -X PUT -f required_status_checks='{"strict":true,"contexts":["Lint","Test","Build","CI Summary"]}'
 ```
 
 ## E2E Tests
