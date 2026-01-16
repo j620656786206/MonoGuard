@@ -1,0 +1,106 @@
+# Cloudflare Pages Deployment
+#
+# Deploys to Cloudflare Pages on main branch push
+# Creates preview deployments for PRs
+#
+# Required secrets:
+# - CLOUDFLARE_API_TOKEN: API token with Pages edit permissions
+# - CLOUDFLARE_ACCOUNT_ID: Your Cloudflare account ID
+
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  NODE_VERSION_FILE: '.nvmrc'
+  PNPM_VERSION: '10.14.0'
+  GO_VERSION: '1.21'
+
+# Only allow one deployment at a time
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy to Cloudflare Pages
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      deployments: write
+      pull-requests: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ${{ env.NODE_VERSION_FILE }}
+          cache: 'pnpm'
+
+      - name: Setup Go (for WASM)
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: |
+            packages/analysis-engine/go.sum
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build types package
+        run: pnpm nx build @monoguard/types
+
+      - name: Build WASM analysis engine
+        run: pnpm nx build @monoguard/analysis-engine
+
+      - name: Copy WASM to public
+        run: |
+          mkdir -p apps/web/public
+          if [ -f packages/analysis-engine/dist/monoguard.wasm ]; then
+            cp packages/analysis-engine/dist/monoguard.wasm apps/web/public/
+            echo "✓ Copied monoguard.wasm"
+          else
+            echo "⚠ WASM file not found, skipping copy"
+          fi
+          if [ -f packages/analysis-engine/dist/wasm_exec.js ]; then
+            cp packages/analysis-engine/dist/wasm_exec.js apps/web/public/
+            echo "✓ Copied wasm_exec.js"
+          else
+            echo "⚠ wasm_exec.js not found, skipping copy"
+          fi
+
+      - name: Build web app
+        run: pnpm nx build web
+
+      - name: Verify build output
+        run: |
+          echo "Build output contents:"
+          ls -la apps/web/.output/
+          echo ""
+          echo "Checking for _headers and _redirects:"
+          cat apps/web/.output/_headers | head -10
+          echo ""
+          cat apps/web/.output/_redirects
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: monoguard
+          directory: apps/web/.output
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+          # Creates preview for PRs, production for main
+          branch: ${{ github.head_ref || github.ref_name }}

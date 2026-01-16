@@ -1,0 +1,12 @@
+# Cloudflare Pages configuration for local development
+# Use: npx wrangler pages dev .output
+# Reference: https://developers.cloudflare.com/pages/functions/wrangler-configuration/
+
+name = "monoguard"
+compatibility_date = "2024-01-01"
+
+[site]
+bucket = ".output"
+
+# Note: Headers are configured via _headers file in public/
+# This file is primarily for local development with wrangler

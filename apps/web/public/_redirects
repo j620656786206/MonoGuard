@@ -1,0 +1,9 @@
+# SPA fallback - redirect all routes to index.html
+# This enables client-side routing for TanStack Router
+# Reference: https://developers.cloudflare.com/pages/configuration/redirects/
+
+# Static assets should be served directly (no redirect)
+# Cloudflare Pages handles this automatically
+
+# All other routes fall back to index.html for client-side routing
+/*    /index.html   200

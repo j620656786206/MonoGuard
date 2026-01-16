@@ -1,0 +1,46 @@
+# Cloudflare Pages headers configuration
+# Reference: https://developers.cloudflare.com/pages/configuration/headers/
+
+# Enable SharedArrayBuffer for WASM (required for multi-threading)
+/*
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: require-corp
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+
+# WASM files - correct MIME type and caching
+/*.wasm
+  Content-Type: application/wasm
+  Cache-Control: public, max-age=31536000, immutable
+  Cross-Origin-Resource-Policy: same-origin
+
+# JavaScript files - long cache for hashed files
+/*.js
+  Cache-Control: public, max-age=31536000, immutable
+
+# CSS files - long cache for hashed files
+/*.css
+  Cache-Control: public, max-age=31536000, immutable
+
+# HTML files - no cache (always fetch latest)
+/*.html
+  Cache-Control: no-cache, no-store, must-revalidate
+
+# Index page
+/
+  Cache-Control: no-cache, no-store, must-revalidate
+
+# Images - moderate caching
+/images/*
+  Cache-Control: public, max-age=86400
+
+# Favicons and manifest - moderate caching
+/favicon*
+  Cache-Control: public, max-age=86400
+/site.webmanifest
+  Cache-Control: public, max-age=86400
+/android-chrome*
+  Cache-Control: public, max-age=86400
+/apple-touch-icon*
+  Cache-Control: public, max-age=86400

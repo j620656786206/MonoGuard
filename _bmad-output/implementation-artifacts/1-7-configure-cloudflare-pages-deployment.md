@@ -1,6 +1,6 @@
 # Story 1.7: Configure Cloudflare Pages Deployment
 
-Status: ready-for-dev
+Status: in-progress
 
 ## Story
 
@@ -81,8 +81,9 @@ So that **the web app is automatically deployed with zero infrastructure cost**.
     ```
   - [ ] 1.6 Set production branch to `main`
 
-- [ ] **Task 2: Create _headers File** (AC: #4, #5)
-  - [ ] 2.1 Create `apps/web/public/_headers`:
+- [x] **Task 2: Create \_headers File** (AC: #4, #5)
+  - [x] 2.1 Create `apps/web/public/_headers`:
+
     ```
     # Cloudflare Pages headers configuration
     # Reference: https://developers.cloudflare.com/pages/configuration/headers/
@@ -122,16 +123,17 @@ So that **the web app is automatically deployed with zero infrastructure cost**.
       Cache-Control: public, max-age=86400
     ```
 
-- [ ] **Task 3: Create _redirects File** (AC: #2)
-  - [ ] 3.1 Create `apps/web/public/_redirects` for SPA routing:
+- [x] **Task 3: Create \_redirects File** (AC: #2)
+  - [x] 3.1 Create `apps/web/public/_redirects` for SPA routing:
     ```
     # SPA fallback - redirect all routes to index.html
     # This enables client-side routing for TanStack Router
     /*    /index.html   200
     ```
 
-- [ ] **Task 4: Configure wrangler.toml (Optional)** (AC: #1, #4)
-  - [ ] 4.1 Create `apps/web/wrangler.toml` for local testing:
+- [x] **Task 4: Configure wrangler.toml (Optional)** (AC: #1, #4)
+  - [x] 4.1 Create `apps/web/wrangler.toml` for local testing:
+
     ```toml
     name = "monoguard"
     compatibility_date = "2024-01-01"
@@ -152,21 +154,14 @@ So that **the web app is automatically deployed with zero infrastructure cost**.
       Content-Type = "application/wasm"
     ```
 
-- [ ] **Task 5: Update Build Output Path** (AC: #2)
-  - [ ] 5.1 Verify TanStack Start outputs to `.output/public/`
-  - [ ] 5.2 Update `apps/web/app.config.ts` if needed:
-    ```typescript
-    export default defineConfig({
-      server: {
-        preset: 'static',
-        // Ensure output goes to .output/public for Cloudflare Pages
-      },
-    })
-    ```
-  - [ ] 5.3 Verify WASM files are copied to public directory during build
+- [x] **Task 5: Update Build Output Path** (AC: #2)
+  - [x] 5.1 Verify Vite outputs to `.output/` (confirmed - using Vite, not TanStack Start)
+  - [x] 5.2 N/A - Using Vite with `vite.config.ts` (outDir: '.output')
+  - [x] 5.3 WASM copy handled in deploy workflow
 
-- [ ] **Task 6: Configure GitHub Actions Deployment** (AC: #2, #3)
-  - [ ] 6.1 Create `.github/workflows/deploy.yml`:
+- [x] **Task 6: Configure GitHub Actions Deployment** (AC: #2, #3)
+  - [x] 6.1 Create `.github/workflows/deploy.yml`:
+
     ```yaml
     # Cloudflare Pages Deployment
     #
@@ -296,6 +291,7 @@ So that **the web app is automatically deployed with zero infrastructure cost**.
 **From project-context.md:**
 
 1. **WASM MIME Type:**
+
    ```
    # ✅ CORRECT: Proper WASM headers
    Content-Type: application/wasm
@@ -306,6 +302,7 @@ So that **the web app is automatically deployed with zero infrastructure cost**.
    ```
 
 2. **COOP/COEP Headers:**
+
    ```
    # Required for SharedArrayBuffer (future WASM threading)
    Cross-Origin-Opener-Policy: same-origin
@@ -313,6 +310,7 @@ So that **the web app is automatically deployed with zero infrastructure cost**.
    ```
 
 3. **Build Output Path:**
+
    ```
    # TanStack Start SSG output
    apps/web/.output/public/
@@ -325,19 +323,19 @@ So that **the web app is automatically deployed with zero infrastructure cost**.
 
 **Build Settings:**
 
-| Setting | Value |
-|---------|-------|
-| Framework | None |
-| Build command | `pnpm nx build web` |
+| Setting          | Value                     |
+| ---------------- | ------------------------- |
+| Framework        | None                      |
+| Build command    | `pnpm nx build web`       |
 | Output directory | `apps/web/.output/public` |
-| Root directory | `/` |
-| Node.js version | 20 |
+| Root directory   | `/`                       |
+| Node.js version  | 20                        |
 
 **Environment Variables:**
 
-| Variable | Value |
-|----------|-------|
-| `NODE_VERSION` | `20` |
+| Variable       | Value     |
+| -------------- | --------- |
+| `NODE_VERSION` | `20`      |
 | `PNPM_VERSION` | `10.14.0` |
 
 ### WASM Loading Flow
@@ -380,6 +378,7 @@ Site live at *.pages.dev
 ### Free Tier Limits
 
 Cloudflare Pages free tier includes:
+
 - 500 builds per month
 - Unlimited requests
 - Unlimited bandwidth
@@ -408,6 +407,7 @@ Cloudflare Pages free tier includes:
 ### Migration from Vercel
 
 Current `vercel.json` is for Next.js and will be obsolete after TanStack Start migration. Options:
+
 1. Delete `vercel.json` after Cloudflare migration
 2. Keep as backup/alternative deployment option
 
@@ -424,11 +424,40 @@ Current `vercel.json` is for Next.js and will be obsolete after TanStack Start m
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.5 (claude-opus-4-5-20251101)
 
 ### Debug Log References
 
+- Build output verified: `apps/web/.output/` (Vite, not TanStack Start)
+- \_headers and \_redirects correctly copied to build output
+
 ### Completion Notes List
+
+1. **Created `apps/web/public/_headers`** - Cloudflare headers for:
+   - WASM MIME type (application/wasm)
+   - COOP/COEP headers for SharedArrayBuffer
+   - Security headers (X-Content-Type-Options, X-Frame-Options, etc.)
+   - Caching configuration for different file types
+
+2. **Created `apps/web/public/_redirects`** - SPA routing fallback
+
+3. **Created `apps/web/wrangler.toml`** - Local development with wrangler
+
+4. **Created `.github/workflows/deploy.yml`** - Deployment workflow that:
+   - Builds WASM and copies to public/
+   - Builds web app
+   - Deploys to Cloudflare Pages
+   - Supports preview deployments for PRs
+
+5. **Manual Tasks Required:**
+   - Task 1: Create Cloudflare Pages project in dashboard
+   - Task 7: Add CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID secrets
+   - Task 8: Configure custom domain (optional)
+   - Task 9: Verification after secrets are configured
 
 ### File List
 
+- apps/web/public/\_headers (new)
+- apps/web/public/\_redirects (new)
+- apps/web/wrangler.toml (new)
+- .github/workflows/deploy.yml (new)
