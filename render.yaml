@@ -41,7 +41,6 @@ services:
   - type: web
     name: monoguard-web
     runtime: static
-    region: oregon
     plan: free
     buildCommand: |
       corepack enable
