@@ -7,13 +7,20 @@ package types
 type AnalysisResult struct {
 	HealthScore int    `json:"healthScore"`
 	Packages    int    `json:"packages"`
-	CreatedAt   string `json:"createdAt"` // ISO 8601 format
+	CreatedAt   string `json:"createdAt,omitempty"` // ISO 8601 format
+	Placeholder bool   `json:"placeholder,omitempty"` // True when returning placeholder data
+}
+
+// VersionInfo represents the version response.
+type VersionInfo struct {
+	Version string `json:"version"`
 }
 
 // CheckResult represents validation-only output for CI/CD pipelines.
 type CheckResult struct {
-	Passed bool     `json:"passed"`
-	Errors []string `json:"errors"`
+	Passed      bool     `json:"passed"`
+	Errors      []string `json:"errors"`
+	Placeholder bool     `json:"placeholder,omitempty"` // True when returning placeholder data
 }
 
 // Package represents a single package in the workspace.

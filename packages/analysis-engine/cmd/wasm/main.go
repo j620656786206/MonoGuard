@@ -2,61 +2,41 @@
 
 // Package main is the WASM entry point for MonoGuard analysis engine.
 // It exports functions to JavaScript via syscall/js.
+// Business logic is delegated to internal/handlers for testability.
 package main
 
 import (
 	"syscall/js"
 
-	"github.com/j620656786206/MonoGuard/packages/analysis-engine/internal/result"
+	"github.com/j620656786206/MonoGuard/packages/analysis-engine/internal/handlers"
 )
 
-// version is the current version of the analysis engine.
-const version = "0.1.0"
-
 // getVersion returns the analysis engine version.
-// Returns: Result<{version: string}>
+// Returns: Result<VersionInfo>
 func getVersion(this js.Value, args []js.Value) interface{} {
-	r := result.NewSuccess(map[string]string{"version": version})
-	return r.ToJSON()
+	return handlers.GetVersion()
 }
 
 // analyze performs dependency analysis on the provided workspace data.
 // Input: JSON string of workspace configuration
-// Returns: Result<AnalysisResult> - placeholder for Epic 2 implementation
+// Returns: Result<AnalysisResult>
 func analyze(this js.Value, args []js.Value) interface{} {
-	if len(args) < 1 {
-		r := result.NewError("INVALID_INPUT", "Missing JSON input")
-		return r.ToJSON()
+	input := ""
+	if len(args) >= 1 {
+		input = args[0].String()
 	}
-
-	// Placeholder - will be implemented in Epic 2
-	input := args[0].String()
-	_ = input // Suppress unused warning
-
-	r := result.NewSuccess(map[string]interface{}{
-		"healthScore": 100,
-		"packages":    0,
-		"placeholder": true,
-	})
-	return r.ToJSON()
+	return handlers.Analyze(input)
 }
 
 // check validates the workspace configuration against configured rules.
 // Input: JSON string of workspace configuration
-// Returns: Result<CheckResult> - placeholder for Epic 2 implementation
+// Returns: Result<CheckResult>
 func check(this js.Value, args []js.Value) interface{} {
-	if len(args) < 1 {
-		r := result.NewError("INVALID_INPUT", "Missing JSON input")
-		return r.ToJSON()
+	input := ""
+	if len(args) >= 1 {
+		input = args[0].String()
 	}
-
-	// Placeholder - will be implemented in Epic 2
-	r := result.NewSuccess(map[string]interface{}{
-		"passed":      true,
-		"errors":      []string{},
-		"placeholder": true,
-	})
-	return r.ToJSON()
+	return handlers.Check(input)
 }
 
 func main() {

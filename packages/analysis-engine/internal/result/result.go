@@ -41,11 +41,37 @@ func NewError(code, message string) *Result {
 
 // ToJSON serializes the Result to a JSON string.
 // This is the format returned to JavaScript from WASM functions.
+// If marshaling fails, returns an error Result with the original error message.
 func (r *Result) ToJSON() string {
 	b, err := json.Marshal(r)
 	if err != nil {
-		// Fallback to error result if marshaling fails
-		return `{"data":null,"error":{"code":"MARSHAL_ERROR","message":"Failed to serialize result"}}`
+		// Fallback to error result if marshaling fails, preserving original error
+		// Note: We use string concatenation to avoid another potential marshal error
+		escapedErr := escapeJSON(err.Error())
+		return `{"data":null,"error":{"code":"MARSHAL_ERROR","message":"Failed to serialize result: ` + escapedErr + `"}}`
 	}
 	return string(b)
+}
+
+// escapeJSON escapes special characters in a string for safe JSON inclusion.
+func escapeJSON(s string) string {
+	result := make([]byte, 0, len(s))
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		switch c {
+		case '"':
+			result = append(result, '\\', '"')
+		case '\\':
+			result = append(result, '\\', '\\')
+		case '\n':
+			result = append(result, '\\', 'n')
+		case '\r':
+			result = append(result, '\\', 'r')
+		case '\t':
+			result = append(result, '\\', 't')
+		default:
+			result = append(result, c)
+		}
+	}
+	return string(result)
 }
