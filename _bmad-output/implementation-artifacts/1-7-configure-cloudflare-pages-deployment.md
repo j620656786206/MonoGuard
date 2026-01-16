@@ -1,6 +1,10 @@
-# Story 1.7: Configure Cloudflare Pages Deployment
+# Story 1.7: Configure Deployment Platform
 
-Status: in-progress
+Status: completed
+
+> **Note:** Original story was for Cloudflare Pages. Changed to **Render** based on user's
+> existing infrastructure (Railway + Vercel issues) and need for all-in-one deployment
+> including Go API + PostgreSQL + Redis + WASM frontend.
 
 ## Story
 
@@ -457,7 +461,22 @@ Claude Opus 4.5 (claude-opus-4-5-20251101)
 
 ### File List
 
-- apps/web/public/\_headers (new)
-- apps/web/public/\_redirects (new)
-- apps/web/wrangler.toml (new)
-- .github/workflows/deploy.yml (new)
+### Original Cloudflare Files (Removed)
+
+- apps/web/public/\_headers (removed)
+- apps/web/public/\_redirects (removed)
+- apps/web/wrangler.toml (removed)
+- .github/workflows/deploy.yml (removed)
+
+### Render Deployment (Final Implementation)
+
+- render.yaml (new) - All-in-one deployment blueprint
+
+**Render Configuration includes:**
+
+- Go API service with health check
+- Vite static site with WASM headers
+- PostgreSQL database (free tier)
+- Redis cache (free tier)
+- SPA routing fallback
+- COOP/COEP headers for SharedArrayBuffer

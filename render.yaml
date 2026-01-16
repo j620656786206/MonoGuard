@@ -1,0 +1,96 @@
+# MonoGuard Render Blueprint
+# Deploy: https://render.com/deploy
+#
+# This file defines all services for one-click deployment to Render.
+# See: https://render.com/docs/blueprint-spec
+
+services:
+  # ===========================================
+  # Go API Service
+  # ===========================================
+  - type: web
+    name: monoguard-api
+    runtime: go
+    region: oregon
+    plan: free
+    buildCommand: cd apps/api && go build -o server ./cmd/server
+    startCommand: cd apps/api && ./server
+    healthCheckPath: /health
+    envVars:
+      - key: GO_ENV
+        value: production
+      - key: PORT
+        value: '8080'
+      - key: DATABASE_URL
+        fromDatabase:
+          name: monoguard-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: monoguard-redis
+          type: redis
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGINS
+        value: https://monoguard-web.onrender.com
+
+  # ===========================================
+  # Vite Frontend (Static Site)
+  # ===========================================
+  - type: web
+    name: monoguard-web
+    runtime: static
+    region: oregon
+    plan: free
+    buildCommand: |
+      corepack enable
+      pnpm install --frozen-lockfile
+      pnpm nx build @monoguard/analysis-engine
+      cp packages/analysis-engine/dist/*.wasm apps/web/public/
+      pnpm nx build web
+    staticPublishPath: apps/web/dist
+    headers:
+      # WASM SharedArrayBuffer support
+      - path: /*
+        name: Cross-Origin-Opener-Policy
+        value: same-origin
+      - path: /*
+        name: Cross-Origin-Embedder-Policy
+        value: require-corp
+      # WASM caching
+      - path: /*.wasm
+        name: Content-Type
+        value: application/wasm
+      - path: /*.wasm
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+    routes:
+      # SPA fallback routing
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        value: https://monoguard-api.onrender.com
+
+  # ===========================================
+  # Redis Cache
+  # ===========================================
+  - type: redis
+    name: monoguard-redis
+    region: oregon
+    plan: free
+    maxmemoryPolicy: allkeys-lru
+    ipAllowList: []
+
+# ===========================================
+# PostgreSQL Database
+# ===========================================
+databases:
+  - name: monoguard-db
+    region: oregon
+    plan: free
+    databaseName: monoguard
+    user: monoguard_user
+    ipAllowList: []
