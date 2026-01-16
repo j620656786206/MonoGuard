@@ -1,0 +1,34 @@
+{
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": true
+  },
+  "permissions": {
+    "defaultMode": "acceptEdits",
+    "allow": [
+      "Read(./**)",
+      "Write(./**)",
+      "Edit(./**)",
+      "Glob(./**)",
+      "Grep(./**)",
+      "Read(/Users/alexyu/projects/personal/mono-guard/**)",
+      "Write(/Users/alexyu/projects/personal/mono-guard/**)",
+      "Edit(/Users/alexyu/projects/personal/mono-guard/**)",
+      "Glob(/Users/alexyu/projects/personal/mono-guard/**)",
+      "Grep(/Users/alexyu/projects/personal/mono-guard/**)",
+      "Read(/Users/alexyu/projects/personal/mono-guard/.auto-claude/specs/005-cli-validate-command/**)",
+      "Write(/Users/alexyu/projects/personal/mono-guard/.auto-claude/specs/005-cli-validate-command/**)",
+      "Edit(/Users/alexyu/projects/personal/mono-guard/.auto-claude/specs/005-cli-validate-command/**)",
+      "Bash(*)",
+      "WebFetch(*)",
+      "WebSearch(*)",
+      "mcp__context7__resolve-library-id(*)",
+      "mcp__context7__get-library-docs(*)",
+      "mcp__graphiti-memory__search_nodes(*)",
+      "mcp__graphiti-memory__search_facts(*)",
+      "mcp__graphiti-memory__add_episode(*)",
+      "mcp__graphiti-memory__get_episodes(*)",
+      "mcp__graphiti-memory__get_entity_edge(*)"
+    ]
+  }
+}
