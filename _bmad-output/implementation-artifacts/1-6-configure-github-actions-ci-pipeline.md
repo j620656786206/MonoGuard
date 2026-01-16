@@ -1,6 +1,6 @@
 # Story 1.6: Configure GitHub Actions CI Pipeline
 
-Status: ready-for-dev
+Status: in-progress
 
 ## Story
 
@@ -71,8 +71,9 @@ So that **code quality is automatically verified before merging and builds are v
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Create Main CI Workflow** (AC: #1, #2)
-  - [ ] 1.1 Create `.github/workflows/ci.yml`:
+- [x] **Task 1: Create Main CI Workflow** (AC: #1, #2)
+  - [x] 1.1 Create `.github/workflows/ci.yml`:
+
     ```yaml
     # MonoGuard CI Pipeline
     #
@@ -164,239 +165,243 @@ So that **code quality is automatically verified before merging and builds are v
             uses: nrwl/nx-set-shas@v4
     ```
 
-- [ ] **Task 2: Add Lint Job** (AC: #3)
-  - [ ] 2.1 Add lint job to `.github/workflows/ci.yml`:
+- [x] **Task 2: Add Lint Job** (AC: #3)
+  - [x] 2.1 Add lint job to `.github/workflows/ci.yml`:
+
     ```yaml
-      # ============================================
-      # Lint Job - ESLint and Type Checking
-      # ============================================
-      lint:
-        name: Lint
-        needs: setup
-        runs-on: ubuntu-latest
-        timeout-minutes: 10
-        steps:
-          - name: Checkout code
-            uses: actions/checkout@v4
-            with:
-              fetch-depth: 0
+    # ============================================
+    # Lint Job - ESLint and Type Checking
+    # ============================================
+    lint:
+      name: Lint
+      needs: setup
+      runs-on: ubuntu-latest
+      timeout-minutes: 10
+      steps:
+        - name: Checkout code
+          uses: actions/checkout@v4
+          with:
+            fetch-depth: 0
 
-          - name: Setup pnpm
-            uses: pnpm/action-setup@v4
-            with:
-              version: ${{ env.PNPM_VERSION }}
+        - name: Setup pnpm
+          uses: pnpm/action-setup@v4
+          with:
+            version: ${{ env.PNPM_VERSION }}
 
-          - name: Setup Node.js
-            uses: actions/setup-node@v4
-            with:
-              node-version-file: ${{ env.NODE_VERSION_FILE }}
-              cache: 'pnpm'
+        - name: Setup Node.js
+          uses: actions/setup-node@v4
+          with:
+            node-version-file: ${{ env.NODE_VERSION_FILE }}
+            cache: 'pnpm'
 
-          - name: Restore Nx cache
-            uses: actions/cache@v4
-            with:
-              path: .nx/cache
-              key: ${{ runner.os }}-nx-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ github.sha }}
-              restore-keys: |
-                ${{ runner.os }}-nx-
+        - name: Restore Nx cache
+          uses: actions/cache@v4
+          with:
+            path: .nx/cache
+            key: ${{ runner.os }}-nx-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ github.sha }}
+            restore-keys: |
+              ${{ runner.os }}-nx-
 
-          - name: Install dependencies
-            run: pnpm install --frozen-lockfile
+        - name: Install dependencies
+          run: pnpm install --frozen-lockfile
 
-          - name: Derive SHAs for affected
-            uses: nrwl/nx-set-shas@v4
+        - name: Derive SHAs for affected
+          uses: nrwl/nx-set-shas@v4
 
-          - name: Run ESLint (affected)
-            run: pnpm nx affected -t lint --parallel=3
+        - name: Run ESLint (affected)
+          run: pnpm nx affected -t lint --parallel=3
 
-          - name: Run TypeScript type check
-            run: pnpm nx affected -t type-check --parallel=3
-            continue-on-error: true # Not all projects may have type-check
+        - name: Run TypeScript type check
+          run: pnpm nx affected -t type-check --parallel=3
+          continue-on-error: true # Not all projects may have type-check
     ```
 
-- [ ] **Task 3: Add Test Job** (AC: #4)
-  - [ ] 3.1 Add test job to `.github/workflows/ci.yml`:
+- [x] **Task 3: Add Test Job** (AC: #4)
+  - [x] 3.1 Add test job to `.github/workflows/ci.yml`:
+
     ```yaml
-      # ============================================
-      # Test Job - Unit and Integration Tests
-      # ============================================
-      test:
-        name: Test
-        needs: setup
-        runs-on: ubuntu-latest
-        timeout-minutes: 15
-        steps:
-          - name: Checkout code
-            uses: actions/checkout@v4
-            with:
-              fetch-depth: 0
+    # ============================================
+    # Test Job - Unit and Integration Tests
+    # ============================================
+    test:
+      name: Test
+      needs: setup
+      runs-on: ubuntu-latest
+      timeout-minutes: 15
+      steps:
+        - name: Checkout code
+          uses: actions/checkout@v4
+          with:
+            fetch-depth: 0
 
-          - name: Setup pnpm
-            uses: pnpm/action-setup@v4
-            with:
-              version: ${{ env.PNPM_VERSION }}
+        - name: Setup pnpm
+          uses: pnpm/action-setup@v4
+          with:
+            version: ${{ env.PNPM_VERSION }}
 
-          - name: Setup Node.js
-            uses: actions/setup-node@v4
-            with:
-              node-version-file: ${{ env.NODE_VERSION_FILE }}
-              cache: 'pnpm'
+        - name: Setup Node.js
+          uses: actions/setup-node@v4
+          with:
+            node-version-file: ${{ env.NODE_VERSION_FILE }}
+            cache: 'pnpm'
 
-          - name: Setup Go
-            uses: actions/setup-go@v5
-            with:
-              go-version: ${{ env.GO_VERSION }}
+        - name: Setup Go
+          uses: actions/setup-go@v5
+          with:
+            go-version: ${{ env.GO_VERSION }}
 
-          - name: Restore Nx cache
-            uses: actions/cache@v4
-            with:
-              path: .nx/cache
-              key: ${{ runner.os }}-nx-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ github.sha }}
-              restore-keys: |
-                ${{ runner.os }}-nx-
+        - name: Restore Nx cache
+          uses: actions/cache@v4
+          with:
+            path: .nx/cache
+            key: ${{ runner.os }}-nx-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ github.sha }}
+            restore-keys: |
+              ${{ runner.os }}-nx-
 
-          - name: Install dependencies
-            run: pnpm install --frozen-lockfile
+        - name: Install dependencies
+          run: pnpm install --frozen-lockfile
 
-          - name: Derive SHAs for affected
-            uses: nrwl/nx-set-shas@v4
+        - name: Derive SHAs for affected
+          uses: nrwl/nx-set-shas@v4
 
-          - name: Run TypeScript tests (affected)
-            run: pnpm nx affected -t test --parallel=3 --coverage
+        - name: Run TypeScript tests (affected)
+          run: pnpm nx affected -t test --parallel=3 --coverage
 
-          - name: Run Go tests
-            run: |
-              cd packages/analysis-engine && go test -v ./... || true
-              cd ../../apps/cli && go test -v ./... || true
+        - name: Run Go tests
+          run: |
+            cd packages/analysis-engine && go test -v ./... || true
+            cd ../../apps/cli && go test -v ./... || true
 
-          - name: Upload coverage report
-            uses: actions/upload-artifact@v4
-            with:
-              name: coverage-report
-              path: coverage/
-              retention-days: 7
-              if-no-files-found: ignore
+        - name: Upload coverage report
+          uses: actions/upload-artifact@v4
+          with:
+            name: coverage-report
+            path: coverage/
+            retention-days: 7
+            if-no-files-found: ignore
     ```
 
-- [ ] **Task 4: Add Build Job** (AC: #5)
-  - [ ] 4.1 Add build job to `.github/workflows/ci.yml`:
+- [x] **Task 4: Add Build Job** (AC: #5)
+  - [x] 4.1 Add build job to `.github/workflows/ci.yml`:
+
     ```yaml
-      # ============================================
-      # Build Job - Build all packages and apps
-      # ============================================
-      build:
-        name: Build
-        needs: [lint, test]
-        runs-on: ubuntu-latest
-        timeout-minutes: 15
-        steps:
-          - name: Checkout code
-            uses: actions/checkout@v4
-            with:
-              fetch-depth: 0
+    # ============================================
+    # Build Job - Build all packages and apps
+    # ============================================
+    build:
+      name: Build
+      needs: [lint, test]
+      runs-on: ubuntu-latest
+      timeout-minutes: 15
+      steps:
+        - name: Checkout code
+          uses: actions/checkout@v4
+          with:
+            fetch-depth: 0
 
-          - name: Setup pnpm
-            uses: pnpm/action-setup@v4
-            with:
-              version: ${{ env.PNPM_VERSION }}
+        - name: Setup pnpm
+          uses: pnpm/action-setup@v4
+          with:
+            version: ${{ env.PNPM_VERSION }}
 
-          - name: Setup Node.js
-            uses: actions/setup-node@v4
-            with:
-              node-version-file: ${{ env.NODE_VERSION_FILE }}
-              cache: 'pnpm'
+        - name: Setup Node.js
+          uses: actions/setup-node@v4
+          with:
+            node-version-file: ${{ env.NODE_VERSION_FILE }}
+            cache: 'pnpm'
 
-          - name: Setup Go
-            uses: actions/setup-go@v5
-            with:
-              go-version: ${{ env.GO_VERSION }}
+        - name: Setup Go
+          uses: actions/setup-go@v5
+          with:
+            go-version: ${{ env.GO_VERSION }}
 
-          - name: Restore Nx cache
-            uses: actions/cache@v4
-            with:
-              path: .nx/cache
-              key: ${{ runner.os }}-nx-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ github.sha }}
-              restore-keys: |
-                ${{ runner.os }}-nx-
+        - name: Restore Nx cache
+          uses: actions/cache@v4
+          with:
+            path: .nx/cache
+            key: ${{ runner.os }}-nx-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ github.sha }}
+            restore-keys: |
+              ${{ runner.os }}-nx-
 
-          - name: Install dependencies
-            run: pnpm install --frozen-lockfile
+        - name: Install dependencies
+          run: pnpm install --frozen-lockfile
 
-          - name: Build types package
-            run: pnpm nx build types
+        - name: Build types package
+          run: pnpm nx build types
 
-          - name: Build WASM analysis engine
-            run: pnpm nx build analysis-engine
+        - name: Build WASM analysis engine
+          run: pnpm nx build analysis-engine
 
-          - name: Build CLI
-            run: pnpm nx build cli
+        - name: Build CLI
+          run: pnpm nx build cli
 
-          - name: Build web app
-            run: pnpm nx build web
+        - name: Build web app
+          run: pnpm nx build web
 
-          - name: Verify build outputs
-            run: |
-              echo "Checking build outputs..."
-              ls -la packages/types/dist/ || echo "types dist not found"
-              ls -la packages/analysis-engine/dist/ || echo "analysis-engine dist not found"
-              ls -la apps/cli/dist/ || echo "cli dist not found"
-              ls -la apps/web/.output/ || echo "web output not found"
+        - name: Verify build outputs
+          run: |
+            echo "Checking build outputs..."
+            ls -la packages/types/dist/ || echo "types dist not found"
+            ls -la packages/analysis-engine/dist/ || echo "analysis-engine dist not found"
+            ls -la apps/cli/dist/ || echo "cli dist not found"
+            ls -la apps/web/.output/ || echo "web output not found"
 
-          - name: Upload build artifacts
-            uses: actions/upload-artifact@v4
-            with:
-              name: build-artifacts
-              path: |
-                packages/types/dist/
-                packages/analysis-engine/dist/
-                apps/cli/dist/
-                apps/web/.output/
-              retention-days: 7
-              if-no-files-found: warn
+        - name: Upload build artifacts
+          uses: actions/upload-artifact@v4
+          with:
+            name: build-artifacts
+            path: |
+              packages/types/dist/
+              packages/analysis-engine/dist/
+              apps/cli/dist/
+              apps/web/.output/
+            retention-days: 7
+            if-no-files-found: warn
     ```
 
-- [ ] **Task 5: Add Summary Job** (AC: #6, #7)
-  - [ ] 5.1 Add summary job to `.github/workflows/ci.yml`:
+- [x] **Task 5: Add Summary Job** (AC: #6, #7)
+  - [x] 5.1 Add summary job to `.github/workflows/ci.yml`:
+
     ```yaml
-      # ============================================
-      # Summary Job - Report pipeline status
-      # ============================================
-      ci-summary:
-        name: CI Summary
-        needs: [lint, test, build]
-        runs-on: ubuntu-latest
-        if: always()
-        steps:
-          - name: Check job statuses
-            run: |
-              echo "📊 CI Pipeline Summary"
-              echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-              echo "Lint:  ${{ needs.lint.result }}"
-              echo "Test:  ${{ needs.test.result }}"
-              echo "Build: ${{ needs.build.result }}"
-              echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    # ============================================
+    # Summary Job - Report pipeline status
+    # ============================================
+    ci-summary:
+      name: CI Summary
+      needs: [lint, test, build]
+      runs-on: ubuntu-latest
+      if: always()
+      steps:
+        - name: Check job statuses
+          run: |
+            echo "📊 CI Pipeline Summary"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "Lint:  ${{ needs.lint.result }}"
+            echo "Test:  ${{ needs.test.result }}"
+            echo "Build: ${{ needs.build.result }}"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-              if [[ "${{ needs.lint.result }}" == "failure" ]] || \
-                 [[ "${{ needs.test.result }}" == "failure" ]] || \
-                 [[ "${{ needs.build.result }}" == "failure" ]]; then
-                echo "❌ Pipeline failed"
-                exit 1
-              fi
+            if [[ "${{ needs.lint.result }}" == "failure" ]] || \
+               [[ "${{ needs.test.result }}" == "failure" ]] || \
+               [[ "${{ needs.build.result }}" == "failure" ]]; then
+              echo "❌ Pipeline failed"
+              exit 1
+            fi
 
-              echo "✅ Pipeline passed"
+            echo "✅ Pipeline passed"
     ```
 
-- [ ] **Task 6: Configure Branch Protection** (AC: #7)
-  - [ ] 6.1 Document branch protection rules for GitHub:
+- [x] **Task 6: Configure Branch Protection** (AC: #7)
+  - [x] 6.1 Document branch protection rules for GitHub:
     - Required status checks: `lint`, `test`, `build`
     - Require branches to be up to date before merging
     - Require PR reviews (optional for solo dev)
-  - [ ] 6.2 Create `.github/CODEOWNERS` if needed
+  - [x] 6.2 Create `.github/BRANCH_PROTECTION.md` with detailed instructions
 
-- [ ] **Task 7: Update Existing E2E Workflow** (AC: #1)
-  - [ ] 7.1 Review existing `.github/workflows/e2e-tests.yml`
-  - [ ] 7.2 Add Go setup step if needed for WASM E2E tests
-  - [ ] 7.3 Ensure E2E workflow is complementary to main CI
+- [x] **Task 7: Update Existing E2E Workflow** (AC: #1)
+  - [x] 7.1 Review existing `.github/workflows/e2e-tests.yml`
+  - [x] 7.2 Add Go setup step if needed for WASM E2E tests
+  - [x] 7.3 Ensure E2E workflow is complementary to main CI
 
 - [ ] **Task 8: Verification** (AC: #1, #6, #7)
   - [ ] 8.1 Push a test commit to verify pipeline triggers
@@ -427,6 +432,7 @@ So that **code quality is automatically verified before merging and builds are v
 **From project-context.md:**
 
 1. **pnpm Exclusively:**
+
    ```yaml
    # ✅ CORRECT: Use pnpm
    run: pnpm install --frozen-lockfile
@@ -438,6 +444,7 @@ So that **code quality is automatically verified before merging and builds are v
    ```
 
 2. **Affected vs Run-Many:**
+
    ```yaml
    # ✅ CORRECT: Use affected for PRs (faster)
    run: pnpm nx affected -t test
@@ -486,22 +493,24 @@ So that **code quality is automatically verified before merging and builds are v
 
 ### Caching Strategy
 
-| Cache | Key | Contents |
-|-------|-----|----------|
-| pnpm store | `pnpm-lock.yaml` hash | Node modules |
-| Nx cache | `pnpm-lock.yaml` + SHA | Build outputs |
-| Go modules | `go.sum` hash | Go dependencies |
-| Playwright | `pnpm-lock.yaml` hash | Browser binaries |
+| Cache      | Key                    | Contents         |
+| ---------- | ---------------------- | ---------------- |
+| pnpm store | `pnpm-lock.yaml` hash  | Node modules     |
+| Nx cache   | `pnpm-lock.yaml` + SHA | Build outputs    |
+| Go modules | `go.sum` hash          | Go dependencies  |
+| Playwright | `pnpm-lock.yaml` hash  | Browser binaries |
 
 ### Existing Workflow Reference
 
 The existing `.github/workflows/e2e-tests.yml` provides:
+
 - Playwright E2E test execution
 - Parallel sharding (4 shards)
 - Burn-in flaky detection
 - Report merging
 
 The new `ci.yml` workflow will handle:
+
 - Basic lint/test/build
 - Go WASM builds
 - Coverage reporting
@@ -536,11 +545,36 @@ Both workflows are complementary - CI for fast feedback, E2E for comprehensive t
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.5 (claude-opus-4-5-20251101)
 
 ### Debug Log References
 
+- YAML validation passed for both ci.yml and e2e-tests.yml
+- Local build of @monoguard/types successful
+- Local lint execution verified
+
 ### Completion Notes List
+
+1. **Created `.github/workflows/ci.yml`** - Complete CI pipeline with:
+   - Setup job: Node.js 20.x, pnpm 10.14.0, Go 1.21+
+   - Lint job: ESLint + TypeScript type checking using affected commands
+   - Test job: TypeScript tests (affected) + Go tests with coverage upload
+   - Build job: types → analysis-engine → cli → web with artifact upload
+   - Summary job: Aggregated status reporting
+
+2. **Created `.github/BRANCH_PROTECTION.md`** - Documentation for:
+   - Required status checks (lint, test, build, ci-summary)
+   - Branch protection settings for main and develop
+   - GitHub CLI commands for setup
+
+3. **Updated `.github/workflows/e2e-tests.yml`** - Added:
+   - GO_VERSION environment variable
+   - Go setup step in install job for WASM support
+
+4. **Task 8 Note**: Verification tasks (8.1-8.5) require pushing to GitHub and creating PRs to validate the pipeline actually executes correctly. These should be marked complete after successful GitHub Actions runs.
 
 ### File List
 
+- .github/workflows/ci.yml (new)
+- .github/BRANCH_PROTECTION.md (new)
+- .github/workflows/e2e-tests.yml (modified)

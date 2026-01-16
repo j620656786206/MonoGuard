@@ -22,6 +22,7 @@ on:
 env:
   NODE_VERSION_FILE: '.nvmrc'
   PNPM_VERSION: '10.14.0'
+  GO_VERSION: '1.21'
 
 # Cancel in-progress runs for the same branch
 concurrency:
@@ -50,6 +51,14 @@ jobs:
         with:
           node-version-file: ${{ env.NODE_VERSION_FILE }}
           cache: 'pnpm'
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: |
+            packages/analysis-engine/go.sum
+            apps/cli/go.sum
 
       - name: Get pnpm store directory
         shell: bash

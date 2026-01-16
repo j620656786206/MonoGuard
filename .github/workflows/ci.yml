@@ -1,0 +1,294 @@
+# MonoGuard CI Pipeline
+#
+# Runs lint, test, and build on every push and PR.
+# Uses Nx affected commands for efficient builds.
+
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  NODE_VERSION_FILE: '.nvmrc'
+  PNPM_VERSION: '10.14.0'
+  GO_VERSION: '1.21'
+
+# Cancel in-progress runs for the same branch
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ============================================
+  # Setup Job - Install and cache dependencies
+  # ============================================
+  setup:
+    name: Setup
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      node-version: ${{ steps.node-version.outputs.version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Full history for affected commands
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Read Node version
+        id: node-version
+        run: echo "version=$(cat .nvmrc)" >> $GITHUB_OUTPUT
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ${{ env.NODE_VERSION_FILE }}
+          cache: 'pnpm'
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: |
+            packages/analysis-engine/go.sum
+            apps/cli/go.sum
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Cache Nx
+        uses: actions/cache@v4
+        with:
+          path: .nx/cache
+          key: ${{ runner.os }}-nx-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-nx-${{ hashFiles('**/pnpm-lock.yaml') }}-
+            ${{ runner.os }}-nx-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Derive SHAs for affected commands
+        uses: nrwl/nx-set-shas@v4
+
+  # ============================================
+  # Lint Job - ESLint and Type Checking
+  # ============================================
+  lint:
+    name: Lint
+    needs: setup
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ${{ env.NODE_VERSION_FILE }}
+          cache: 'pnpm'
+
+      - name: Restore Nx cache
+        uses: actions/cache@v4
+        with:
+          path: .nx/cache
+          key: ${{ runner.os }}-nx-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-nx-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Derive SHAs for affected
+        uses: nrwl/nx-set-shas@v4
+
+      - name: Run ESLint (affected)
+        run: pnpm nx affected -t lint --parallel=3
+
+      - name: Run TypeScript type check
+        run: pnpm nx affected -t type-check --parallel=3
+        continue-on-error: true # Not all projects may have type-check
+
+  # ============================================
+  # Test Job - Unit and Integration Tests
+  # ============================================
+  test:
+    name: Test
+    needs: setup
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ${{ env.NODE_VERSION_FILE }}
+          cache: 'pnpm'
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Restore Nx cache
+        uses: actions/cache@v4
+        with:
+          path: .nx/cache
+          key: ${{ runner.os }}-nx-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-nx-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Derive SHAs for affected
+        uses: nrwl/nx-set-shas@v4
+
+      - name: Run TypeScript tests (affected)
+        run: pnpm nx affected -t test --parallel=3 --coverage
+
+      - name: Run Go tests
+        run: |
+          cd packages/analysis-engine && go test -v ./... || true
+          cd ../../apps/cli && go test -v ./... || true
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 7
+          if-no-files-found: ignore
+
+  # ============================================
+  # Build Job - Build all packages and apps
+  # ============================================
+  build:
+    name: Build
+    needs: [lint, test]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ${{ env.NODE_VERSION_FILE }}
+          cache: 'pnpm'
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Restore Nx cache
+        uses: actions/cache@v4
+        with:
+          path: .nx/cache
+          key: ${{ runner.os }}-nx-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-nx-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build types package
+        run: pnpm nx build @monoguard/types
+
+      - name: Build WASM analysis engine
+        run: pnpm nx build @monoguard/analysis-engine
+
+      - name: Build CLI
+        run: pnpm nx build @monoguard/cli
+
+      - name: Build web app
+        run: pnpm nx build web
+
+      - name: Verify build outputs
+        run: |
+          echo "Checking build outputs..."
+          ls -la packages/types/dist/ || echo "types dist not found"
+          ls -la packages/analysis-engine/dist/ || echo "analysis-engine dist not found"
+          ls -la apps/cli/dist/ || echo "cli dist not found"
+          ls -la apps/web/.output/ || echo "web output not found"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: |
+            packages/types/dist/
+            packages/analysis-engine/dist/
+            apps/cli/dist/
+            apps/web/.output/
+          retention-days: 7
+          if-no-files-found: warn
+
+  # ============================================
+  # Summary Job - Report pipeline status
+  # ============================================
+  ci-summary:
+    name: CI Summary
+    needs: [lint, test, build]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Check job statuses
+        run: |
+          echo "📊 CI Pipeline Summary"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "Lint:  ${{ needs.lint.result }}"
+          echo "Test:  ${{ needs.test.result }}"
+          echo "Build: ${{ needs.build.result }}"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+          if [[ "${{ needs.lint.result }}" == "failure" ]] || \
+             [[ "${{ needs.test.result }}" == "failure" ]] || \
+             [[ "${{ needs.build.result }}" == "failure" ]]; then
+            echo "❌ Pipeline failed"
+            exit 1
+          fi
+
+          echo "✅ Pipeline passed"
