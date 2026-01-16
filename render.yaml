@@ -76,7 +76,7 @@ services:
       pnpm nx build @monoguard/analysis-engine
       cp packages/analysis-engine/dist/*.wasm apps/web/public/
       pnpm nx build web
-    staticPublishPath: apps/web/.output
+    publishDir: apps/web/.output
     headers:
       # WASM SharedArrayBuffer support
       - path: /*
