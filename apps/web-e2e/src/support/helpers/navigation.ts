@@ -12,7 +12,7 @@ import type { Page } from '@playwright/test';
  */
 export async function navigateAndWait(page: Page, url: string): Promise<void> {
   await page.goto(url);
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('domcontentloaded');
 }
 
 /**
@@ -44,7 +44,7 @@ export async function clickAndWaitForNavigation(
   selector: string
 ): Promise<void> {
   await Promise.all([
-    page.waitForNavigation({ waitUntil: 'networkidle' }),
+    page.waitForNavigation({ waitUntil: 'domcontentloaded' }),
     page.click(selector),
   ]);
 }
