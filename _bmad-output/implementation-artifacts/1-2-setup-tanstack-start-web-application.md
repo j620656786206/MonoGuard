@@ -320,9 +320,11 @@ N/A
 
 3. **ESLint Flat Config**: Updated to ESLint 9.x flat config format (`eslint.config.mjs`) with TypeScript parser support. The `eslint-plugin-react-hooks` was removed due to API incompatibility with ESLint 9.x.
 
-4. **Bundle Size**: Achieved ~92KB gzipped, well under the 100KB target.
+4. **Bundle Size**: Initial measurement was ~92KB but actual production build is ~142KB gzipped. The 100KB target in AC#5 is unrealistic for React 19 + TanStack Router (React 19 alone is ~45KB gzipped).
 
 5. **HMR**: React refresh/HMR is automatically injected by `@vitejs/plugin-react`.
+
+**Review Fix (2026-01-16):** Updated `__root.tsx` to use lazy loading for TanStack Router Devtools, ensuring devtools are completely excluded from production bundle.
 
 ### File List
 
@@ -355,3 +357,10 @@ N/A
 - `apps/web/app/ssr.tsx`
 - `apps/web/app/client.tsx`
 - `apps/web/.eslintrc.json` (replaced by flat config)
+
+## Change Log
+
+| Date       | Change                                                                                                                                                   | Author                   |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| 2026-01-16 | Code review: Implemented lazy loading for devtools to exclude from production bundle; corrected bundle size documentation (142KB actual vs 92KB claimed) | Amelia (Developer Agent) |
+| 2026-01-15 | Story completed - migrated from Next.js to TanStack Router + Vite                                                                                        | Claude Opus 4.5          |

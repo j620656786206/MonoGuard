@@ -115,11 +115,11 @@ So that **I have a standardized project structure that supports multiple applica
 
 **Current vs Target State:**
 
-| App/Package | Current State | Target State (Future Story) |
-|-------------|---------------|----------------------------|
-| `apps/web/` | Next.js 15.x | TanStack Start 0.34+ (Story 1.2) |
-| `apps/cli/` | TypeScript/Node.js (esbuild) | Go CLI (Story 1.4) |
-| `packages/analysis-engine/` | TypeScript placeholder | Go WASM (Story 1.3) |
+| App/Package                 | Current State                | Target State (Future Story)      |
+| --------------------------- | ---------------------------- | -------------------------------- |
+| `apps/web/`                 | Next.js 15.x                 | TanStack Start 0.34+ (Story 1.2) |
+| `apps/cli/`                 | TypeScript/Node.js (esbuild) | Go CLI (Story 1.4)               |
+| `packages/analysis-engine/` | TypeScript placeholder       | Go WASM (Story 1.3)              |
 
 **Target Directory Structure:**
 
@@ -258,9 +258,10 @@ Claude Opus 4.5 (claude-opus-4-5-20251101)
 Files created/modified:
 
 **Configuration Files:**
+
 - `/nx.json` - Added workspaceLayout configuration, updated defaultProject to "web"
 - `/package.json` - Updated workspaces from libs to packages, renamed dev:frontend to dev:web
-- `/pnpm-workspace.yaml` - Changed libs/* to packages/*
+- `/pnpm-workspace.yaml` - Changed libs/_ to packages/_
 - `/tsconfig.base.json` - Updated path mappings to @monoguard/types, @monoguard/ui-components, @monoguard/analysis-engine
 - `/vercel.json` - Updated paths from apps/frontend to apps/web
 - `/docker-compose.yml` - Renamed frontend service to web
@@ -268,6 +269,7 @@ Files created/modified:
 - `/.vscode/launch.json` - Fixed CLI path reference
 
 **Packages (New):**
+
 - `/packages/types/` - Renamed from libs/shared-types, package name changed to @monoguard/types
 - `/packages/analysis-engine/` - New placeholder package
 - `/packages/analysis-engine/package.json` - Package configuration
@@ -279,6 +281,7 @@ Files created/modified:
 - `/packages/ui-components/tsconfig.json` - TypeScript configuration
 
 **Apps (Renamed):**
+
 - `/apps/web/` - Renamed from apps/frontend
 - `/apps/web/project.json` - Updated all references from frontend to web
 - `/apps/web/package.json` - Renamed to @monoguard/web, updated dependency to @monoguard/types
@@ -289,10 +292,12 @@ Files created/modified:
 - `/apps/cli/package.json` - Updated dependency to @monoguard/types
 
 **Source Files (Import Updates):**
+
 - All TypeScript files in apps/web that imported @monoguard/shared-types now import @monoguard/types
 - 16 files updated with new import paths
 
 **Review Fixes (2026-01-15):**
+
 - `/pnpm-workspace.yaml` - Removed non-existent `tools/*` entry
 - `/package.json` - Synced workspaces config with pnpm-workspace.yaml
 
@@ -318,6 +323,7 @@ Files created/modified:
 **Outcome:** ✅ APPROVED with Action Items
 
 **Summary:**
+
 - All 4 Acceptance Criteria verified and PASSED
 - All 6 Tasks verified as complete
 - 4 action items created for future improvement (non-blocking)
@@ -325,7 +331,9 @@ Files created/modified:
 
 ## Change Log
 
-| Date | Change | Author |
-|------|--------|--------|
-| 2026-01-15 | Code review completed - approved with action items | Claude Opus 4.5 (Reviewer) |
-| 2026-01-15 | Story completed - major restructure from existing workspace to match story requirements | Claude Opus 4.5 |
+| Date       | Change                                                                                                                           | Author                     |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
+| 2026-01-16 | Code review #2: Removed invalid @monoguard/analysis-engine path from tsconfig.base.json (directory converted to Go in Story 1.3) | Amelia (Developer Agent)   |
+| 2026-01-16 | Code review #2: Removed legacy Next.js configuration from nx.json, updated bundler to vite                                       | Amelia (Developer Agent)   |
+| 2026-01-15 | Code review completed - approved with action items                                                                               | Claude Opus 4.5 (Reviewer) |
+| 2026-01-15 | Story completed - major restructure from existing workspace to match story requirements                                          | Claude Opus 4.5            |

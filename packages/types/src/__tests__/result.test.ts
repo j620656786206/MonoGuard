@@ -1,4 +1,4 @@
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect } from 'vitest';
 import { isSuccess, isError, ErrorCodes, type Result } from '../result';
 
 describe('Result type guards', () => {

@@ -16,8 +16,7 @@
     "baseUrl": ".",
     "paths": {
       "@monoguard/types": ["packages/types/src/index.ts"],
-      "@monoguard/ui-components": ["packages/ui-components/src/index.ts"],
-      "@monoguard/analysis-engine": ["packages/analysis-engine/src/index.ts"]
+      "@monoguard/ui-components": ["packages/ui-components/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

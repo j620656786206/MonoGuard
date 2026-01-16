@@ -39,16 +39,6 @@
     "e2e": {
       "inputs": ["default", "^production"],
       "cache": true
-    },
-    "@nx/next:build": {
-      "cache": true,
-      "dependsOn": ["^build"],
-      "inputs": ["production", "^production"]
-    },
-    "@nx/esbuild:esbuild": {
-      "cache": true,
-      "dependsOn": ["^build"],
-      "inputs": ["production", "^production"]
     }
   },
   "generators": {
@@ -56,18 +46,12 @@
       "application": {
         "style": "css",
         "linter": "eslint",
-        "bundler": "webpack"
+        "bundler": "vite"
       },
       "component": {
         "style": "css"
       },
       "library": {
-        "style": "css",
-        "linter": "eslint"
-      }
-    },
-    "@nx/next": {
-      "application": {
         "style": "css",
         "linter": "eslint"
       }
