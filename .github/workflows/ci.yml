@@ -21,6 +21,11 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Permissions required for nx-set-shas to work
+permissions:
+  actions: read
+  contents: read
+
 jobs:
   # ============================================
   # Setup Job - Install and cache dependencies
