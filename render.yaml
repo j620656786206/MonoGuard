@@ -41,7 +41,6 @@ services:
   - type: web
     name: monoguard-web
     runtime: static
-    plan: free
     buildCommand: |
       corepack enable
       pnpm install --frozen-lockfile
