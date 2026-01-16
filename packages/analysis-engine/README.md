@@ -14,6 +14,7 @@ packages/analysis-engine/
 │   ├── parser/                  # Workspace parsing (Epic 2)
 │   └── types/                   # Shared Go types matching TypeScript
 ├── internal/
+│   ├── handlers/                # Business logic for WASM exports (testable)
 │   └── result/                  # Result<T> implementation
 ├── test/
 │   └── smoke-test.html          # Browser smoke test

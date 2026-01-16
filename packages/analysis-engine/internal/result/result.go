@@ -54,8 +54,9 @@ func (r *Result) ToJSON() string {
 }
 
 // escapeJSON escapes special characters in a string for safe JSON inclusion.
+// Handles all JSON special characters and control characters (0x00-0x1F).
 func escapeJSON(s string) string {
-	result := make([]byte, 0, len(s))
+	result := make([]byte, 0, len(s)*2) // Pre-allocate for potential escaping
 	for i := 0; i < len(s); i++ {
 		c := s[i]
 		switch c {
@@ -69,9 +70,27 @@ func escapeJSON(s string) string {
 			result = append(result, '\\', 'r')
 		case '\t':
 			result = append(result, '\\', 't')
+		case '\b':
+			result = append(result, '\\', 'b')
+		case '\f':
+			result = append(result, '\\', 'f')
 		default:
-			result = append(result, c)
+			// Escape control characters (0x00-0x1F) as \uXXXX
+			if c < 0x20 {
+				result = append(result, '\\', 'u', '0', '0')
+				result = append(result, hexDigit(c>>4), hexDigit(c&0xF))
+			} else {
+				result = append(result, c)
+			}
 		}
 	}
 	return string(result)
+}
+
+// hexDigit returns the hex character for a nibble (0-15).
+func hexDigit(n byte) byte {
+	if n < 10 {
+		return '0' + n
+	}
+	return 'a' + n - 10
 }

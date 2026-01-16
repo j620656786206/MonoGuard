@@ -178,3 +178,104 @@ func TestErrorCodeFormat(t *testing.T) {
 		}
 	}
 }
+
+func TestEscapeJSON(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		want  string
+	}{
+		{
+			name:  "no special characters",
+			input: "simple text",
+			want:  "simple text",
+		},
+		{
+			name:  "double quote",
+			input: `say "hello"`,
+			want:  `say \"hello\"`,
+		},
+		{
+			name:  "backslash",
+			input: `path\to\file`,
+			want:  `path\\to\\file`,
+		},
+		{
+			name:  "newline",
+			input: "line1\nline2",
+			want:  `line1\nline2`,
+		},
+		{
+			name:  "carriage return",
+			input: "line1\rline2",
+			want:  `line1\rline2`,
+		},
+		{
+			name:  "tab",
+			input: "col1\tcol2",
+			want:  `col1\tcol2`,
+		},
+		{
+			name:  "mixed special characters",
+			input: "Error: \"file\\path\"\nDetails:\ttab",
+			want:  `Error: \"file\\path\"\nDetails:\ttab`,
+		},
+		{
+			name:  "control character (bell)",
+			input: "text\x07bell",
+			want:  `text\u0007bell`,
+		},
+		{
+			name:  "control character (null)",
+			input: "text\x00null",
+			want:  `text\u0000null`,
+		},
+		{
+			name:  "empty string",
+			input: "",
+			want:  "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := escapeJSON(tt.input)
+			if got != tt.want {
+				t.Errorf("escapeJSON(%q) = %q, want %q", tt.input, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestToJSONWithUnmarshalableData(t *testing.T) {
+	// Test the fallback path when marshaling fails
+	// Create a result with a channel (channels cannot be marshaled to JSON)
+	ch := make(chan int)
+	r := NewSuccess(ch)
+
+	jsonStr := r.ToJSON()
+
+	// Should return a MARSHAL_ERROR result
+	var parsed map[string]interface{}
+	if err := json.Unmarshal([]byte(jsonStr), &parsed); err != nil {
+		t.Fatalf("Fallback JSON should be valid: %v", err)
+	}
+
+	if parsed["data"] != nil {
+		t.Error("Fallback should have null data")
+	}
+
+	errObj, ok := parsed["error"].(map[string]interface{})
+	if !ok {
+		t.Fatal("Fallback should have error object")
+	}
+
+	if errObj["code"] != "MARSHAL_ERROR" {
+		t.Errorf("error code = %v, want MARSHAL_ERROR", errObj["code"])
+	}
+
+	msg, ok := errObj["message"].(string)
+	if !ok || msg == "" {
+		t.Error("error message should not be empty")
+	}
+}
