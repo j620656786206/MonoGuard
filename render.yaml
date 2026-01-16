@@ -19,17 +19,46 @@ services:
     envVars:
       - key: GO_ENV
         value: production
+      - key: GIN_MODE
+        value: release
+      - key: APP_ENV
+        value: production
       - key: PORT
         value: '8080'
-      - key: DATABASE_URL
+      # Database config (individual values for Go API)
+      - key: DB_HOST
         fromDatabase:
           name: monoguard-db
-          property: connectionString
-      - key: REDIS_URL
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: monoguard-db
+          property: port
+      - key: DB_USER
+        fromDatabase:
+          name: monoguard-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: monoguard-db
+          property: password
+      - key: DB_NAME
+        fromDatabase:
+          name: monoguard-db
+          property: database
+      - key: DB_SSL_MODE
+        value: require
+      # Redis config
+      - key: REDIS_HOST
         fromService:
           name: monoguard-redis
           type: redis
-          property: connectionString
+          property: host
+      - key: REDIS_PORT
+        fromService:
+          name: monoguard-redis
+          type: redis
+          property: port
       - key: JWT_SECRET
         generateValue: true
       - key: CORS_ORIGINS
@@ -47,7 +76,7 @@ services:
       pnpm nx build @monoguard/analysis-engine
       cp packages/analysis-engine/dist/*.wasm apps/web/public/
       pnpm nx build web
-    staticPublishPath: apps/web/dist
+    staticPublishPath: apps/web/.output
     headers:
       # WASM SharedArrayBuffer support
       - path: /*
