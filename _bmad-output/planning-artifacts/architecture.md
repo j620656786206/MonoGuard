@@ -85,7 +85,7 @@ MonoGuard 的功能需求圍繞三個核心能力：
    - **架構影響：** 彈性的輸入解析器、標準化輸出格式
 
 5. **Scalability (NFR16-NFR17)**
-   - 基礎設施成本：$0/月（Cloudflare Pages）
+   - 基礎設施成本：$0/月（Render Free Tier）
    - 支援 10,000 併發使用者
    - 優雅降級（> 2000 packages 建議使用 CLI）
    - **架構影響：** 靜態部署策略、分批處理機制
@@ -110,7 +110,7 @@ MonoGuard 的功能需求圍繞三個核心能力：
 
 2. **Zero Cost Infrastructure (NFR16)**
    - 必須使用免費層服務
-   - Cloudflare Pages 為首選
+   - Render 為首選（Web + API + DB 統一管理）
    - **影響：** 純靜態部署，無 server-side rendering 或 API routes
 
 3. **Performance Targets (NFR1-NFR4)**
@@ -132,7 +132,7 @@ MonoGuard 的功能需求圍繞三個核心能力：
 - **Analysis Engine:** Go（編譯為 WASM）
 - **Visualization:** D3.js
 - **Storage:** IndexedDB（Web）+ local files（CLI）
-- **Deployment:** Cloudflare Pages
+- **Deployment:** Render (Web + API + PostgreSQL + Redis)
 - **CLI:** Go native binary
 
 ### Cross-Cutting Concerns Identified
@@ -170,10 +170,12 @@ MonoGuard 的功能需求圍繞三個核心能力：
    - 架構決策：PostHog（client-side）、Sentry（錯誤追蹤）
 
 7. **Deployment & Distribution**
-   - 影響：Web UI, CLI
-   - Web：靜態部署到 Cloudflare Pages
+   - 影響：Web UI, CLI, API
+   - Web：靜態部署到 Render Static Site
+   - API：Go 服務部署到 Render Web Service
+   - Database：Render PostgreSQL + Redis
    - CLI：npm global install（Go binary）
-   - 架構決策：構建管道、版本管理策略
+   - 架構決策：All-in-one Render Blueprint（render.yaml）統一管理
 
 ## Starter Template Evaluation
 
@@ -193,7 +195,7 @@ MonoGuard 的功能需求圍繞三個核心能力：
    - 用途：Web UI 前端基礎
    - 狀態：官方維護，生產就緒
    - 版本：0.34.11（最新）
-   - 優勢：完整 SSG 支援、Cloudflare Pages 友善
+   - 優勢：完整 SSG 支援、Render Static Site 友善
 
 2. **Go 自訂 WASM 專案**
    - 用途：分析引擎核心
@@ -438,11 +440,29 @@ mono-guard/
 
 ### Deployment Strategy
 
-**Web UI → Cloudflare Pages:**
+**決策變更記錄 (2026-01-16):** 從 Cloudflare Pages 改為 Render，原因如下：
 
-- 靜態 HTML/CSS/JS 輸出
-- WASM 檔案作為靜態資源
-- `_headers` 檔案配置 COOP/COEP（WASM 需求）
+- All-in-one 部署體驗：Web + API + PostgreSQL + Redis 統一管理
+- `render.yaml` Blueprint 實現 Infrastructure as Code
+- 簡化 CI/CD 流程，單一平台管理所有服務
+
+**Web UI → Render Static Site:**
+
+- 靜態 HTML/CSS/JS 輸出（Vite build → `.output/`）
+- WASM 檔案作為靜態資源（`public/monoguard.wasm`）
+- Headers 配置 COOP/COEP（WASM SharedArrayBuffer 需求）
+- SPA fallback routing（`/* → /index.html`）
+
+**API → Render Web Service:**
+
+- Go API 服務（Gin framework）
+- Health check endpoint: `/health`
+- 自動連接 PostgreSQL + Redis
+
+**Database → Render PostgreSQL + Redis:**
+
+- PostgreSQL: 持久化資料儲存
+- Redis: 快取層（allkeys-lru 策略）
 
 **CLI → npm Registry:**
 
@@ -1489,13 +1509,16 @@ export function CanvasRenderer({ data }: { data: GraphData }) {
 
 ### Decision 7: CI/CD & Testing Strategy
 
-**選擇：GitHub Actions + Cloudflare Pages + Vitest (80%+ Coverage)**
+**選擇：GitHub Actions + Render + Vitest (80%+ Coverage)**
+
+**決策變更 (2026-01-16):** 從 Cloudflare Pages 改為 Render
 
 **理由：**
 
-- 完全免費（符合零成本約束）
+- 完全免費（符合零成本約束，Render Free Tier）
 - 與 Nx monorepo 深度整合
-- Cloudflare Pages 提供自動預覽部署
+- Render 提供 all-in-one 部署（Web + API + PostgreSQL + Redis）
+- `render.yaml` Blueprint 實現 Infrastructure as Code
 - Vitest 與 Vite 生態完美整合
 
 **實作細節：**
@@ -1749,7 +1772,8 @@ Cross-Origin-Opener-Policy = "same-origin"
 
 **替代方案（已排除）：**
 
-- Vercel - 功能類似但 Cloudflare Pages 更適合 WASM
+- Cloudflare Pages - 原部署平台，但無法統一管理 API + Database
+- Vercel - 功能類似但 Render 提供更完整的 all-in-one 方案
 - Jest - Vitest 更快且與 Vite 整合更好
 
 ---
@@ -1765,7 +1789,7 @@ Cross-Origin-Opener-Policy = "same-origin"
 | **Error Monitoring** | Sentry (Opt-in)           | 強大追蹤，尊重隱私       | 需維護同意 UI          |
 | **Data Persistence** | Dexie.js                  | TypeScript 友善          | IndexedDB 學習曲線     |
 | **Rendering**        | Hybrid SVG/Canvas         | 彈性，自動切換           | Canvas 互動性較低      |
-| **CI/CD**            | GitHub Actions + CF Pages | 完全免費，自動化         | E2E 測試 Phase 1 補充  |
+| **CI/CD**            | GitHub Actions + Render   | All-in-one 部署，自動化  | E2E 測試 Phase 1 補充  |
 | **Testing**          | Vitest + Go testing       | 快速，Vite 整合          | 需建立測試文化         |
 
 **這些決策共同形成了 MonoGuard 的技術基礎，確保專案能夠：**
@@ -4243,7 +4267,7 @@ type AnalysisResult struct {
 
 | NFR   | 需求                     | 架構支援                           | 驗證 |
 | ----- | ------------------------ | ---------------------------------- | ---- |
-| NFR16 | $0/月基礎設施 + 10k 併發 | Cloudflare Pages 免費層 + CDN      | ✅   |
+| NFR16 | $0/月基礎設施 + 10k 併發 | Render Free Tier (Web + API + DB)  | ✅   |
 | NFR17 | 大型 monorepo 優雅降級   | 分批處理 (500 packages) + 錯誤訊息 | ✅   |
 
 ---
@@ -4474,6 +4498,7 @@ linters-settings:
 - **現況：** Sentry opt-in 錯誤追蹤已定義
 - **差距：** 缺少效能監控策略（Web Vitals, WASM 執行時間）
 - **建議補充：**
+
   ```typescript
   // Performance monitoring
   const analyzePerformance = async (data: WorkspaceData) => {
@@ -4497,6 +4522,7 @@ linters-settings:
     }
   };
   ```
+
 - **影響：** 不阻礙 Phase 0，但有助於 Phase 1 效能優化決策
 - **優先級：** 🟡 Phase 1 規劃
 

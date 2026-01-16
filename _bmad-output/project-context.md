@@ -302,6 +302,7 @@ _This file contains critical rules and patterns that AI agents must follow when 
 
 - Use table-driven tests for multiple scenarios
 - Test function naming: `TestFunctionName`
+
   ```go
   // ✅ CORRECT: Table-driven test
   func TestAnalyzeWorkspace(t *testing.T) {
@@ -426,8 +427,8 @@ WIP
   3. Build: `pnpm nx run-many --target=build --all`
   4. E2E: `pnpm nx run web-e2e:e2e` (on `main` only)
 - **Deployment Triggers:**
-  - `main` branch: Auto-deploy to production (Vercel)
-  - Pull requests: Preview deployments with unique URLs
+  - `main` branch: Auto-deploy to production (Render)
+  - Pull requests: Preview deployments (manual trigger on Render)
 - **Cache Strategy:**
   - Nx computation cache enabled (`.nx/cache`)
   - pnpm store cache: `.pnpm-store/`
@@ -801,4 +802,4 @@ const DependencyGraph = React.memo(
 - Review quarterly for outdated rules
 - Remove rules that become obvious over time
 
-Last Updated: 2026-01-12
+Last Updated: 2026-01-16
