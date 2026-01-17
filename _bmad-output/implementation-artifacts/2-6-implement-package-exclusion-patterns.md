@@ -1,6 +1,6 @@
 # Story 2.6: Implement Package Exclusion Patterns
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -454,10 +454,47 @@ packages/analysis-engine/
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+claude-opus-4-5-20251101
 
 ### Debug Log References
 
 ### Completion Notes List
 
+1. **Task 1: Define AnalysisConfig Types** - Created `pkg/types/config.go` with AnalysisConfig and AnalysisInput types. Supports exclusion patterns via `exclude` array in JSON config.
+
+2. **Task 2: Implement Pattern Matcher** - Created `pkg/analyzer/exclusion_matcher.go` with support for:
+   - Exact matches: simple string comparison
+   - Glob patterns: `*` (within segment), `**` (recursive), `?` (single char)
+   - Regex patterns: prefixed with `regex:` for explicit identification
+   - Performance: 7µs for 100 packages × 20 patterns (AC7 requires <50ms)
+
+3. **Task 3: Update PackageNode for Exclusion Flag** - Added `Excluded bool` field to PackageNode in `pkg/types/graph.go`. Uses omitempty for clean JSON when false.
+
+4. **Task 4: Integrate Exclusion into Graph Builder** - Updated GraphBuilder with:
+   - `NewGraphBuilderWithExclusions()` constructor for exclusion patterns
+   - Marks excluded packages in `buildNodes()` with `Excluded=true`
+
+5. **Task 5: Filter Excluded from Detectors** - Created `filterExcludedPackages()` function in analyzer.go that creates a filtered graph for cycle/conflict detection and health calculation. Excluded packages are removed from nodes and their references are removed from dependency lists.
+
+6. **Task 6: Update Analyzer to Accept Config** - Added:
+   - `NewAnalyzerWithConfig()` constructor
+   - `ExcludedPackages` count in AnalysisResult
+   - Full graph returned for visualization (excluded packages marked)
+   - Filtered graph used for all metrics
+
+7. **Tasks 7-9: Testing and Verification** - All tests pass. Performance verified at 7µs for 100×20 (well under 50ms requirement). WASM builds successfully (4.5MB).
+
 ### File List
+
+**New Files:**
+- `packages/analysis-engine/pkg/types/config.go` - AnalysisConfig and AnalysisInput types
+- `packages/analysis-engine/pkg/types/config_test.go` - Config type tests
+- `packages/analysis-engine/pkg/analyzer/exclusion_matcher.go` - Pattern matching implementation
+- `packages/analysis-engine/pkg/analyzer/exclusion_matcher_test.go` - Matcher unit tests
+- `packages/analysis-engine/pkg/analyzer/exclusion_matcher_benchmark_test.go` - Performance benchmarks
+
+**Modified Files:**
+- `packages/analysis-engine/pkg/types/graph.go` - Added Excluded field to PackageNode
+- `packages/analysis-engine/pkg/types/types.go` - Added ExcludedPackages field to AnalysisResult
+- `packages/analysis-engine/pkg/analyzer/graph_builder.go` - Added exclusion matcher integration
+- `packages/analysis-engine/pkg/analyzer/analyzer.go` - Added config support and filterExcludedPackages

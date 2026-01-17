@@ -122,8 +122,8 @@ func TestAnalyzeSimpleWorkspace(t *testing.T) {
 	}
 }
 
-// TestAnalyzeResultHealthScorePlaceholder verifies health score is placeholder.
-func TestAnalyzeResultHealthScorePlaceholder(t *testing.T) {
+// TestAnalyzeResultHealthScore verifies health score calculation (Story 2.5).
+func TestAnalyzeResultHealthScore(t *testing.T) {
 	a := NewAnalyzer()
 	workspace := &types.WorkspaceData{
 		RootPath:      "/workspace",
@@ -145,9 +145,79 @@ func TestAnalyzeResultHealthScorePlaceholder(t *testing.T) {
 		t.Fatalf("Analyze failed: %v", err)
 	}
 
-	// Health score should be 100 (placeholder until Story 2.5)
-	if result.HealthScore != 100 {
-		t.Errorf("HealthScore = %d, want 100 (placeholder)", result.HealthScore)
+	// Perfect architecture should score high
+	if result.HealthScore < 85 {
+		t.Errorf("HealthScore = %d, want >= 85 for perfect architecture", result.HealthScore)
+	}
+
+	// Verify HealthScoreDetails is populated
+	if result.HealthScoreDetails == nil {
+		t.Fatal("HealthScoreDetails is nil")
+	}
+
+	if result.HealthScoreDetails.Overall != result.HealthScore {
+		t.Errorf("HealthScoreDetails.Overall (%d) != HealthScore (%d)",
+			result.HealthScoreDetails.Overall, result.HealthScore)
+	}
+
+	if result.HealthScoreDetails.Rating == "" {
+		t.Error("HealthScoreDetails.Rating is empty")
+	}
+
+	if result.HealthScoreDetails.Breakdown == nil {
+		t.Fatal("HealthScoreDetails.Breakdown is nil")
+	}
+
+	if len(result.HealthScoreDetails.Factors) != 4 {
+		t.Errorf("HealthScoreDetails.Factors count = %d, want 4", len(result.HealthScoreDetails.Factors))
+	}
+}
+
+// TestAnalyzeResultHealthScoreWithIssues verifies health score decreases with issues.
+func TestAnalyzeResultHealthScoreWithIssues(t *testing.T) {
+	a := NewAnalyzer()
+	// Create workspace with version conflicts
+	workspace := &types.WorkspaceData{
+		RootPath:      "/workspace",
+		WorkspaceType: types.WorkspaceTypeNpm,
+		Packages: map[string]*types.PackageInfo{
+			"@mono/app": {
+				Name:    "@mono/app",
+				Version: "1.0.0",
+				Path:    "apps/web",
+				Dependencies: map[string]string{
+					"typescript": "^5.0.0",
+				},
+				DevDependencies:  map[string]string{},
+				PeerDependencies: map[string]string{},
+			},
+			"@mono/lib": {
+				Name:    "@mono/lib",
+				Version: "1.0.0",
+				Path:    "packages/lib",
+				Dependencies: map[string]string{
+					"typescript": "^4.0.0", // Major version conflict
+				},
+				DevDependencies:  map[string]string{},
+				PeerDependencies: map[string]string{},
+			},
+		},
+	}
+
+	result, err := a.Analyze(workspace)
+	if err != nil {
+		t.Fatalf("Analyze failed: %v", err)
+	}
+
+	// Score should be less than 100 due to version conflict
+	if result.HealthScore >= 100 {
+		t.Errorf("HealthScore = %d, want < 100 with version conflicts", result.HealthScore)
+	}
+
+	// Verify conflict score is reflected in breakdown
+	if result.HealthScoreDetails.Breakdown.ConflictScore >= 100 {
+		t.Errorf("ConflictScore = %d, want < 100 with conflicts",
+			result.HealthScoreDetails.Breakdown.ConflictScore)
 	}
 }
 

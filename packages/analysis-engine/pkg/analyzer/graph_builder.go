@@ -11,14 +11,29 @@ import (
 // GraphBuilder constructs dependency graphs from workspace data.
 // It separates internal workspace packages from external npm dependencies.
 type GraphBuilder struct {
-	workspacePackages map[string]bool // Set of internal package names for O(1) lookup
+	workspacePackages map[string]bool    // Set of internal package names for O(1) lookup
+	exclusionMatcher  *ExclusionMatcher  // Story 2.6: Pattern matcher for exclusions
 }
 
 // NewGraphBuilder creates a new graph builder instance.
 func NewGraphBuilder() *GraphBuilder {
 	return &GraphBuilder{
 		workspacePackages: make(map[string]bool),
+		exclusionMatcher:  nil,
 	}
+}
+
+// NewGraphBuilderWithExclusions creates a graph builder with exclusion patterns.
+// Returns an error if any regex pattern is invalid.
+func NewGraphBuilderWithExclusions(excludePatterns []string) (*GraphBuilder, error) {
+	matcher, err := NewExclusionMatcher(excludePatterns)
+	if err != nil {
+		return nil, err
+	}
+	return &GraphBuilder{
+		workspacePackages: make(map[string]bool),
+		exclusionMatcher:  matcher,
+	}, nil
 }
 
 // Build constructs a DependencyGraph from WorkspaceData.
@@ -50,6 +65,7 @@ func (gb *GraphBuilder) Build(workspace *types.WorkspaceData) (*types.Dependency
 
 // buildNodes creates PackageNode entries for each package in the workspace.
 // Internal dependencies are sorted alphabetically for deterministic output.
+// Story 2.6: Excluded packages are marked with Excluded=true.
 func (gb *GraphBuilder) buildNodes(workspace *types.WorkspaceData) map[string]*types.PackageNode {
 	nodes := make(map[string]*types.PackageNode)
 
@@ -63,10 +79,22 @@ func (gb *GraphBuilder) buildNodes(workspace *types.WorkspaceData) map[string]*t
 		node.PeerDependencies, node.ExternalPeerDeps = gb.classifyDependenciesExcludingSelf(pkg.PeerDependencies, name)
 		node.OptionalDependencies, node.ExternalOptionalDeps = gb.classifyDependenciesExcludingSelf(pkg.OptionalDependencies, name)
 
+		// Story 2.6: Mark excluded packages
+		node.Excluded = gb.isExcluded(name)
+
 		nodes[name] = node
 	}
 
 	return nodes
+}
+
+// isExcluded checks if a package matches any exclusion pattern.
+// Returns false if no exclusion matcher is configured.
+func (gb *GraphBuilder) isExcluded(name string) bool {
+	if gb.exclusionMatcher == nil {
+		return false
+	}
+	return gb.exclusionMatcher.IsExcluded(name)
 }
 
 // buildEdges creates DependencyEdge entries for internal dependencies only.

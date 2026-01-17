@@ -56,8 +56,8 @@ development_status:
   2-2-build-dependency-graph-data-structure: done
   2-3-implement-circular-dependency-detection-algorithm: review
   2-4-identify-duplicate-dependencies-with-version-conflicts: review
-  2-5-calculate-architecture-health-score: ready-for-dev
-  2-6-implement-package-exclusion-patterns: ready-for-dev
+  2-5-calculate-architecture-health-score: review
+  2-6-implement-package-exclusion-patterns: review
   2-7-create-typescript-wasm-adapter: ready-for-dev
   epic-2-retrospective: optional
 

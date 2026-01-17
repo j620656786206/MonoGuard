@@ -33,6 +33,7 @@ type PackageNode struct {
 	ExternalDevDeps      map[string]string `json:"externalDevDeps,omitempty"`
 	ExternalPeerDeps     map[string]string `json:"externalPeerDeps,omitempty"`
 	ExternalOptionalDeps map[string]string `json:"externalOptionalDeps,omitempty"`
+	Excluded             bool              `json:"excluded,omitempty"` // Story 2.6: True if excluded from analysis
 }
 
 // DependencyEdge represents a directed edge between packages in the dependency graph.

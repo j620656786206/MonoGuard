@@ -46,7 +46,9 @@ type PackageInfo struct {
 // This matches @monoguard/types AnalysisResult.
 type AnalysisResult struct {
 	HealthScore          int                       `json:"healthScore"`
+	HealthScoreDetails   *HealthScoreResult        `json:"healthScoreDetails,omitempty"`   // Story 2.5 - detailed breakdown
 	Packages             int                       `json:"packages"`
+	ExcludedPackages     int                       `json:"excludedPackages,omitempty"`     // Story 2.6 - count of excluded
 	Graph                *DependencyGraph          `json:"graph,omitempty"`
 	CircularDependencies []*CircularDependencyInfo `json:"circularDependencies,omitempty"` // Story 2.3
 	VersionConflicts     []*VersionConflictInfo    `json:"versionConflicts,omitempty"`     // Story 2.4
