@@ -160,57 +160,9 @@ func TestPackageJSON(t *testing.T) {
 	}
 }
 
-func TestCircularDependencyJSON(t *testing.T) {
-	c := CircularDependency{
-		Nodes: []string{"A", "B", "C", "A"},
-		Depth: 3,
-	}
-
-	jsonBytes, err := json.Marshal(c)
-	if err != nil {
-		t.Fatalf("Failed to marshal CircularDependency: %v", err)
-	}
-
-	var parsed map[string]interface{}
-	if err := json.Unmarshal(jsonBytes, &parsed); err != nil {
-		t.Fatalf("Failed to unmarshal JSON: %v", err)
-	}
-
-	if _, ok := parsed["nodes"]; !ok {
-		t.Error("Missing 'nodes' key")
-	}
-	if _, ok := parsed["depth"]; !ok {
-		t.Error("Missing 'depth' key")
-	}
-}
-
-func TestVersionConflictJSON(t *testing.T) {
-	v := VersionConflict{
-		PackageName: "lodash",
-		Versions: map[string]string{
-			"@app/web":    "4.17.21",
-			"@app/shared": "4.17.15",
-		},
-	}
-
-	jsonBytes, err := json.Marshal(v)
-	if err != nil {
-		t.Fatalf("Failed to marshal VersionConflict: %v", err)
-	}
-
-	var parsed map[string]interface{}
-	if err := json.Unmarshal(jsonBytes, &parsed); err != nil {
-		t.Fatalf("Failed to unmarshal JSON: %v", err)
-	}
-
-	// Verify camelCase - packageName not package_name
-	if _, ok := parsed["packageName"]; !ok {
-		t.Error("Missing 'packageName' key (should be camelCase)")
-	}
-	if _, ok := parsed["package_name"]; ok {
-		t.Error("Found 'package_name' key - should be camelCase 'packageName'")
-	}
-}
+// Note: Tests for CircularDependency and VersionConflict have been moved to:
+// - circular_test.go (CircularDependencyInfo tests)
+// - version_conflict_test.go (VersionConflictInfo tests)
 
 // ========================================
 // WorkspaceData Types Tests (Story 2.1)

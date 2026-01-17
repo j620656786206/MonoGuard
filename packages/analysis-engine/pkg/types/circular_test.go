@@ -300,15 +300,15 @@ func TestCalculateBaseComplexity(t *testing.T) {
 		depth    int
 		expected int
 	}{
-		{1, 1},  // self-loop
-		{2, 3},  // direct
-		{3, 5},  // short indirect
-		{4, 5},  // short indirect
-		{5, 7},  // medium indirect
-		{6, 7},  // medium indirect
-		{7, 7},  // long indirect
-		{8, 8},  // long indirect
-		{15, 10}, // max complexity
+		{1, ComplexitySelfLoop},        // self-loop
+		{2, ComplexityDirect},          // direct
+		{3, ComplexityShortIndirect},   // short indirect
+		{4, ComplexityShortIndirect},   // short indirect
+		{5, ComplexityMediumIndirect},  // medium indirect
+		{6, ComplexityMediumIndirect},  // medium indirect
+		{7, 7},                         // long indirect (equals depth)
+		{8, 8},                         // long indirect (equals depth)
+		{15, ComplexityMax},            // max complexity (capped)
 	}
 
 	for _, tt := range tests {
@@ -316,5 +316,24 @@ func TestCalculateBaseComplexity(t *testing.T) {
 		if result != tt.expected {
 			t.Errorf("calculateBaseComplexity(%d) = %d, want %d", tt.depth, result, tt.expected)
 		}
+	}
+}
+
+func TestComplexityConstants(t *testing.T) {
+	// Verify constants have expected values
+	if ComplexitySelfLoop != 1 {
+		t.Errorf("ComplexitySelfLoop = %d, want 1", ComplexitySelfLoop)
+	}
+	if ComplexityDirect != 3 {
+		t.Errorf("ComplexityDirect = %d, want 3", ComplexityDirect)
+	}
+	if ComplexityShortIndirect != 5 {
+		t.Errorf("ComplexityShortIndirect = %d, want 5", ComplexityShortIndirect)
+	}
+	if ComplexityMediumIndirect != 7 {
+		t.Errorf("ComplexityMediumIndirect = %d, want 7", ComplexityMediumIndirect)
+	}
+	if ComplexityMax != 10 {
+		t.Errorf("ComplexityMax = %d, want 10", ComplexityMax)
 	}
 }

@@ -3,6 +3,7 @@ package analyzer
 
 import (
 	"sort"
+	"strings"
 
 	"github.com/j620656786206/MonoGuard/packages/analysis-engine/pkg/types"
 )
@@ -338,13 +339,10 @@ func normalizeCycle(cycle []string) []string {
 }
 
 // cyclesToKey creates a unique string key for a cycle.
+// Uses strings.Join for better performance than string concatenation.
 func cyclesToKey(cycle []string) string {
 	if len(cycle) == 0 {
 		return ""
 	}
-	key := ""
-	for _, node := range cycle {
-		key += node + "|"
-	}
-	return key
+	return strings.Join(cycle, "|")
 }

@@ -515,6 +515,71 @@ func TestDetectCycles_PeerDependencies(t *testing.T) {
 	}
 }
 
+func TestDetectCycles_OptionalDependencies(t *testing.T) {
+	// Cycle through optionalDependencies
+	graph := &types.DependencyGraph{
+		Nodes: map[string]*types.PackageNode{
+			"A": {
+				Name:                 "A",
+				Version:              "1.0.0",
+				Path:                 "packages/a",
+				Dependencies:         []string{},
+				OptionalDependencies: []string{"B"},
+			},
+			"B": {
+				Name:                 "B",
+				Version:              "1.0.0",
+				Path:                 "packages/b",
+				Dependencies:         []string{},
+				OptionalDependencies: []string{"A"},
+			},
+		},
+		Edges:         []*types.DependencyEdge{},
+		RootPath:      "/workspace",
+		WorkspaceType: types.WorkspaceTypePnpm,
+	}
+
+	detector := NewCycleDetector(graph)
+	cycles := detector.DetectCycles()
+
+	if len(cycles) != 1 {
+		t.Fatalf("Expected 1 cycle through optionalDependencies, got %d", len(cycles))
+	}
+}
+
+func TestDetectCycles_OptionalDependencySelfLoop(t *testing.T) {
+	// Self-loop through optionalDependencies
+	graph := &types.DependencyGraph{
+		Nodes: map[string]*types.PackageNode{
+			"self": {
+				Name:                 "self",
+				Version:              "1.0.0",
+				Path:                 "packages/self",
+				Dependencies:         []string{},
+				OptionalDependencies: []string{"self"}, // Self-loop via optional
+			},
+		},
+		Edges:         []*types.DependencyEdge{},
+		RootPath:      "/workspace",
+		WorkspaceType: types.WorkspaceTypePnpm,
+	}
+
+	detector := NewCycleDetector(graph)
+	cycles := detector.DetectCycles()
+
+	if len(cycles) != 1 {
+		t.Fatalf("Expected 1 self-loop cycle, got %d", len(cycles))
+	}
+
+	cycle := cycles[0]
+	if cycle.Severity != types.CircularSeverityCritical {
+		t.Errorf("Self-loop severity = %q, want %q", cycle.Severity, types.CircularSeverityCritical)
+	}
+	if cycle.Depth != 1 {
+		t.Errorf("Self-loop depth = %d, want 1", cycle.Depth)
+	}
+}
+
 // ========================================
 // hasSelfLoop Tests
 // ========================================

@@ -112,25 +112,40 @@ func generateImpactDescription(cycle []string) string {
 	return fmt.Sprintf("Indirect circular dependency involving %d packages", depth)
 }
 
+// Complexity constants for refactoring effort estimation.
+// These values represent the relative difficulty of breaking cycles.
+const (
+	// ComplexitySelfLoop is for self-referencing packages (trivial to fix).
+	ComplexitySelfLoop = 1
+	// ComplexityDirect is for A ↔ B cycles (requires interface extraction).
+	ComplexityDirect = 3
+	// ComplexityShortIndirect is for 3-4 package cycles (moderate effort).
+	ComplexityShortIndirect = 5
+	// ComplexityMediumIndirect is for 5-6 package cycles (significant refactoring).
+	ComplexityMediumIndirect = 7
+	// ComplexityMax is the maximum complexity score.
+	ComplexityMax = 10
+)
+
 // calculateBaseComplexity estimates refactoring effort (1-10).
+// Complexity scales with cycle depth:
+// - Self-loop (depth 1): Trivial fix, just remove self-reference
+// - Direct (depth 2): Extract shared interface or dependency injection
+// - Short indirect (depth 3-4): Moderate refactoring, may need new module
+// - Long indirect (depth 5+): Significant architectural changes needed
 func calculateBaseComplexity(depth int) int {
-	// Base complexity scales with cycle length
-	// 1 (self-loop) -> 1
-	// 2 (direct) -> 3
-	// 3-4 (short indirect) -> 5
-	// 5+ (long indirect) -> 7-10
 	switch {
 	case depth <= 1:
-		return 1
+		return ComplexitySelfLoop
 	case depth == 2:
-		return 3
+		return ComplexityDirect
 	case depth <= 4:
-		return 5
+		return ComplexityShortIndirect
 	case depth <= 6:
-		return 7
+		return ComplexityMediumIndirect
 	default:
-		if depth > 10 {
-			return 10
+		if depth > ComplexityMax {
+			return ComplexityMax
 		}
 		return depth
 	}

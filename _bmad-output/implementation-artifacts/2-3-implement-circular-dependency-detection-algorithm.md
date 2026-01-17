@@ -1,6 +1,6 @@
 # Story 2.3: Implement Circular Dependency Detection Algorithm
 
-Status: review
+Status: done
 
 ## Story
 
@@ -565,3 +565,11 @@ N/A
 ### Change Log
 
 - 2026-01-17: Implemented circular dependency detection using Tarjan's SCC algorithm (Story 2.3)
+- 2026-01-17: Code Review Fixes Applied (7 issues resolved):
+  - HIGH: Added missing `depth` field to TypeScript CircularDependencyInfo
+  - MEDIUM: Fixed TypeScript AnalysisResult field name (`packageCount` → `packages`)
+  - MEDIUM: Added TypeScript types for VersionConflictInfo, HealthScoreDetails matching Go
+  - MEDIUM: Added optionalDependencies self-loop test coverage
+  - LOW: Removed deprecated CircularDependency and VersionConflict types from types.go
+  - LOW: Added named constants for complexity calculation (ComplexitySelfLoop, etc.)
+  - LOW: Optimized cyclesToKey() using strings.Join for better performance

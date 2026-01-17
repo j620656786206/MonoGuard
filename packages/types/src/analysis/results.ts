@@ -9,16 +9,22 @@ import type { DependencyGraph, WorkspaceType } from './graph'
 export interface AnalysisResult {
   /** Architecture health score (0-100) */
   healthScore: number
-  /** Total packages analyzed */
-  packageCount: number
-  /** Detected circular dependencies */
-  circularDependencies: CircularDependencyInfo[]
+  /** Total packages analyzed (matches Go: packages) */
+  packages: number
+  /** Number of excluded packages (Story 2.6) */
+  excludedPackages?: number
+  /** Detected circular dependencies (Story 2.3) */
+  circularDependencies?: CircularDependencyInfo[]
+  /** Detected version conflicts (Story 2.4) */
+  versionConflicts?: VersionConflictInfo[]
+  /** Health score breakdown (Story 2.5) */
+  healthScoreDetails?: HealthScoreDetails
   /** Dependency graph data */
-  graph: DependencyGraph
+  graph?: DependencyGraph
   /** Analysis metadata */
-  metadata: AnalysisMetadata
+  metadata?: AnalysisMetadata
   /** ISO 8601 timestamp */
-  createdAt: string
+  createdAt?: string
 }
 
 /**
@@ -27,15 +33,17 @@ export interface AnalysisResult {
  * Matches Go: pkg/types/circular.go
  */
 export interface CircularDependencyInfo {
-  /** Packages involved in the cycle (in order) */
+  /** Packages involved in the cycle (in order, ends with first package) */
   cycle: string[]
   /** Type of circular dependency */
   type: 'direct' | 'indirect'
   /** Severity level */
   severity: 'critical' | 'warning' | 'info'
+  /** Number of unique packages in the cycle */
+  depth: number
   /** Impact description */
   impact: string
-  /** Suggested fix strategy */
+  /** Suggested fix strategy (Epic 3) */
   fixStrategy?: FixStrategy
   /** Refactoring complexity (1-10) */
   complexity: number
@@ -117,6 +125,90 @@ export interface AnalysisMetadata {
   filesProcessed: number
   /** Workspace type detected */
   workspaceType: WorkspaceType
+}
+
+/**
+ * VersionConflictInfo - Dependency with multiple versions across packages
+ *
+ * Matches Go: pkg/types/version_conflict.go (Story 2.4)
+ */
+export interface VersionConflictInfo {
+  /** External package name with conflicting versions */
+  packageName: string
+  /** List of conflicting versions and their consumers */
+  conflictingVersions: VersionConflictVersion[]
+  /** Severity based on semver difference */
+  severity: 'critical' | 'warning' | 'info'
+  /** Suggested resolution action */
+  resolution: string
+  /** Impact description */
+  impact: string
+}
+
+/**
+ * VersionConflictVersion - One version and which packages use it
+ * Named differently from domain.ts ConflictingVersion to match Go struct
+ */
+export interface VersionConflictVersion {
+  /** The version string */
+  version: string
+  /** Workspace packages using this version */
+  packages: string[]
+  /** True if major version differs from others */
+  isBreaking: boolean
+  /** Dependency type: production, development, peer */
+  depType: 'production' | 'development' | 'peer'
+}
+
+/**
+ * HealthScoreDetails - Complete health score with breakdown
+ *
+ * Matches Go: pkg/types/health_score.go (Story 2.5)
+ */
+export interface HealthScoreDetails {
+  /** Overall score 0-100 */
+  overall: number
+  /** Rating classification */
+  rating: 'excellent' | 'good' | 'fair' | 'poor' | 'critical'
+  /** Individual factor scores */
+  breakdown: ScoreBreakdown
+  /** Detailed factor information */
+  factors: HealthScoreFactor[]
+  /** ISO 8601 timestamp */
+  updatedAt: string
+}
+
+/**
+ * ScoreBreakdown - Individual factor scores
+ */
+export interface ScoreBreakdown {
+  /** Score from circular dependency analysis */
+  circularScore: number
+  /** Score from version conflict analysis */
+  conflictScore: number
+  /** Score from dependency depth analysis */
+  depthScore: number
+  /** Score from package coupling analysis */
+  couplingScore: number
+}
+
+/**
+ * HealthScoreFactor - Single factor in health calculation
+ * Named differently from domain.ts HealthFactor to match Go struct with weightedScore
+ */
+export interface HealthScoreFactor {
+  /** Factor name */
+  name: string
+  /** Raw score 0-100 */
+  score: number
+  /** Weight 0.0-1.0 */
+  weight: number
+  /** Contribution to overall (score * weight) */
+  weightedScore: number
+  /** Human-readable description */
+  description: string
+  /** Suggested improvements */
+  recommendations: string[]
 }
 
 // Re-export for convenience

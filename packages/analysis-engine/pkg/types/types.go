@@ -75,18 +75,5 @@ type Package struct {
 	Dependencies []string `json:"dependencies"`
 }
 
-// CircularDependency is deprecated, use CircularDependencyInfo from circular.go instead.
-// Kept for backward compatibility with existing tests.
-// Deprecated: Use CircularDependencyInfo
-type CircularDependency struct {
-	Nodes []string `json:"nodes"` // Package names in the cycle
-	Depth int      `json:"depth"` // Length of the cycle
-}
-
-// VersionConflict is deprecated, use VersionConflictInfo from version_conflict.go instead.
-// Kept for backward compatibility with existing tests.
-// Deprecated: Use VersionConflictInfo
-type VersionConflict struct {
-	PackageName string            `json:"packageName"`
-	Versions    map[string]string `json:"versions"` // dependent -> version
-}
+// Note: Legacy types CircularDependency and VersionConflict have been removed.
+// Use CircularDependencyInfo from circular.go and VersionConflictInfo from version_conflict.go instead.
