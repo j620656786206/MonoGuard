@@ -127,7 +127,7 @@
     "*.{js,jsx,ts,tsx}": [
       "biome check --write"
     ],
-    "*.{json,md,yml,yaml}": [
+    "!(_bmad-output)/**/*.{json,md,yml,yaml}": [
       "biome format --write"
     ],
     "apps/api/**/*.go": [
