@@ -1,6 +1,6 @@
 # Story 2.5: Calculate Architecture Health Score
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -636,10 +636,38 @@ score = 100 - (deviation × 100)
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+claude-opus-4-5-20251101
 
 ### Debug Log References
 
 ### Completion Notes List
 
+1. **Task 1: Define HealthScore Types** - Created `pkg/types/health_score.go` with HealthScoreResult, ScoreBreakdown, HealthFactor, and HealthRating types. All JSON tags use camelCase. GetHealthRating function classifies scores per AC3 thresholds.
+
+2. **Tasks 2-6: Implement Health Calculator** - Created `pkg/analyzer/health_calculator.go` with:
+   - Weight constants (40% circular, 25% conflict, 20% depth, 15% coupling)
+   - Circular score: 25 points deduction per self-loop, 15 per direct cycle, 10 per indirect
+   - Conflict score: 10 points per critical, 5 per warning, 2 per info
+   - Depth score: Optimal depth 4, deductions for exceeding
+   - Coupling score: Based on instability metric (Ce/(Ca+Ce)), ideal is 0.5
+   - All scores bounded 0-100, recommendations generated per factor
+
+3. **Task 7: Wire to Analyzer** - Updated `pkg/types/types.go` to add `HealthScoreDetails` field. Updated `pkg/analyzer/analyzer.go` to call HealthCalculator and populate both `HealthScore` (int) and `HealthScoreDetails` (full breakdown).
+
+4. **Task 8: Performance Testing** - Created benchmark tests. Performance verified: ~1.16ms for 100 packages with 5 cycles and 10 conflicts (well under 100ms AC8 requirement). 500 packages completes in ~22ms.
+
+5. **Task 9: Integration Verification** - Fixed exponential time complexity in depth calculation by implementing memoized DFS. All tests pass. WASM builds successfully (4.5MB).
+
 ### File List
+
+**New Files:**
+- `packages/analysis-engine/pkg/types/health_score.go` - Health score type definitions
+- `packages/analysis-engine/pkg/types/health_score_test.go` - Type tests
+- `packages/analysis-engine/pkg/analyzer/health_calculator.go` - Health calculator implementation
+- `packages/analysis-engine/pkg/analyzer/health_calculator_test.go` - Calculator unit tests
+- `packages/analysis-engine/pkg/analyzer/health_calculator_benchmark_test.go` - Performance benchmarks
+
+**Modified Files:**
+- `packages/analysis-engine/pkg/types/types.go` - Added HealthScoreDetails field to AnalysisResult
+- `packages/analysis-engine/pkg/analyzer/analyzer.go` - Wired HealthCalculator to Analyze method
+- `packages/analysis-engine/pkg/analyzer/analyzer_test.go` - Added health score integration tests
