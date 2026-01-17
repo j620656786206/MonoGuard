@@ -74,9 +74,23 @@ func (cd *ConflictDetector) collectDependencies() map[string][]depInfo {
 		for _, info := range versionMap {
 			infos = append(infos, *info)
 		}
-		// Sort by version for deterministic output
+		// Sort by version semantically for deterministic output
+		// Uses semantic comparison so "9.0.0" comes before "10.0.0"
 		sort.Slice(infos, func(i, j int) bool {
-			return infos[i].version < infos[j].version
+			v1 := ParseSemVer(infos[i].version)
+			v2 := ParseSemVer(infos[j].version)
+			// If either can't be parsed, fall back to string comparison
+			if v1 == nil || v2 == nil {
+				return infos[i].version < infos[j].version
+			}
+			// Compare semantically: major, then minor, then patch
+			if v1.Major != v2.Major {
+				return v1.Major < v2.Major
+			}
+			if v1.Minor != v2.Minor {
+				return v1.Minor < v2.Minor
+			}
+			return v1.Patch < v2.Patch
 		})
 		result[depName] = infos
 	}
@@ -162,9 +176,22 @@ func (cd *ConflictDetector) buildConflict(depName string, infos []depInfo) *type
 		}
 	}
 
-	// Sort conflicting versions by version string for deterministic output
+	// Sort conflicting versions semantically for deterministic output
 	sort.Slice(conflictingVersions, func(i, j int) bool {
-		return conflictingVersions[i].Version < conflictingVersions[j].Version
+		v1 := ParseSemVer(conflictingVersions[i].Version)
+		v2 := ParseSemVer(conflictingVersions[j].Version)
+		// If either can't be parsed, fall back to string comparison
+		if v1 == nil || v2 == nil {
+			return conflictingVersions[i].Version < conflictingVersions[j].Version
+		}
+		// Compare semantically: major, then minor, then patch
+		if v1.Major != v2.Major {
+			return v1.Major < v2.Major
+		}
+		if v1.Minor != v2.Minor {
+			return v1.Minor < v2.Minor
+		}
+		return v1.Patch < v2.Patch
 	})
 
 	return &types.VersionConflictInfo{

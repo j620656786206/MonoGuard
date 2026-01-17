@@ -54,9 +54,21 @@ func ParseSemVer(version string) *SemVer {
 	// Strip range prefixes
 	version = StripRange(version)
 
-	// Handle special cases
+	// Handle special cases: dist-tags and wildcards that can't be parsed as semver
 	version = strings.TrimSpace(version)
-	if version == "" || version == "latest" || version == "next" || version == "*" {
+	specialTags := map[string]bool{
+		"":        true,
+		"latest":  true,
+		"next":    true,
+		"beta":    true,
+		"alpha":   true,
+		"canary":  true,
+		"rc":      true,
+		"dev":     true,
+		"nightly": true,
+		"*":       true,
+	}
+	if specialTags[version] {
 		return nil
 	}
 
@@ -108,7 +120,18 @@ func ParseSemVer(version string) *SemVer {
 }
 
 // StripRange removes semver range prefixes (^, ~, >=, <=, >, <, =, etc.).
+// For complex ranges like ">=4.0.0 <5.0.0", takes the first version.
+// For OR ranges like "^17.0.0 || ^18.0.0", takes the first option.
+// This is intentional: we compare the minimum satisfying version for conflict detection.
 func StripRange(version string) string {
+	// Handle OR ranges like "^17.0.0 || ^18.0.0" - take first option
+	if strings.Contains(version, "||") {
+		parts := strings.Split(version, "||")
+		if len(parts) > 0 {
+			version = strings.TrimSpace(parts[0])
+		}
+	}
+
 	// Handle complex range like ">=4.0.0 <5.0.0" - take first version
 	if strings.Contains(version, " ") {
 		parts := strings.Fields(version)

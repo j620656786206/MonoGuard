@@ -6,6 +6,146 @@ import (
 	"testing"
 )
 
+// TestNewDependencyGraph verifies the constructor initializes all fields correctly.
+func TestNewDependencyGraph(t *testing.T) {
+	graph := NewDependencyGraph("/workspace", WorkspaceTypePnpm)
+
+	if graph == nil {
+		t.Fatal("NewDependencyGraph returned nil")
+	}
+
+	if graph.RootPath != "/workspace" {
+		t.Errorf("RootPath = %q, want %q", graph.RootPath, "/workspace")
+	}
+
+	if graph.WorkspaceType != WorkspaceTypePnpm {
+		t.Errorf("WorkspaceType = %q, want %q", graph.WorkspaceType, WorkspaceTypePnpm)
+	}
+
+	if graph.Nodes == nil {
+		t.Error("Nodes map should be initialized, not nil")
+	}
+
+	if len(graph.Nodes) != 0 {
+		t.Errorf("Nodes should be empty, got %d", len(graph.Nodes))
+	}
+
+	if graph.Edges == nil {
+		t.Error("Edges slice should be initialized, not nil")
+	}
+
+	if len(graph.Edges) != 0 {
+		t.Errorf("Edges should be empty, got %d", len(graph.Edges))
+	}
+}
+
+// TestNewDependencyGraph_AllWorkspaceTypes verifies constructor with all workspace types.
+func TestNewDependencyGraph_AllWorkspaceTypes(t *testing.T) {
+	tests := []struct {
+		wsType WorkspaceType
+	}{
+		{WorkspaceTypeNpm},
+		{WorkspaceTypeYarn},
+		{WorkspaceTypePnpm},
+		{WorkspaceTypeUnknown},
+	}
+
+	for _, tt := range tests {
+		t.Run(string(tt.wsType), func(t *testing.T) {
+			graph := NewDependencyGraph("/test", tt.wsType)
+			if graph.WorkspaceType != tt.wsType {
+				t.Errorf("WorkspaceType = %q, want %q", graph.WorkspaceType, tt.wsType)
+			}
+		})
+	}
+}
+
+// TestNewPackageNode verifies the constructor initializes all fields correctly.
+func TestNewPackageNode(t *testing.T) {
+	node := NewPackageNode("@mono/app", "1.0.0", "apps/web")
+
+	if node == nil {
+		t.Fatal("NewPackageNode returned nil")
+	}
+
+	if node.Name != "@mono/app" {
+		t.Errorf("Name = %q, want %q", node.Name, "@mono/app")
+	}
+
+	if node.Version != "1.0.0" {
+		t.Errorf("Version = %q, want %q", node.Version, "1.0.0")
+	}
+
+	if node.Path != "apps/web" {
+		t.Errorf("Path = %q, want %q", node.Path, "apps/web")
+	}
+
+	// Verify all slices are initialized (not nil)
+	if node.Dependencies == nil {
+		t.Error("Dependencies should be initialized, not nil")
+	}
+	if node.DevDependencies == nil {
+		t.Error("DevDependencies should be initialized, not nil")
+	}
+	if node.PeerDependencies == nil {
+		t.Error("PeerDependencies should be initialized, not nil")
+	}
+	if node.OptionalDependencies == nil {
+		t.Error("OptionalDependencies should be initialized, not nil")
+	}
+
+	// Verify all maps are initialized (not nil)
+	if node.ExternalDeps == nil {
+		t.Error("ExternalDeps should be initialized, not nil")
+	}
+	if node.ExternalDevDeps == nil {
+		t.Error("ExternalDevDeps should be initialized, not nil")
+	}
+	if node.ExternalPeerDeps == nil {
+		t.Error("ExternalPeerDeps should be initialized, not nil")
+	}
+	if node.ExternalOptionalDeps == nil {
+		t.Error("ExternalOptionalDeps should be initialized, not nil")
+	}
+
+	// Verify empty by default
+	if len(node.Dependencies) != 0 {
+		t.Errorf("Dependencies should be empty, got %d", len(node.Dependencies))
+	}
+	if len(node.ExternalDeps) != 0 {
+		t.Errorf("ExternalDeps should be empty, got %d", len(node.ExternalDeps))
+	}
+
+	// Verify Excluded is false by default
+	if node.Excluded {
+		t.Error("Excluded should be false by default")
+	}
+}
+
+// TestNewPackageNode_CanAddDependencies verifies nodes can be modified after creation.
+func TestNewPackageNode_CanAddDependencies(t *testing.T) {
+	node := NewPackageNode("@mono/lib", "2.0.0", "packages/lib")
+
+	// Add internal dependencies
+	node.Dependencies = append(node.Dependencies, "@mono/utils")
+	node.DevDependencies = append(node.DevDependencies, "@mono/types")
+
+	// Add external dependencies
+	node.ExternalDeps["react"] = "^18.0.0"
+	node.ExternalDevDeps["typescript"] = "^5.0.0"
+
+	// Verify additions
+	if len(node.Dependencies) != 1 {
+		t.Errorf("Dependencies count = %d, want 1", len(node.Dependencies))
+	}
+	if node.Dependencies[0] != "@mono/utils" {
+		t.Errorf("Dependencies[0] = %q, want %q", node.Dependencies[0], "@mono/utils")
+	}
+	if node.ExternalDeps["react"] != "^18.0.0" {
+		t.Errorf("ExternalDeps[react] = %q, want %q", node.ExternalDeps["react"], "^18.0.0")
+	}
+}
+
 // TestDependencyTypeConstants verifies the dependency type constants.
 func TestDependencyTypeConstants(t *testing.T) {
 	tests := []struct {

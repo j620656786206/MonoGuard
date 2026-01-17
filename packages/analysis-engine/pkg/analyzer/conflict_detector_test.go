@@ -475,6 +475,76 @@ func TestDetermineSeverity(t *testing.T) {
 	}
 }
 
+func TestConflictDetector_SemanticVersionSorting(t *testing.T) {
+	// Test that versions are sorted semantically, not lexicographically
+	// "9.0.0" should come before "10.0.0" (not after, as string comparison would)
+	graph := createConflictTestGraph(map[string]map[string]map[string]string{
+		"@mono/app": {
+			"production": {"some-pkg": "^10.0.0"},
+		},
+		"@mono/lib": {
+			"production": {"some-pkg": "^9.0.0"},
+		},
+		"@mono/utils": {
+			"production": {"some-pkg": "^2.0.0"},
+		},
+	})
+
+	detector := NewConflictDetector(graph)
+	conflicts := detector.DetectConflicts()
+
+	if len(conflicts) != 1 {
+		t.Fatalf("Expected 1 conflict, got %d", len(conflicts))
+	}
+
+	conflict := conflicts[0]
+	if len(conflict.ConflictingVersions) != 3 {
+		t.Fatalf("Expected 3 versions, got %d", len(conflict.ConflictingVersions))
+	}
+
+	// Verify semantic order: 2.0.0 < 9.0.0 < 10.0.0
+	versions := make([]string, len(conflict.ConflictingVersions))
+	for i, cv := range conflict.ConflictingVersions {
+		versions[i] = cv.Version
+	}
+
+	if versions[0] != "^2.0.0" {
+		t.Errorf("First version should be ^2.0.0, got %s", versions[0])
+	}
+	if versions[1] != "^9.0.0" {
+		t.Errorf("Second version should be ^9.0.0, got %s", versions[1])
+	}
+	if versions[2] != "^10.0.0" {
+		t.Errorf("Third version should be ^10.0.0, got %s", versions[2])
+	}
+}
+
+func TestConflictDetector_WorkspaceProtocol(t *testing.T) {
+	// Test that workspace: protocol versions don't cause issues
+	graph := createConflictTestGraph(map[string]map[string]map[string]string{
+		"@mono/app": {
+			"production": {"lodash": "^4.17.21"},
+		},
+		"@mono/lib": {
+			"production": {"lodash": "workspace:*"}, // pnpm workspace protocol
+		},
+	})
+
+	detector := NewConflictDetector(graph)
+	conflicts := detector.DetectConflicts()
+
+	// Should detect conflict (different version strings)
+	if len(conflicts) != 1 {
+		t.Fatalf("Expected 1 conflict, got %d", len(conflicts))
+	}
+
+	// The conflict should be reported gracefully even with workspace: protocol
+	conflict := conflicts[0]
+	if conflict.PackageName != "lodash" {
+		t.Errorf("Expected package 'lodash', got '%s'", conflict.PackageName)
+	}
+}
+
 func TestIsBreakingVersion(t *testing.T) {
 	tests := []struct {
 		name        string

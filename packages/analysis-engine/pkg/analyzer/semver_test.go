@@ -50,6 +50,18 @@ func TestParseSemVer(t *testing.T) {
 		{"latest", "latest", 0, 0, 0, "", true},
 		{"next", "next", 0, 0, 0, "", true},
 		{"star", "*", 0, 0, 0, "", true},
+
+		// OR ranges (takes first option)
+		{"or range caret", "^17.0.0 || ^18.0.0", 17, 0, 0, "", false},
+		{"or range mixed", "~16.8.0 || ^17.0.0 || ^18.0.0", 16, 8, 0, "", false},
+
+		// Additional dist-tags
+		{"beta tag", "beta", 0, 0, 0, "", true},
+		{"alpha tag", "alpha", 0, 0, 0, "", true},
+		{"canary tag", "canary", 0, 0, 0, "", true},
+		{"rc tag", "rc", 0, 0, 0, "", true},
+		{"dev tag", "dev", 0, 0, 0, "", true},
+		{"nightly tag", "nightly", 0, 0, 0, "", true},
 	}
 
 	for _, tt := range tests {
@@ -98,6 +110,10 @@ func TestStripRange(t *testing.T) {
 		{"=4.0.0", "4.0.0"},
 		{">=4.0.0 <5.0.0", "4.0.0"},
 		{"  ^4.17.0  ", "4.17.0"},
+		// OR ranges
+		{"^17.0.0 || ^18.0.0", "17.0.0"},
+		{"~16.8.0 || ^17.0.0", "16.8.0"},
+		{">=16.0.0 || ^17.0.0 || ^18.0.0", "16.0.0"},
 	}
 
 	for _, tt := range tests {
