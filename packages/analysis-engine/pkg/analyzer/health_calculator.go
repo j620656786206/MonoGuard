@@ -33,8 +33,11 @@ const (
 )
 
 // Depth scoring constants.
+// Note: AC6 mentions "3-4 levels" as optimal range. We use 4 as the threshold,
+// meaning depths of 1-4 get full score (100), and deductions start at depth 5+.
+// This is a design choice that treats 4 as the upper bound of "optimal".
 const (
-	OptimalDepth       = 4  // Ideal max depth
+	OptimalDepth       = 4  // Ideal max depth (upper bound of 3-4 range per AC6)
 	DeductionPerLevel  = 10 // Points deducted per level above optimal
 	AvgDepthMultiplier = 5  // Multiplier for average depth penalty
 )
@@ -120,7 +123,12 @@ func (hc *HealthCalculator) calculateCircularScore() (int, *types.HealthFactor) 
 	indirectCount := 0
 
 	for _, cycle := range hc.cycles {
-		// Self-loop: depth 1 and cycle has 2 elements where both are same
+		// Self-loop detection: A package that depends on itself.
+		// We check two conditions for robustness:
+		//   1. cycle.Depth == 1: Standard self-loop indicator from cycle detector
+		//   2. Cycle array has 2 identical elements: Handles edge case where cycle
+		//      representation is ["A", "A"] (package A depending on itself)
+		// Both conditions are checked to handle different cycle detector implementations.
 		if cycle.Depth == 1 || (len(cycle.Cycle) == 2 && cycle.Cycle[0] == cycle.Cycle[1]) {
 			selfLoopCount++
 			deductions += DeductionSelfLoop

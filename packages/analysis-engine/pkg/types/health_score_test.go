@@ -2,6 +2,8 @@ package types
 
 import (
 	"encoding/json"
+	"fmt"
+	"strings"
 	"testing"
 )
 
@@ -63,7 +65,7 @@ func TestHealthScoreResult_JSONSerialization(t *testing.T) {
 	}
 
 	for _, key := range expectedKeys {
-		if !containsSubstring(jsonStr, key) {
+		if !strings.Contains(jsonStr, key) {
 			t.Errorf("Expected JSON to contain key %s, but it didn't. JSON: %s", key, jsonStr)
 		}
 	}
@@ -129,7 +131,9 @@ func TestGetHealthRating(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(string(tt.expected), func(t *testing.T) {
+		// Use unique test name with score to avoid collision when same rating appears multiple times
+		testName := fmt.Sprintf("score_%d_expects_%s", tt.score, tt.expected)
+		t.Run(testName, func(t *testing.T) {
 			result := GetHealthRating(tt.score)
 			if result != tt.expected {
 				t.Errorf("GetHealthRating(%d) = %s, want %s", tt.score, result, tt.expected)
@@ -229,12 +233,4 @@ func TestHealthFactor_JSONSerialization(t *testing.T) {
 	}
 }
 
-// Helper function
-func containsSubstring(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
-}
+// Note: Using strings.Contains from standard library instead of custom helper

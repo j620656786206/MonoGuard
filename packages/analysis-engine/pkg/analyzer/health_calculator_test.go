@@ -333,7 +333,11 @@ func TestHealthCalculator_WeightedScores(t *testing.T) {
 		totalWeighted += factor.WeightedScore
 	}
 
-	// Weighted sum should approximately equal overall
+	// Weighted sum should approximately equal overall.
+	// Tolerance of ±2 accounts for rounding differences:
+	// - Each factor's WeightedScore is rounded independently (int(math.Round(...)))
+	// - The overall score is also rounded
+	// - With 4 factors, cumulative rounding can differ by up to ±2 points
 	if totalWeighted < result.Overall-2 || totalWeighted > result.Overall+2 {
 		t.Errorf("Sum of weighted scores (%d) should approximately equal overall (%d)",
 			totalWeighted, result.Overall)
@@ -490,5 +494,15 @@ func TestBoundScore(t *testing.T) {
 		if result != tt.expected {
 			t.Errorf("boundScore(%d) = %d, want %d", tt.input, result, tt.expected)
 		}
+	}
+}
+
+// TestWeightsSumToOne verifies that all weight constants sum to exactly 1.0.
+// This guards against accidental changes that would break the health score calculation.
+func TestWeightsSumToOne(t *testing.T) {
+	sum := WeightCircular + WeightConflict + WeightDepth + WeightCoupling
+	if sum != 1.0 {
+		t.Errorf("Weight constants must sum to 1.0, got %.2f (Circular=%.2f + Conflict=%.2f + Depth=%.2f + Coupling=%.2f)",
+			sum, WeightCircular, WeightConflict, WeightDepth, WeightCoupling)
 	}
 }

@@ -1,6 +1,6 @@
 # Story 2.5: Calculate Architecture Health Score
 
-Status: review
+Status: done
 
 ## Story
 
@@ -88,8 +88,8 @@ So that **I can quickly assess the state of my dependency structure**.
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Define HealthScore Types in Go** (AC: #2)
-  - [ ] 1.1 Create `pkg/types/health_score.go`:
+- [x] **Task 1: Define HealthScore Types in Go** (AC: #2)
+  - [x] 1.1 Create `pkg/types/health_score.go`:
     ```go
     package types
 
@@ -148,11 +148,11 @@ So that **I can quickly assess the state of my dependency structure**.
         }
     }
     ```
-  - [ ] 1.2 Add JSON serialization tests
-  - [ ] 1.3 Add GetRating tests for all thresholds
+  - [x] 1.2 Add JSON serialization tests
+  - [x] 1.3 Add GetRating tests for all thresholds
 
-- [ ] **Task 2: Implement Health Calculator** (AC: #1, #2)
-  - [ ] 2.1 Create `pkg/analyzer/health_calculator.go`:
+- [x] **Task 2: Implement Health Calculator** (AC: #1, #2)
+  - [x] 2.1 Create `pkg/analyzer/health_calculator.go`:
     ```go
     package analyzer
 
@@ -195,11 +195,11 @@ So that **I can quickly assess the state of my dependency structure**.
     // calculateCouplingScore computes score from package coupling
     func (hc *HealthCalculator) calculateCouplingScore() (int, *types.HealthFactor)
     ```
-  - [ ] 2.2 Implement weighted score aggregation
-  - [ ] 2.3 Create comprehensive tests
+  - [x] 2.2 Implement weighted score aggregation
+  - [x] 2.3 Create comprehensive tests
 
-- [ ] **Task 3: Implement Circular Score Calculation** (AC: #4)
-  - [ ] 3.1 Implement `calculateCircularScore`:
+- [x] **Task 3: Implement Circular Score Calculation** (AC: #4)
+  - [x] 3.1 Implement `calculateCircularScore`:
     ```go
     func (hc *HealthCalculator) calculateCircularScore() (int, *types.HealthFactor) {
         if len(hc.cycles) == 0 {
@@ -242,10 +242,10 @@ So that **I can quickly assess the state of my dependency structure**.
         }
     }
     ```
-  - [ ] 3.2 Add tests for various cycle scenarios
+  - [x] 3.2 Add tests for various cycle scenarios
 
-- [ ] **Task 4: Implement Conflict Score Calculation** (AC: #5)
-  - [ ] 4.1 Implement `calculateConflictScore`:
+- [x] **Task 4: Implement Conflict Score Calculation** (AC: #5)
+  - [x] 4.1 Implement `calculateConflictScore`:
     ```go
     func (hc *HealthCalculator) calculateConflictScore() (int, *types.HealthFactor) {
         if len(hc.conflicts) == 0 {
@@ -288,10 +288,10 @@ So that **I can quickly assess the state of my dependency structure**.
         }
     }
     ```
-  - [ ] 4.2 Add tests for various conflict scenarios
+  - [x] 4.2 Add tests for various conflict scenarios
 
-- [ ] **Task 5: Implement Depth Score Calculation** (AC: #6)
-  - [ ] 5.1 Implement `calculateDepthScore`:
+- [x] **Task 5: Implement Depth Score Calculation** (AC: #6)
+  - [x] 5.1 Implement `calculateDepthScore`:
     ```go
     func (hc *HealthCalculator) calculateDepthScore() (int, *types.HealthFactor) {
         maxDepth, avgDepth := hc.calculateDepthMetrics()
@@ -326,11 +326,11 @@ So that **I can quickly assess the state of my dependency structure**.
         // Return max depth and average depth across all packages
     }
     ```
-  - [ ] 5.2 Implement BFS-based depth calculation
-  - [ ] 5.3 Add tests for various graph structures
+  - [x] 5.2 Implement BFS-based depth calculation
+  - [x] 5.3 Add tests for various graph structures
 
-- [ ] **Task 6: Implement Coupling Score Calculation** (AC: #7)
-  - [ ] 6.1 Implement `calculateCouplingScore`:
+- [x] **Task 6: Implement Coupling Score Calculation** (AC: #7)
+  - [x] 6.1 Implement `calculateCouplingScore`:
     ```go
     func (hc *HealthCalculator) calculateCouplingScore() (int, *types.HealthFactor) {
         couplingMetrics := hc.calculateCouplingMetrics()
@@ -367,11 +367,11 @@ So that **I can quickly assess the state of my dependency structure**.
         Instability      float64 // Ce / (Ca + Ce)
     }
     ```
-  - [ ] 6.2 Implement coupling metrics calculation
-  - [ ] 6.3 Add tests for coupling scenarios
+  - [x] 6.2 Implement coupling metrics calculation
+  - [x] 6.3 Add tests for coupling scenarios
 
-- [ ] **Task 7: Wire to Analyzer** (AC: all)
-  - [ ] 7.1 Update `pkg/analyzer/analyzer.go`:
+- [x] **Task 7: Wire to Analyzer** (AC: all)
+  - [x] 7.1 Update `pkg/analyzer/analyzer.go`:
     ```go
     func (a *Analyzer) Analyze(workspace *types.WorkspaceData) (*types.AnalysisResult, error) {
         // Build dependency graph (Story 2.2)
@@ -403,11 +403,11 @@ So that **I can quickly assess the state of my dependency structure**.
         }, nil
     }
     ```
-  - [ ] 7.2 Update AnalysisResult type to include HealthScoreResult
-  - [ ] 7.3 Update handler and WASM tests
+  - [x] 7.2 Update AnalysisResult type to include HealthScoreResult
+  - [x] 7.3 Update handler and WASM tests
 
-- [ ] **Task 8: Performance Testing** (AC: #8)
-  - [ ] 8.1 Create `pkg/analyzer/health_calculator_benchmark_test.go`:
+- [x] **Task 8: Performance Testing** (AC: #8)
+  - [x] 8.1 Create `pkg/analyzer/health_calculator_benchmark_test.go`:
     ```go
     func BenchmarkCalculateHealth100Packages(b *testing.B) {
         graph := generateGraph(100)
@@ -421,13 +421,13 @@ So that **I can quickly assess the state of my dependency structure**.
         }
     }
     ```
-  - [ ] 8.2 Verify calculation completes in < 100ms
+  - [x] 8.2 Verify calculation completes in < 100ms
 
-- [ ] **Task 9: Integration Verification** (AC: all)
-  - [ ] 9.1 Build WASM: `pnpm nx build @monoguard/analysis-engine`
-  - [ ] 9.2 Update smoke test to verify health score
-  - [ ] 9.3 Test with various scenarios (healthy, unhealthy, critical)
-  - [ ] 9.4 Verify all tests pass: `make test`
+- [x] **Task 9: Integration Verification** (AC: all)
+  - [x] 9.1 Build WASM: `pnpm nx build @monoguard/analysis-engine`
+  - [x] 9.2 Update smoke test to verify health score
+  - [x] 9.3 Test with various scenarios (healthy, unhealthy, critical)
+  - [x] 9.4 Verify all tests pass: `make test`
 
 ## Dev Notes
 
@@ -671,3 +671,36 @@ claude-opus-4-5-20251101
 - `packages/analysis-engine/pkg/types/types.go` - Added HealthScoreDetails field to AnalysisResult
 - `packages/analysis-engine/pkg/analyzer/analyzer.go` - Wired HealthCalculator to Analyze method
 - `packages/analysis-engine/pkg/analyzer/analyzer_test.go` - Added health score integration tests
+
+### Senior Developer Review (AI)
+
+**Review Date:** 2026-01-17
+**Reviewer:** Claude Opus 4.5 (Code Review Agent)
+**Outcome:** ✅ APPROVED (with fixes applied)
+
+**Issues Found & Fixed:**
+
+| # | Severity | Issue | Fix Applied |
+|---|----------|-------|-------------|
+| 1 | CRITICAL | All 9 tasks marked [ ] but completed | Marked all tasks [x] |
+| 2 | HIGH | Missing weight sum validation test | Added `TestWeightsSumToOne` |
+| 3 | HIGH | Redundant self-loop detection logic | Added documentation explaining dual-check |
+| 4 | MEDIUM | Test name collision in GetHealthRating tests | Used unique names with score |
+| 5 | MEDIUM | Reimplementing strings.Contains | Replaced with standard library |
+| 6 | MEDIUM | Unexplained ±2 tolerance in weighted test | Added rounding documentation |
+| 7 | MEDIUM | Optimal depth single value vs range | Documented design choice |
+
+**Verification:**
+- All tests pass: `go test ./pkg/... -count=1` ✅
+- New test added: `TestWeightsSumToOne` ✅
+- Performance verified: <100ms for 100 packages ✅
+
+**AC Validation:**
+- AC1-AC8: All acceptance criteria verified and implemented correctly
+
+### Change Log
+
+| Date | Author | Change |
+|------|--------|--------|
+| 2026-01-17 | Dev Agent | Initial implementation |
+| 2026-01-17 | Code Review Agent | Fixed 7 issues, marked tasks complete, updated status to done |
