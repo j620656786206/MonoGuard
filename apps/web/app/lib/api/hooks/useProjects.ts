@@ -1,12 +1,12 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Project } from '@monoguard/types'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
-  ProjectsService,
-  type ProjectListParams,
-  type CreateProjectPayload,
-  type UpdateProjectPayload,
   type AnalyzeProjectOptions,
-} from '../services/projects';
-import { Project } from '@monoguard/types';
+  type CreateProjectPayload,
+  type ProjectListParams,
+  ProjectsService,
+  type UpdateProjectPayload,
+} from '../services/projects'
 
 /**
  * Query keys for projects
@@ -14,16 +14,13 @@ import { Project } from '@monoguard/types';
 export const projectQueryKeys = {
   all: ['projects'] as const,
   lists: () => [...projectQueryKeys.all, 'list'] as const,
-  list: (params?: ProjectListParams) =>
-    [...projectQueryKeys.lists(), params] as const,
+  list: (params?: ProjectListParams) => [...projectQueryKeys.lists(), params] as const,
   details: () => [...projectQueryKeys.all, 'detail'] as const,
   detail: (id: string) => [...projectQueryKeys.details(), id] as const,
-  dependencies: (id: string) =>
-    [...projectQueryKeys.detail(id), 'dependencies'] as const,
-  architecture: (id: string) =>
-    [...projectQueryKeys.detail(id), 'architecture'] as const,
+  dependencies: (id: string) => [...projectQueryKeys.detail(id), 'dependencies'] as const,
+  architecture: (id: string) => [...projectQueryKeys.detail(id), 'architecture'] as const,
   health: (id: string) => [...projectQueryKeys.detail(id), 'health'] as const,
-};
+}
 
 /**
  * Hook to fetch projects with optional filtering
@@ -33,7 +30,7 @@ export function useProjects(params?: ProjectListParams) {
     queryKey: projectQueryKeys.list(params),
     queryFn: () => ProjectsService.getProjects(params),
     staleTime: 5 * 60 * 1000, // 5 minutes
-  });
+  })
 }
 
 /**
@@ -45,7 +42,7 @@ export function useProject(id: string, enabled = true) {
     queryFn: () => ProjectsService.getProject(id),
     enabled: enabled && !!id,
     staleTime: 2 * 60 * 1000, // 2 minutes
-  });
+  })
 }
 
 /**
@@ -57,7 +54,7 @@ export function useProjectDependencies(id: string, enabled = true) {
     queryFn: () => ProjectsService.getProjectDependencies(id),
     enabled: enabled && !!id,
     staleTime: 10 * 60 * 1000, // 10 minutes
-  });
+  })
 }
 
 /**
@@ -69,7 +66,7 @@ export function useProjectArchitecture(id: string, enabled = true) {
     queryFn: () => ProjectsService.getProjectArchitecture(id),
     enabled: enabled && !!id,
     staleTime: 10 * 60 * 1000, // 10 minutes
-  });
+  })
 }
 
 /**
@@ -81,92 +78,81 @@ export function useProjectHealth(id: string, enabled = true) {
     queryFn: () => ProjectsService.getProjectHealth(id),
     enabled: enabled && !!id,
     staleTime: 1 * 60 * 1000, // 1 minute
-  });
+  })
 }
 
 /**
  * Hook to create a new project
  */
 export function useCreateProject() {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (payload: CreateProjectPayload) =>
-      ProjectsService.createProject(payload),
+    mutationFn: (payload: CreateProjectPayload) => ProjectsService.createProject(payload),
     onSuccess: () => {
       // Invalidate projects list to refetch with new project
-      queryClient.invalidateQueries({ queryKey: projectQueryKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: projectQueryKeys.lists() })
     },
-  });
+  })
 }
 
 /**
  * Hook to update a project
  */
 export function useUpdateProject() {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({
-      id,
-      payload,
-    }: {
-      id: string;
-      payload: UpdateProjectPayload;
-    }) => ProjectsService.updateProject(id, payload),
+    mutationFn: ({ id, payload }: { id: string; payload: UpdateProjectPayload }) =>
+      ProjectsService.updateProject(id, payload),
     onSuccess: (data, { id }) => {
       // Update the specific project in cache
-      queryClient.setQueryData(projectQueryKeys.detail(id), data);
+      queryClient.setQueryData(projectQueryKeys.detail(id), data)
       // Invalidate projects list to refetch
-      queryClient.invalidateQueries({ queryKey: projectQueryKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: projectQueryKeys.lists() })
     },
-  });
+  })
 }
 
 /**
  * Hook to delete a project
  */
 export function useDeleteProject() {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: (id: string) => ProjectsService.deleteProject(id),
     onSuccess: (_, id) => {
       // Remove project from cache
-      queryClient.removeQueries({ queryKey: projectQueryKeys.detail(id) });
+      queryClient.removeQueries({ queryKey: projectQueryKeys.detail(id) })
       // Invalidate projects list
-      queryClient.invalidateQueries({ queryKey: projectQueryKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: projectQueryKeys.lists() })
     },
-  });
+  })
 }
 
 /**
  * Hook to analyze a project
  */
 export function useAnalyzeProject() {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({
-      id,
-      options,
-    }: {
-      id: string;
-      options?: AnalyzeProjectOptions;
-    }) => ProjectsService.analyzeProject(id, options),
+    mutationFn: ({ id, options }: { id: string; options?: AnalyzeProjectOptions }) =>
+      ProjectsService.analyzeProject(id, options),
     onSuccess: (_, { id }) => {
       // Invalidate project data to refetch with updated analysis
-      queryClient.invalidateQueries({ queryKey: projectQueryKeys.detail(id) });
-      queryClient.invalidateQueries({ queryKey: projectQueryKeys.health(id) });
+      queryClient.invalidateQueries({ queryKey: projectQueryKeys.detail(id) })
+      queryClient.invalidateQueries({ queryKey: projectQueryKeys.health(id) })
     },
-  });
+  })
 }
 
 /**
  * Hook to upload project files
  */
 export function useUploadProjectFiles() {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: ({
@@ -174,13 +160,13 @@ export function useUploadProjectFiles() {
       files,
       onUploadProgress,
     }: {
-      id: string;
-      files: File[];
-      onUploadProgress?: (progressEvent: any) => void;
+      id: string
+      files: File[]
+      onUploadProgress?: (progressEvent: any) => void
     }) => ProjectsService.uploadProjectFiles(id, files, onUploadProgress),
     onSuccess: (_, { id }) => {
       // Invalidate project data
-      queryClient.invalidateQueries({ queryKey: projectQueryKeys.detail(id) });
+      queryClient.invalidateQueries({ queryKey: projectQueryKeys.detail(id) })
     },
-  });
+  })
 }

@@ -6,13 +6,13 @@
  */
 export interface DependencyGraph {
   /** Map of package name to Package details */
-  nodes: Record<string, PackageNode>;
+  nodes: Record<string, PackageNode>
   /** List of dependency edges */
-  edges: DependencyEdge[];
+  edges: DependencyEdge[]
   /** Workspace root path */
-  rootPath: string;
+  rootPath: string
   /** Workspace type detected */
-  workspaceType: WorkspaceType;
+  workspaceType: WorkspaceType
 }
 
 /**
@@ -22,17 +22,17 @@ export interface DependencyGraph {
  */
 export interface PackageNode {
   /** Package name (e.g., "@monoguard/types") */
-  name: string;
+  name: string
   /** Package version */
-  version: string;
+  version: string
   /** Relative path from workspace root */
-  path: string;
+  path: string
   /** Direct dependencies */
-  dependencies: string[];
+  dependencies: string[]
   /** Dev dependencies */
-  devDependencies: string[];
+  devDependencies: string[]
   /** Peer dependencies */
-  peerDependencies: string[];
+  peerDependencies: string[]
 }
 
 /**
@@ -42,13 +42,13 @@ export interface PackageNode {
  */
 export interface DependencyEdge {
   /** Source package name */
-  from: string;
+  from: string
   /** Target package name */
-  to: string;
+  to: string
   /** Dependency type */
-  type: DependencyType;
+  type: DependencyType
   /** Version range specified */
-  versionRange: string;
+  versionRange: string
 }
 
 /**
@@ -56,11 +56,11 @@ export interface DependencyEdge {
  *
  * Matches Go: pkg/types/dependency_type.go
  */
-export type DependencyType = 'production' | 'development' | 'peer' | 'optional';
+export type DependencyType = 'production' | 'development' | 'peer' | 'optional'
 
 /**
  * WorkspaceType - Type of monorepo workspace detected
  *
  * Matches Go: pkg/types/workspace_type.go
  */
-export type WorkspaceType = 'npm' | 'yarn' | 'pnpm' | 'nx' | 'unknown';
+export type WorkspaceType = 'npm' | 'yarn' | 'pnpm' | 'nx' | 'unknown'

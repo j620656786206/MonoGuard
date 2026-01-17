@@ -1,4 +1,4 @@
-import type { DependencyGraph, WorkspaceType } from './graph';
+import type { DependencyGraph, WorkspaceType } from './graph'
 
 /**
  * AnalysisResult - Complete analysis output
@@ -8,17 +8,17 @@ import type { DependencyGraph, WorkspaceType } from './graph';
  */
 export interface AnalysisResult {
   /** Architecture health score (0-100) */
-  healthScore: number;
+  healthScore: number
   /** Total packages analyzed */
-  packageCount: number;
+  packageCount: number
   /** Detected circular dependencies */
-  circularDependencies: CircularDependencyInfo[];
+  circularDependencies: CircularDependencyInfo[]
   /** Dependency graph data */
-  graph: DependencyGraph;
+  graph: DependencyGraph
   /** Analysis metadata */
-  metadata: AnalysisMetadata;
+  metadata: AnalysisMetadata
   /** ISO 8601 timestamp */
-  createdAt: string;
+  createdAt: string
 }
 
 /**
@@ -28,17 +28,17 @@ export interface AnalysisResult {
  */
 export interface CircularDependencyInfo {
   /** Packages involved in the cycle (in order) */
-  cycle: string[];
+  cycle: string[]
   /** Type of circular dependency */
-  type: 'direct' | 'indirect';
+  type: 'direct' | 'indirect'
   /** Severity level */
-  severity: 'critical' | 'warning' | 'info';
+  severity: 'critical' | 'warning' | 'info'
   /** Impact description */
-  impact: string;
+  impact: string
   /** Suggested fix strategy */
-  fixStrategy?: FixStrategy;
+  fixStrategy?: FixStrategy
   /** Refactoring complexity (1-10) */
-  complexity: number;
+  complexity: number
 }
 
 /**
@@ -48,13 +48,13 @@ export interface CircularDependencyInfo {
  */
 export interface FixStrategy {
   /** Strategy type */
-  type: 'extract_module' | 'dependency_injection' | 'boundary_refactor';
+  type: 'extract_module' | 'dependency_injection' | 'boundary_refactor'
   /** Human-readable description */
-  description: string;
+  description: string
   /** Step-by-step instructions */
-  steps: string[];
+  steps: string[]
   /** Files that need modification */
-  affectedFiles: string[];
+  affectedFiles: string[]
 }
 
 /**
@@ -64,13 +64,13 @@ export interface FixStrategy {
  */
 export interface CheckResult {
   /** Overall pass/fail status */
-  passed: boolean;
+  passed: boolean
   /** List of errors found */
-  errors: ValidationError[];
+  errors: ValidationError[]
   /** List of warnings */
-  warnings: ValidationWarning[];
+  warnings: ValidationWarning[]
   /** Health score (0-100) */
-  healthScore: number;
+  healthScore: number
 }
 
 /**
@@ -80,13 +80,13 @@ export interface CheckResult {
  */
 export interface ValidationError {
   /** Error code */
-  code: string;
+  code: string
   /** Error message */
-  message: string;
+  message: string
   /** Related file path (optional) */
-  file?: string;
+  file?: string
   /** Line number (optional) */
-  line?: number;
+  line?: number
 }
 
 /**
@@ -96,11 +96,11 @@ export interface ValidationError {
  */
 export interface ValidationWarning {
   /** Warning code */
-  code: string;
+  code: string
   /** Warning message */
-  message: string;
+  message: string
   /** Related file path (optional) */
-  file?: string;
+  file?: string
 }
 
 /**
@@ -110,14 +110,14 @@ export interface ValidationWarning {
  */
 export interface AnalysisMetadata {
   /** MonoGuard version */
-  version: string;
+  version: string
   /** Analysis duration in milliseconds */
-  durationMs: number;
+  durationMs: number
   /** Number of files processed */
-  filesProcessed: number;
+  filesProcessed: number
   /** Workspace type detected */
-  workspaceType: WorkspaceType;
+  workspaceType: WorkspaceType
 }
 
 // Re-export for convenience
-export type { WorkspaceType } from './graph';
+export type { WorkspaceType } from './graph'

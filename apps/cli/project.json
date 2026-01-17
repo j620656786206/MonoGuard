@@ -27,6 +27,14 @@
         "cwd": "apps/cli"
       }
     },
+    "test:coverage": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "make test-coverage",
+        "cwd": "apps/cli"
+      },
+      "outputs": ["{projectRoot}/coverage.out", "{projectRoot}/coverage.html"]
+    },
     "clean": {
       "executor": "nx:run-commands",
       "options": {

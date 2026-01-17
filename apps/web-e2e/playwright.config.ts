@@ -1,13 +1,13 @@
-import { defineConfig, devices } from '@playwright/test';
-import { workspaceRoot } from '@nx/devkit';
-import path from 'path';
+import { workspaceRoot } from '@nx/devkit'
+import { defineConfig, devices } from '@playwright/test'
+import path from 'path'
 
 /**
  * MonoGuard E2E Test Configuration
  */
 
-const baseURL = process.env['BASE_URL'] || 'http://localhost:3000';
-const isCI = !!process.env['CI'];
+const baseURL = process.env['BASE_URL'] || 'http://localhost:3000'
+const isCI = !!process.env['CI']
 
 export default defineConfig({
   testDir: './src',
@@ -48,4 +48,4 @@ export default defineConfig({
       },
     },
   ],
-});
+})

@@ -8,37 +8,34 @@
  */
 
 export type NxProject = {
-  root: string;
-  sourceRoot: string;
-  projectType: 'application' | 'library';
-  targets?: Record<string, { executor: string; options?: Record<string, unknown> }>;
-  tags?: string[];
-  implicitDependencies?: string[];
-};
+  root: string
+  sourceRoot: string
+  projectType: 'application' | 'library'
+  targets?: Record<string, { executor: string; options?: Record<string, unknown> }>
+  tags?: string[]
+  implicitDependencies?: string[]
+}
 
 export type WorkspaceJson = {
-  version: number;
-  projects: Record<string, NxProject>;
-  defaultProject?: string;
-};
+  version: number
+  projects: Record<string, NxProject>
+  defaultProject?: string
+}
 
 export type WorkspaceJsonOverrides = {
-  version?: number;
-  projects?: Record<string, Partial<NxProject>>;
-  defaultProject?: string;
-  projectCount?: number;
-  includeCircularDeps?: boolean;
-};
+  version?: number
+  projects?: Record<string, Partial<NxProject>>
+  defaultProject?: string
+  projectCount?: number
+  includeCircularDeps?: boolean
+}
 
 /**
  * Creates a default NxProject with sensible defaults
  */
-export function createProject(
-  name: string,
-  overrides: Partial<NxProject> = {}
-): NxProject {
-  const projectType = overrides.projectType ?? 'library';
-  const root = overrides.root ?? `packages/${name}`;
+export function createProject(name: string, overrides: Partial<NxProject> = {}): NxProject {
+  const projectType = overrides.projectType ?? 'library'
+  const root = overrides.root ?? `packages/${name}`
 
   return {
     root,
@@ -68,7 +65,7 @@ export function createProject(
     },
     tags: [],
     ...overrides,
-  };
+  }
 }
 
 /**
@@ -91,59 +88,63 @@ export function createProject(
  * // Workspace with circular dependencies for testing detection
  * const workspace = createWorkspaceJson({ includeCircularDeps: true });
  */
-export function createWorkspaceJson(
-  overrides: WorkspaceJsonOverrides = {}
-): WorkspaceJson {
-  const { version = 2, projects = {}, defaultProject, includeCircularDeps = false, projectCount } = overrides;
+export function createWorkspaceJson(overrides: WorkspaceJsonOverrides = {}): WorkspaceJson {
+  const {
+    version = 2,
+    projects = {},
+    defaultProject,
+    includeCircularDeps = false,
+    projectCount,
+  } = overrides
 
   // If projectCount is specified, generate that many projects
-  let finalProjects: Record<string, NxProject> = {};
+  let finalProjects: Record<string, NxProject> = {}
 
   if (projectCount !== undefined) {
     for (let i = 1; i <= projectCount; i++) {
-      const name = `project-${i}`;
+      const name = `project-${i}`
       finalProjects[name] = createProject(name, {
         projectType: i === 1 ? 'application' : 'library',
-      });
+      })
     }
   } else if (Object.keys(projects).length === 0) {
     // Default projects if none specified
     finalProjects = {
-      'web': createProject('web', { projectType: 'application', root: 'apps/web' }),
-      'types': createProject('types', { root: 'packages/types' }),
+      web: createProject('web', { projectType: 'application', root: 'apps/web' }),
+      types: createProject('types', { root: 'packages/types' }),
       'ui-components': createProject('ui-components', {
         root: 'packages/ui-components',
         tags: ['scope:shared', 'type:ui'],
       }),
-    };
+    }
   } else {
     // Use provided projects with createProject for defaults
     for (const [name, projectOverrides] of Object.entries(projects)) {
-      finalProjects[name] = createProject(name, projectOverrides);
+      finalProjects[name] = createProject(name, projectOverrides)
     }
   }
 
   // Add circular dependencies if requested (for testing detection)
   if (includeCircularDeps && Object.keys(finalProjects).length >= 2) {
-    const projectNames = Object.keys(finalProjects);
-    const first = projectNames[0];
-    const second = projectNames[1];
+    const projectNames = Object.keys(finalProjects)
+    const first = projectNames[0]
+    const second = projectNames[1]
 
     finalProjects[first] = {
       ...finalProjects[first],
       implicitDependencies: [second],
-    };
+    }
     finalProjects[second] = {
       ...finalProjects[second],
       implicitDependencies: [first],
-    };
+    }
   }
 
   return {
     version,
     projects: finalProjects,
     ...(defaultProject && { defaultProject }),
-  };
+  }
 }
 
 /**
@@ -158,14 +159,14 @@ export function createMinimalWorkspace(): WorkspaceJson {
         root: 'apps/single-app',
       }),
     },
-  };
+  }
 }
 
 /**
  * Creates a large workspace for performance testing
  */
 export function createLargeWorkspace(projectCount: number = 50): WorkspaceJson {
-  return createWorkspaceJson({ projectCount });
+  return createWorkspaceJson({ projectCount })
 }
 
 /**
@@ -179,5 +180,5 @@ export function createCircularWorkspace(): WorkspaceJson {
       'lib-c': { implicitDependencies: ['lib-a'] },
     },
     includeCircularDeps: false, // We're manually setting the cycle above
-  });
+  })
 }

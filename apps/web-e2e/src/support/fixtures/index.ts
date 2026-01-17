@@ -14,10 +14,10 @@
  *   });
  */
 
-import { test as base, mergeTests, expect } from '@playwright/test';
-import { test as analysisFixture } from './analysis-fixture';
+import { test as base, expect, mergeTests } from '@playwright/test'
+import { test as analysisFixture } from './analysis-fixture'
 
 // Merge all fixtures into a single test object
-export const test = mergeTests(base, analysisFixture);
+export const test = mergeTests(base, analysisFixture)
 
-export { expect };
+export { expect }

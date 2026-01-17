@@ -1,7 +1,7 @@
-'use client';
+'use client'
 
-import React from 'react';
-import { EmailSignup } from './EmailSignup';
+import React from 'react'
+import { EmailSignup } from './EmailSignup'
 
 export function HeroSection() {
   return (
@@ -18,22 +18,15 @@ export function HeroSection() {
 
           {/* Subheadline */}
           <p className="mx-auto mt-6 max-w-3xl text-xl leading-relaxed text-gray-600 sm:text-2xl">
-            <span className="font-semibold text-gray-900">
-              Upload your package.json files
-            </span>{' '}
-            for instant, privacy-first analysis of dependencies, circular
-            dependencies, and security vulnerabilities.
+            <span className="font-semibold text-gray-900">Upload your package.json files</span> for
+            instant, privacy-first analysis of dependencies, circular dependencies, and security
+            vulnerabilities.
           </p>
 
           {/* Privacy Badge */}
           <div className="mt-8 flex justify-center">
             <div className="inline-flex items-center rounded-full bg-green-100 px-4 py-2 text-sm font-medium text-green-800">
-              <svg
-                className="mr-2 h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
+              <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -51,21 +44,15 @@ export function HeroSection() {
               onClick={() => {
                 // Navigate to upload section
                 if (typeof window !== 'undefined') {
-                  const uploadSection =
-                    document.getElementById('upload-section');
+                  const uploadSection = document.getElementById('upload-section')
                   if (uploadSection) {
-                    uploadSection.scrollIntoView({ behavior: 'smooth' });
+                    uploadSection.scrollIntoView({ behavior: 'smooth' })
                   }
                 }
               }}
               className="flex w-full transform items-center justify-center rounded-full bg-indigo-600 px-8 py-4 text-lg font-semibold text-white shadow-lg transition-all duration-200 hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-xl sm:w-auto"
             >
-              <svg
-                className="mr-2 h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
+              <svg className="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -80,8 +67,7 @@ export function HeroSection() {
           {/* Sample Files Note */}
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-500">
-              Don't have files? Scroll down to download sample files for
-              testing.
+              Don't have files? Scroll down to download sample files for testing.
             </p>
           </div>
 
@@ -103,12 +89,8 @@ export function HeroSection() {
                   />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900">
-                Instant Analysis
-              </h3>
-              <p className="mt-2 text-gray-600">
-                Get comprehensive reports in under 30 seconds
-              </p>
+              <h3 className="text-lg font-semibold text-gray-900">Instant Analysis</h3>
+              <p className="mt-2 text-gray-600">Get comprehensive reports in under 30 seconds</p>
             </div>
 
             <div className="text-center">
@@ -127,9 +109,7 @@ export function HeroSection() {
                   />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900">
-                Zero Setup
-              </h3>
+              <h3 className="text-lg font-semibold text-gray-900">Zero Setup</h3>
               <p className="mt-2 text-gray-600">
                 No installation required - upload and analyze instantly
               </p>
@@ -151,9 +131,7 @@ export function HeroSection() {
                   />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900">
-                Actionable Insights
-              </h3>
+              <h3 className="text-lg font-semibold text-gray-900">Actionable Insights</h3>
               <p className="mt-2 text-gray-600">
                 Get specific recommendations to improve code quality
               </p>
@@ -162,5 +140,5 @@ export function HeroSection() {
         </div>
       </div>
     </section>
-  );
+  )
 }

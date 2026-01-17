@@ -7,5 +7,5 @@
  *   import { goToUpload, assertHealthScore } from '../support/helpers';
  */
 
-export * from './navigation';
-export * from './assertions';
+export * from './assertions'
+export * from './navigation'

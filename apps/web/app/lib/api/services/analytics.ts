@@ -1,29 +1,29 @@
-import { apiClient } from '../client';
+import { apiClient } from '../client'
 
 export interface EventProperties {
-  url?: string;
-  referrer?: string;
-  title?: string;
-  projectId?: string;
-  analysisType?: string;
-  fileSize?: number;
-  fileName?: string;
-  errorMessage?: string;
-  errorCode?: string;
-  repositoryUrl?: string;
-  branch?: string;
-  healthScore?: number;
-  totalDependencies?: number;
-  vulnerabilityCount?: number;
-  customData?: Record<string, any>;
+  url?: string
+  referrer?: string
+  title?: string
+  projectId?: string
+  analysisType?: string
+  fileSize?: number
+  fileName?: string
+  errorMessage?: string
+  errorCode?: string
+  repositoryUrl?: string
+  branch?: string
+  healthScore?: number
+  totalDependencies?: number
+  vulnerabilityCount?: number
+  customData?: Record<string, any>
 }
 
 export interface FunnelStepMetadata {
-  source: string;
-  context: string;
-  abortReason?: string;
-  retryCount: number;
-  customData?: Record<string, any>;
+  source: string
+  context: string
+  abortReason?: string
+  retryCount: number
+  customData?: Record<string, any>
 }
 
 export type EventType =
@@ -37,7 +37,7 @@ export type EventType =
   | 'error'
   | 'click'
   | 'form_submit'
-  | 'feature_view';
+  | 'feature_view'
 
 export class AnalyticsService {
   // Track a generic event
@@ -46,10 +46,10 @@ export class AnalyticsService {
     eventName: string,
     properties?: EventProperties,
     options?: {
-      page?: string;
-      element?: string;
-      value?: string;
-      duration?: number;
+      page?: string
+      element?: string
+      value?: string
+      duration?: number
     }
   ): Promise<void> {
     try {
@@ -66,9 +66,9 @@ export class AnalyticsService {
           referrer: typeof document !== 'undefined' ? document.referrer : '',
           ...properties,
         },
-      });
+      })
     } catch (error) {
-      console.error('Failed to track event:', error);
+      console.error('Failed to track event:', error)
       // Don't throw - analytics failures shouldn't break the app
     }
   }
@@ -80,9 +80,9 @@ export class AnalyticsService {
         url: url || (typeof window !== 'undefined' ? window.location.href : ''),
         title: title || (typeof document !== 'undefined' ? document.title : ''),
         referrer: typeof document !== 'undefined' ? document.referrer : '',
-      });
+      })
     } catch (error) {
-      console.error('Failed to track page view:', error);
+      console.error('Failed to track page view:', error)
     }
   }
 
@@ -91,7 +91,7 @@ export class AnalyticsService {
     analysisType: string,
     properties?: EventProperties
   ): Promise<void> {
-    return this.trackAnalysis('start', analysisType, { properties });
+    return AnalyticsService.trackAnalysis('start', analysisType, { properties })
   }
 
   static async trackAnalysisComplete(
@@ -100,20 +100,20 @@ export class AnalyticsService {
     healthScore: number,
     properties?: EventProperties
   ): Promise<void> {
-    return this.trackAnalysis('complete', analysisType, {
+    return AnalyticsService.trackAnalysis('complete', analysisType, {
       duration,
       healthScore,
       properties,
-    });
+    })
   }
 
   private static async trackAnalysis(
     type: 'start' | 'complete',
     analysisType: string,
     options: {
-      duration?: number;
-      healthScore?: number;
-      properties?: EventProperties;
+      duration?: number
+      healthScore?: number
+      properties?: EventProperties
     }
   ): Promise<void> {
     try {
@@ -123,9 +123,9 @@ export class AnalyticsService {
         duration: options.duration,
         healthScore: options.healthScore,
         properties: options.properties,
-      });
+      })
     } catch (error) {
-      console.error('Failed to track analysis event:', error);
+      console.error('Failed to track analysis event:', error)
     }
   }
 
@@ -144,27 +144,22 @@ export class AnalyticsService {
         completed,
         duration,
         metadata,
-      });
+      })
     } catch (error) {
-      console.error('Failed to track conversion step:', error);
+      console.error('Failed to track conversion step:', error)
     }
   }
 
   // Track errors
-  static async trackError(
-    errorMessage: string,
-    errorCode?: string,
-    page?: string
-  ): Promise<void> {
+  static async trackError(errorMessage: string, errorCode?: string, page?: string): Promise<void> {
     try {
       await apiClient.post('/api/v1/analytics/error', {
         errorMessage,
         errorCode,
-        page:
-          page || (typeof window !== 'undefined' ? window.location.href : ''),
-      });
+        page: page || (typeof window !== 'undefined' ? window.location.href : ''),
+      })
     } catch (error) {
-      console.error('Failed to track error:', error);
+      console.error('Failed to track error:', error)
     }
   }
 
@@ -174,32 +169,26 @@ export class AnalyticsService {
     value?: string,
     properties?: EventProperties
   ): Promise<void> {
-    return this.trackEvent('click', 'click', properties, {
+    return AnalyticsService.trackEvent('click', 'click', properties, {
       element,
       value,
       page: typeof window !== 'undefined' ? window.location.pathname : '',
-    });
+    })
   }
 
-  static async trackFormSubmit(
-    formName: string,
-    properties?: EventProperties
-  ): Promise<void> {
-    return this.trackEvent('form_submit', 'form_submit', properties, {
+  static async trackFormSubmit(formName: string, properties?: EventProperties): Promise<void> {
+    return AnalyticsService.trackEvent('form_submit', 'form_submit', properties, {
       element: formName,
       page: typeof window !== 'undefined' ? window.location.pathname : '',
-    });
+    })
   }
 
   // Track feature usage
-  static async trackFeatureView(
-    featureName: string,
-    properties?: EventProperties
-  ): Promise<void> {
-    return this.trackEvent('feature_view', 'feature_view', properties, {
+  static async trackFeatureView(featureName: string, properties?: EventProperties): Promise<void> {
+    return AnalyticsService.trackEvent('feature_view', 'feature_view', properties, {
       element: featureName,
       page: typeof window !== 'undefined' ? window.location.pathname : '',
-    });
+    })
   }
 
   // Track GitHub analysis specifically
@@ -208,22 +197,19 @@ export class AnalyticsService {
     branch: string,
     properties?: EventProperties
   ): Promise<void> {
-    return this.trackEvent('github_analysis', 'github_analysis', {
+    return AnalyticsService.trackEvent('github_analysis', 'github_analysis', {
       repositoryUrl,
       branch,
       ...properties,
-    });
+    })
   }
 
   // Track file uploads
-  static async trackUploadStart(
-    fileName: string,
-    fileSize: number
-  ): Promise<void> {
-    return this.trackEvent('upload_start', 'upload_start', {
+  static async trackUploadStart(fileName: string, fileSize: number): Promise<void> {
+    return AnalyticsService.trackEvent('upload_start', 'upload_start', {
       fileName,
       fileSize,
-    });
+    })
   }
 
   static async trackUploadComplete(
@@ -231,7 +217,7 @@ export class AnalyticsService {
     fileSize: number,
     duration: number
   ): Promise<void> {
-    return this.trackEvent(
+    return AnalyticsService.trackEvent(
       'upload_complete',
       'upload_complete',
       {
@@ -241,44 +227,41 @@ export class AnalyticsService {
       {
         duration,
       }
-    );
+    )
   }
 
   // Track downloads
-  static async trackDownload(
-    fileName: string,
-    properties?: EventProperties
-  ): Promise<void> {
-    return this.trackEvent('download', 'download', {
+  static async trackDownload(fileName: string, properties?: EventProperties): Promise<void> {
+    return AnalyticsService.trackEvent('download', 'download', {
       fileName,
       ...properties,
-    });
+    })
   }
 
   // Conversion funnel tracking helpers
   static async trackLandingPageView(): Promise<void> {
-    await this.trackPageView();
-    return this.trackConversionStep('landing_page_view', 1, true);
+    await AnalyticsService.trackPageView()
+    return AnalyticsService.trackConversionStep('landing_page_view', 1, true)
   }
 
   static async trackAnalysisIntent(): Promise<void> {
-    return this.trackConversionStep('analysis_intent', 2, true);
+    return AnalyticsService.trackConversionStep('analysis_intent', 2, true)
   }
 
   static async trackAnalysisAttempt(): Promise<void> {
-    return this.trackConversionStep('analysis_attempt', 3, true);
+    return AnalyticsService.trackConversionStep('analysis_attempt', 3, true)
   }
 
   static async trackAnalysisSuccess(): Promise<void> {
-    return this.trackConversionStep('analysis_success', 4, true);
+    return AnalyticsService.trackConversionStep('analysis_success', 4, true)
   }
 
   static async trackAnalysisAbandoned(reason?: string): Promise<void> {
-    return this.trackConversionStep('analysis_attempt', 3, false, undefined, {
+    return AnalyticsService.trackConversionStep('analysis_attempt', 3, false, undefined, {
       source: typeof window !== 'undefined' ? window.location.pathname : '',
       context: 'user_abandoned',
       abortReason: reason,
       retryCount: 0,
-    });
+    })
   }
 }

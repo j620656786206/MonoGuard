@@ -1,30 +1,29 @@
-'use client';
+'use client'
 
-import React, { useState } from 'react';
-import { HealthScore } from '@monoguard/types';
+import type { HealthScore } from '@monoguard/types'
+import type React from 'react'
+import { useState } from 'react'
 
 export interface HealthScoreDisplayProps {
-  healthScore: HealthScore;
+  healthScore: HealthScore
 }
 
-export const HealthScoreDisplay: React.FC<HealthScoreDisplayProps> = ({
-  healthScore,
-}) => {
+export const HealthScoreDisplay: React.FC<HealthScoreDisplayProps> = ({ healthScore }) => {
   const getScoreColor = (score: number) => {
-    if (score >= 90) return 'text-green-600';
-    if (score >= 80) return 'text-green-500';
-    if (score >= 70) return 'text-yellow-500';
-    if (score >= 60) return 'text-orange-500';
-    return 'text-red-500';
-  };
+    if (score >= 90) return 'text-green-600'
+    if (score >= 80) return 'text-green-500'
+    if (score >= 70) return 'text-yellow-500'
+    if (score >= 60) return 'text-orange-500'
+    return 'text-red-500'
+  }
 
   const getScoreBg = (score: number) => {
-    if (score >= 90) return 'bg-green-100 border-green-200';
-    if (score >= 80) return 'bg-green-50 border-green-200';
-    if (score >= 70) return 'bg-yellow-50 border-yellow-200';
-    if (score >= 60) return 'bg-orange-50 border-orange-200';
-    return 'bg-red-50 border-red-200';
-  };
+    if (score >= 90) return 'bg-green-100 border-green-200'
+    if (score >= 80) return 'bg-green-50 border-green-200'
+    if (score >= 70) return 'bg-yellow-50 border-yellow-200'
+    if (score >= 60) return 'bg-orange-50 border-orange-200'
+    return 'bg-red-50 border-red-200'
+  }
 
   const getTrendIcon = () => {
     switch (healthScore.trend) {
@@ -43,7 +42,7 @@ export const HealthScoreDisplay: React.FC<HealthScoreDisplayProps> = ({
               d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
             />
           </svg>
-        );
+        )
       case 'declining':
         return (
           <svg
@@ -59,7 +58,7 @@ export const HealthScoreDisplay: React.FC<HealthScoreDisplayProps> = ({
               d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
             />
           </svg>
-        );
+        )
       default:
         return (
           <svg
@@ -68,38 +67,29 @@ export const HealthScoreDisplay: React.FC<HealthScoreDisplayProps> = ({
             stroke="currentColor"
             viewBox="0 0 24 24"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 5l7 7-7 7"
-            />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
-        );
+        )
     }
-  };
+  }
 
   const getTrendColor = () => {
     switch (healthScore.trend) {
       case 'improving':
-        return 'text-green-600 bg-green-100';
+        return 'text-green-600 bg-green-100'
       case 'declining':
-        return 'text-red-600 bg-red-100';
+        return 'text-red-600 bg-red-100'
       default:
-        return 'text-gray-600 bg-gray-100';
+        return 'text-gray-600 bg-gray-100'
     }
-  };
+  }
 
   return (
     <div className="space-y-6">
       {/* Overall Health Score */}
-      <div
-        className={`rounded-lg border p-8 text-center ${getScoreBg(healthScore.overall)}`}
-      >
+      <div className={`rounded-lg border p-8 text-center ${getScoreBg(healthScore.overall)}`}>
         <div className="mb-4 flex items-center justify-center space-x-3">
-          <div
-            className={`text-6xl font-bold ${getScoreColor(healthScore.overall)}`}
-          >
+          <div className={`text-6xl font-bold ${getScoreColor(healthScore.overall)}`}>
             {healthScore.overall}
           </div>
           <div className="text-left">
@@ -113,9 +103,7 @@ export const HealthScoreDisplay: React.FC<HealthScoreDisplayProps> = ({
           </div>
         </div>
 
-        <h2 className="mb-2 text-2xl font-bold text-gray-900">
-          Overall Health Score
-        </h2>
+        <h2 className="mb-2 text-2xl font-bold text-gray-900">Overall Health Score</h2>
         <p className="text-gray-600">
           Last updated {new Date(healthScore.lastUpdated).toLocaleDateString()}
         </p>
@@ -127,12 +115,7 @@ export const HealthScoreDisplay: React.FC<HealthScoreDisplayProps> = ({
           title="Dependencies"
           score={healthScore.dependencies}
           icon={
-            <svg
-              className="h-6 w-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -147,12 +130,7 @@ export const HealthScoreDisplay: React.FC<HealthScoreDisplayProps> = ({
           title="Architecture"
           score={healthScore.architecture}
           icon={
-            <svg
-              className="h-6 w-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -167,12 +145,7 @@ export const HealthScoreDisplay: React.FC<HealthScoreDisplayProps> = ({
           title="Maintainability"
           score={healthScore.maintainability}
           icon={
-            <svg
-              className="h-6 w-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -193,12 +166,7 @@ export const HealthScoreDisplay: React.FC<HealthScoreDisplayProps> = ({
           title="Security"
           score={healthScore.security}
           icon={
-            <svg
-              className="h-6 w-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -213,12 +181,7 @@ export const HealthScoreDisplay: React.FC<HealthScoreDisplayProps> = ({
           title="Performance"
           score={healthScore.performance}
           icon={
-            <svg
-              className="h-6 w-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -232,9 +195,7 @@ export const HealthScoreDisplay: React.FC<HealthScoreDisplayProps> = ({
 
       {/* Health Factors */}
       <div className="rounded-lg border border-gray-200 bg-white p-6">
-        <h3 className="mb-4 text-lg font-semibold text-gray-900">
-          Health Factors
-        </h3>
+        <h3 className="mb-4 text-lg font-semibold text-gray-900">Health Factors</h3>
         <div className="space-y-4">
           {healthScore.factors.map((factor, index) => (
             <HealthFactor key={index} factor={factor} />
@@ -244,9 +205,7 @@ export const HealthScoreDisplay: React.FC<HealthScoreDisplayProps> = ({
 
       {/* Recommendations Summary */}
       <div className="rounded-lg border border-blue-200 bg-blue-50 p-6">
-        <h3 className="mb-3 text-lg font-semibold text-blue-900">
-          Key Recommendations
-        </h3>
+        <h3 className="mb-3 text-lg font-semibold text-blue-900">Key Recommendations</h3>
         <div className="space-y-3">
           {healthScore.factors
             .filter((factor) => factor.recommendations.length > 0)
@@ -266,39 +225,37 @@ export const HealthScoreDisplay: React.FC<HealthScoreDisplayProps> = ({
                 </svg>
                 <div>
                   <div className="font-medium text-blue-900">{factor.name}</div>
-                  <div className="text-sm text-blue-700">
-                    {factor.recommendations[0]}
-                  </div>
+                  <div className="text-sm text-blue-700">{factor.recommendations[0]}</div>
                 </div>
               </div>
             ))}
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
 // Score Card Component
 const ScoreCard: React.FC<{
-  title: string;
-  score: number;
-  icon: React.ReactNode;
+  title: string
+  score: number
+  icon: React.ReactNode
 }> = ({ title, score, icon }) => {
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-green-600';
-    if (score >= 60) return 'text-yellow-600';
-    return 'text-red-600';
-  };
+    if (score >= 80) return 'text-green-600'
+    if (score >= 60) return 'text-yellow-600'
+    return 'text-red-600'
+  }
 
   const getScoreBg = (score: number) => {
-    if (score >= 80) return 'bg-green-50 border-green-200';
-    if (score >= 60) return 'bg-yellow-50 border-yellow-200';
-    return 'bg-red-50 border-red-200';
-  };
+    if (score >= 80) return 'bg-green-50 border-green-200'
+    if (score >= 60) return 'bg-yellow-50 border-yellow-200'
+    return 'bg-red-50 border-red-200'
+  }
 
-  const circumference = 2 * Math.PI * 45;
-  const strokeDasharray = circumference;
-  const strokeDashoffset = circumference - (score / 100) * circumference;
+  const circumference = 2 * Math.PI * 45
+  const strokeDasharray = circumference
+  const strokeDashoffset = circumference - (score / 100) * circumference
 
   return (
     <div className={`rounded-lg border p-4 ${getScoreBg(score)}`}>
@@ -333,33 +290,29 @@ const ScoreCard: React.FC<{
             />
           </svg>
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className={`text-sm font-bold ${getScoreColor(score)}`}>
-              {score}
-            </span>
+            <span className={`text-sm font-bold ${getScoreColor(score)}`}>{score}</span>
           </div>
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
 // Health Factor Component
-const HealthFactor: React.FC<{ factor: HealthScore['factors'][0] }> = ({
-  factor,
-}) => {
-  const [isExpanded, setIsExpanded] = useState(false);
+const HealthFactor: React.FC<{ factor: HealthScore['factors'][0] }> = ({ factor }) => {
+  const [isExpanded, setIsExpanded] = useState(false)
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-green-600';
-    if (score >= 60) return 'text-yellow-600';
-    return 'text-red-600';
-  };
+    if (score >= 80) return 'text-green-600'
+    if (score >= 60) return 'text-yellow-600'
+    return 'text-red-600'
+  }
 
   const getScoreBg = (score: number) => {
-    if (score >= 80) return 'bg-green-100';
-    if (score >= 60) return 'bg-yellow-100';
-    return 'bg-red-100';
-  };
+    if (score >= 80) return 'bg-green-100'
+    if (score >= 60) return 'bg-yellow-100'
+    return 'bg-red-100'
+  }
 
   return (
     <div className="rounded-lg border border-gray-200 p-4">
@@ -379,9 +332,7 @@ const HealthFactor: React.FC<{ factor: HealthScore['factors'][0] }> = ({
 
           {isExpanded && factor.recommendations.length > 0 && (
             <div className="mt-4 space-y-2 pl-11">
-              <h5 className="text-sm font-medium text-gray-900">
-                Recommendations:
-              </h5>
+              <h5 className="text-sm font-medium text-gray-900">Recommendations:</h5>
               <ul className="space-y-1 text-sm text-gray-600">
                 {factor.recommendations.map((rec, index) => (
                   <li key={index} className="flex items-start space-x-2">
@@ -404,5 +355,5 @@ const HealthFactor: React.FC<{ factor: HealthScore['factors'][0] }> = ({
         )}
       </div>
     </div>
-  );
-};
+  )
+}

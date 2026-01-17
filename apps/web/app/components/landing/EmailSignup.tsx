@@ -1,13 +1,13 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
+import { useState } from 'react'
 
 interface EmailSignupProps {
-  title?: string;
-  description?: string;
-  buttonText?: string;
-  variant?: 'error' | 'default' | 'inline';
-  className?: string;
+  title?: string
+  description?: string
+  buttonText?: string
+  variant?: 'error' | 'default' | 'inline'
+  className?: string
 }
 
 export function EmailSignup({
@@ -17,25 +17,25 @@ export function EmailSignup({
   variant = 'default',
   className = '',
 }: EmailSignupProps) {
-  const [email, setEmail] = useState('');
-  const [feedback, setFeedback] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState('')
+  const [feedback, setFeedback] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSubmitted, setIsSubmitted] = useState(false)
+  const [error, setError] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email) return;
+    e.preventDefault()
+    if (!email) return
 
-    setIsSubmitting(true);
-    setError('');
+    setIsSubmitting(true)
+    setError('')
 
     try {
       // Create form data to match Mailchimp's expected format
-      const formData = new FormData();
-      formData.append('EMAIL', email);
-      formData.append('COMPANY', feedback); // Using COMPANY field for feedback
-      formData.append('b_0cd5a0fcdc1d61a426b399d8f_6bbeb33fba', ''); // honeypot field
+      const formData = new FormData()
+      formData.append('EMAIL', email)
+      formData.append('COMPANY', feedback) // Using COMPANY field for feedback
+      formData.append('b_0cd5a0fcdc1d61a426b399d8f_6bbeb33fba', '') // honeypot field
 
       // Submit to Mailchimp
       const response = await fetch(
@@ -45,20 +45,20 @@ export function EmailSignup({
           body: formData,
           mode: 'no-cors', // This is required for Mailchimp
         }
-      );
+      )
 
       // Since we're using no-cors mode, we can't check the response
       // So we assume success if no error is thrown
-      setIsSubmitted(true);
-      setEmail('');
-      setFeedback('');
+      setIsSubmitted(true)
+      setEmail('')
+      setFeedback('')
     } catch (err) {
-      console.error('Email signup error:', err);
-      setError('Something went wrong. Please try again.');
+      console.error('Email signup error:', err)
+      setError('Something went wrong. Please try again.')
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   if (isSubmitted) {
     return (
@@ -70,45 +70,35 @@ export function EmailSignup({
             stroke="currentColor"
             viewBox="0 0 24 24"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M5 13l4 4L19 7"
-            />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
           <p className="font-medium text-green-800">Thanks for subscribing!</p>
-          <p className="mt-1 text-sm text-green-700">
-            We'll notify you when MonoGuard is ready.
-          </p>
+          <p className="mt-1 text-sm text-green-700">We'll notify you when MonoGuard is ready.</p>
         </div>
       </div>
-    );
+    )
   }
 
   const errorStateContent = variant === 'error' && (
     <div className="mb-4 rounded-lg border border-yellow-200 bg-yellow-50 p-4">
-      <h3 className="mb-2 font-semibold text-yellow-800">
-        GitHub API Temporarily Unavailable
-      </h3>
+      <h3 className="mb-2 font-semibold text-yellow-800">GitHub API Temporarily Unavailable</h3>
       <p className="text-sm text-yellow-700">
-        Due to rate limits, public repository analysis is temporarily limited.
-        Get notified when it's restored and receive our monorepo security
-        checklist!
+        Due to rate limits, public repository analysis is temporarily limited. Get notified when
+        it's restored and receive our monorepo security checklist!
       </p>
     </div>
-  );
+  )
 
   const getContainerClass = () => {
     switch (variant) {
       case 'error':
-        return `bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg p-6 ${className}`;
+        return `bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg p-6 ${className}`
       case 'inline':
-        return `bg-white rounded-lg p-4 ${className}`;
+        return `bg-white rounded-lg p-4 ${className}`
       default:
-        return `bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-8 ${className}`;
+        return `bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-8 ${className}`
     }
-  };
+  }
 
   return (
     <div className={getContainerClass()}>
@@ -158,5 +148,5 @@ export function EmailSignup({
         </form>
       </div>
     </div>
-  );
+  )
 }

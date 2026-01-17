@@ -1,16 +1,14 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/analyze')({
   component: AnalyzePage,
-});
+})
 
 function AnalyzePage() {
   return (
     <main className="min-h-screen p-8">
       <div className="mx-auto max-w-4xl">
-        <h1 className="mb-6 text-3xl font-bold text-gray-900">
-          Analyze Your Workspace
-        </h1>
+        <h1 className="mb-6 text-3xl font-bold text-gray-900">Analyze Your Workspace</h1>
         <div className="rounded-lg border-2 border-dashed border-gray-300 p-12 text-center">
           <div className="mb-4">
             <svg
@@ -27,17 +25,13 @@ function AnalyzePage() {
               />
             </svg>
           </div>
-          <p className="text-lg text-gray-600">
-            Drop your workspace.json here or click to upload
-          </p>
-          <p className="mt-2 text-sm text-gray-500">
-            Supports Nx, Lerna, and Turborepo workspaces
-          </p>
+          <p className="text-lg text-gray-600">Drop your workspace.json here or click to upload</p>
+          <p className="mt-2 text-sm text-gray-500">Supports Nx, Lerna, and Turborepo workspaces</p>
           <button className="mt-6 rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-500">
             Select File
           </button>
         </div>
       </div>
     </main>
-  );
+  )
 }

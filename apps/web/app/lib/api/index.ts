@@ -5,56 +5,53 @@
 
 // Core client
 export {
-  apiClient,
   ApiError,
   type ApiResponse,
+  apiClient,
   type PaginatedResponse,
-} from './client';
+} from './client'
 
 // Configuration
-export { API_CONFIG, API_ENDPOINTS } from './config';
-
-// Services
-export { default as AuthService } from './services/auth';
-export { default as ProjectsService } from './services/projects';
-export { default as AnalysisService } from './services/analysis';
-
+export { API_CONFIG, API_ENDPOINTS } from './config'
+export type {
+  AnalysisIssue,
+  AnalysisListParams,
+  AnalysisResult,
+  AnalysisStatus,
+  CreateAnalysisPayload,
+} from './services/analysis'
+export { default as AnalysisService } from './services/analysis'
 // Types from services
 export type {
   LoginResponse,
-  RegisterPayload,
-  PasswordResetPayload,
   PasswordChangePayload,
+  PasswordResetPayload,
+  RegisterPayload,
   UpdateProfilePayload,
-} from './services/auth';
+} from './services/auth'
+// Services
+export { default as AuthService } from './services/auth'
 
 export type {
-  CreateProjectPayload,
-  UpdateProjectPayload,
-  ProjectListParams,
   AnalyzeProjectOptions,
-} from './services/projects';
-
-export type {
-  AnalysisStatus,
-  AnalysisResult,
-  AnalysisIssue,
-  AnalysisListParams,
-  CreateAnalysisPayload,
-} from './services/analysis';
+  CreateProjectPayload,
+  ProjectListParams,
+  UpdateProjectPayload,
+} from './services/projects'
+export { default as ProjectsService } from './services/projects'
 
 // Utility functions
 export const createQueryParams = (params: Record<string, any>): string => {
-  const queryParams = new URLSearchParams();
+  const queryParams = new URLSearchParams()
 
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined && value !== null) {
-      queryParams.append(key, value.toString());
+      queryParams.append(key, value.toString())
     }
-  });
+  })
 
-  return queryParams.toString();
-};
+  return queryParams.toString()
+}
 
 /**
  * Generic pagination helper
@@ -66,38 +63,34 @@ export const createPaginationParams = (
   page,
   limit,
   offset: (page - 1) * limit,
-});
+})
 
 /**
  * Error handling utility
  */
 export const handleApiError = (error: unknown): string => {
   if (error instanceof Error && error.name === 'ApiError') {
-    return error.message;
+    return error.message
   }
 
   if (error instanceof Error) {
-    return error.message;
+    return error.message
   }
 
-  return 'An unexpected error occurred';
-};
+  return 'An unexpected error occurred'
+}
 
 /**
  * Response validation utility
  */
-export const validateApiResponse = <T>(
-  response: any,
-  expectedStatus: number = 200
-): T => {
+export const validateApiResponse = <T>(response: any, expectedStatus: number = 200): T => {
   if (response.status !== expectedStatus) {
     const error = new Error(
-      response.message ||
-        `Expected status ${expectedStatus}, got ${response.status}`
-    );
-    error.name = 'ApiError';
-    throw error;
+      response.message || `Expected status ${expectedStatus}, got ${response.status}`
+    )
+    error.name = 'ApiError'
+    throw error
   }
 
-  return response.data;
-};
+  return response.data
+}

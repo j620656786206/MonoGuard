@@ -1,12 +1,12 @@
-import { type ClassValue, clsx } from 'clsx';
-import { twMerge } from 'tailwind-merge';
+import { type ClassValue, clsx } from 'clsx'
+import { twMerge } from 'tailwind-merge'
 
 /**
  * Utility function to merge Tailwind CSS classes
  * Combines clsx and tailwind-merge for optimal class handling
  */
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
+  return twMerge(clsx(inputs))
 }
 
 /**
@@ -21,31 +21,28 @@ export function formatDate(
     day: 'numeric',
     year: 'numeric',
     ...options,
-  }).format(new Date(date));
+  }).format(new Date(date))
 }
 
 /**
  * Utility function to truncate text with ellipsis
  */
 export function truncate(str: string, length: number): string {
-  return str.length > length ? `${str.substring(0, length)}...` : str;
+  return str.length > length ? `${str.substring(0, length)}...` : str
 }
 
 /**
  * Utility function to capitalize first letter
  */
 export function capitalize(str: string): string {
-  return str.charAt(0).toUpperCase() + str.slice(1);
+  return str.charAt(0).toUpperCase() + str.slice(1)
 }
 
 /**
  * Utility function to format numbers with localization
  */
-export function formatNumber(
-  num: number,
-  options: Intl.NumberFormatOptions = {}
-): string {
-  return new Intl.NumberFormat('en-US', options).format(num);
+export function formatNumber(num: number, options: Intl.NumberFormatOptions = {}): string {
+  return new Intl.NumberFormat('en-US', options).format(num)
 }
 
 /**
@@ -55,11 +52,11 @@ export function debounce<T extends (...args: any[]) => any>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {
-  let timeout: NodeJS.Timeout;
+  let timeout: NodeJS.Timeout
   return (...args: Parameters<T>) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
-  };
+    clearTimeout(timeout)
+    timeout = setTimeout(() => func(...args), wait)
+  }
 }
 
 /**
@@ -74,5 +71,5 @@ export function slugify(text: string): string {
     .replace(/[^\w-]+/g, '')
     .replace(/--+/g, '-')
     .replace(/^-+/, '')
-    .replace(/-+$/, '');
+    .replace(/-+$/, '')
 }

@@ -30,7 +30,13 @@ $(DIST_DIR):
 
 # Run tests
 test:
-	go test -v ./...
+	go test -v -race ./...
+
+# Run tests with coverage
+test-coverage:
+	go test -v -race -coverprofile=coverage.out ./...
+	go tool cover -html=coverage.out -o coverage.html
+	@echo "Coverage report generated: coverage.html"
 
 # Clean build artifacts
 clean:

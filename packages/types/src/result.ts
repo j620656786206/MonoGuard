@@ -17,8 +17,8 @@
  * { data: null, error: { code: "PARSE_ERROR", message: "Invalid JSON" } }
  */
 export interface Result<T> {
-  data: T | null;
-  error: ResultError | null;
+  data: T | null
+  error: ResultError | null
 }
 
 /**
@@ -28,9 +28,9 @@ export interface Result<T> {
  */
 export interface ResultError {
   /** Error code in UPPER_SNAKE_CASE (e.g., PARSE_ERROR, CIRCULAR_DETECTED) */
-  code: string;
+  code: string
   /** Human-readable error message */
-  message: string;
+  message: string
 }
 
 /**
@@ -44,19 +44,17 @@ export const ErrorCodes = {
   ANALYSIS_FAILED: 'ANALYSIS_FAILED',
   WASM_ERROR: 'WASM_ERROR',
   TIMEOUT: 'TIMEOUT',
-} as const;
+} as const
 
-export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];
+export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes]
 
 /**
  * Type guard to check if a Result is successful
  * @param result - The Result to check
  * @returns true if the result has data and no error
  */
-export function isSuccess<T>(
-  result: Result<T>
-): result is Result<T> & { data: T; error: null } {
-  return result.error === null && result.data !== null;
+export function isSuccess<T>(result: Result<T>): result is Result<T> & { data: T; error: null } {
+  return result.error === null && result.data !== null
 }
 
 /**
@@ -67,5 +65,5 @@ export function isSuccess<T>(
 export function isError<T>(
   result: Result<T>
 ): result is Result<T> & { data: null; error: ResultError } {
-  return result.error !== null;
+  return result.error !== null
 }

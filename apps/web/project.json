@@ -43,6 +43,21 @@
         "command": "pnpm vitest run",
         "cwd": "apps/web"
       }
+    },
+    "test:watch": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm vitest",
+        "cwd": "apps/web"
+      }
+    },
+    "test:coverage": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm vitest run --coverage",
+        "cwd": "apps/web"
+      },
+      "outputs": ["{projectRoot}/coverage"]
     }
   }
 }

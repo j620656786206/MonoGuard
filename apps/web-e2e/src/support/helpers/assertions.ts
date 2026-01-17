@@ -5,8 +5,8 @@
  * These supplement Playwright's built-in expect() assertions.
  */
 
-import type { Page, Locator } from '@playwright/test';
-import { expect } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test'
+import { expect } from '@playwright/test'
 
 /**
  * Assert that the health score is displayed with a specific value range
@@ -16,49 +16,40 @@ export async function assertHealthScore(
   minScore: number,
   maxScore: number = 100
 ): Promise<void> {
-  const healthScoreElement = page.locator('[data-testid="health-score-value"]');
-  await expect(healthScoreElement).toBeVisible();
+  const healthScoreElement = page.locator('[data-testid="health-score-value"]')
+  await expect(healthScoreElement).toBeVisible()
 
-  const scoreText = await healthScoreElement.textContent();
-  const score = parseInt(scoreText || '0', 10);
+  const scoreText = await healthScoreElement.textContent()
+  const score = parseInt(scoreText || '0', 10)
 
-  expect(score).toBeGreaterThanOrEqual(minScore);
-  expect(score).toBeLessThanOrEqual(maxScore);
+  expect(score).toBeGreaterThanOrEqual(minScore)
+  expect(score).toBeLessThanOrEqual(maxScore)
 }
 
 /**
  * Assert that a specific number of issues are displayed
  */
-export async function assertIssueCount(
-  page: Page,
-  expectedCount: number
-): Promise<void> {
-  const issueCountElement = page.locator('[data-testid="issue-count"]');
-  await expect(issueCountElement).toBeVisible();
-  await expect(issueCountElement).toHaveText(expectedCount.toString());
+export async function assertIssueCount(page: Page, expectedCount: number): Promise<void> {
+  const issueCountElement = page.locator('[data-testid="issue-count"]')
+  await expect(issueCountElement).toBeVisible()
+  await expect(issueCountElement).toHaveText(expectedCount.toString())
 }
 
 /**
  * Assert that a toast notification appears with specific text
  */
-export async function assertToastMessage(
-  page: Page,
-  messageContains: string
-): Promise<void> {
-  const toast = page.locator('[data-testid="toast-message"]');
-  await expect(toast).toBeVisible();
-  await expect(toast).toContainText(messageContains);
+export async function assertToastMessage(page: Page, messageContains: string): Promise<void> {
+  const toast = page.locator('[data-testid="toast-message"]')
+  await expect(toast).toBeVisible()
+  await expect(toast).toContainText(messageContains)
 }
 
 /**
  * Assert that an element is not present in the DOM
  */
-export async function assertNotPresent(
-  page: Page,
-  selector: string
-): Promise<void> {
-  const element = page.locator(selector);
-  await expect(element).toHaveCount(0);
+export async function assertNotPresent(page: Page, selector: string): Promise<void> {
+  const element = page.locator(selector)
+  await expect(element).toHaveCount(0)
 }
 
 /**
@@ -66,22 +57,17 @@ export async function assertNotPresent(
  */
 export async function assertLoadingComplete(page: Page): Promise<void> {
   // Wait for any loading spinners to disappear
-  const loadingIndicator = page.locator('[data-testid="loading-indicator"]');
-  await expect(loadingIndicator).toBeHidden({ timeout: 30000 });
+  const loadingIndicator = page.locator('[data-testid="loading-indicator"]')
+  await expect(loadingIndicator).toBeHidden({ timeout: 30000 })
 }
 
 /**
  * Assert that the page has no console errors
  */
-export async function assertNoConsoleErrors(
-  page: Page,
-  errors: string[]
-): Promise<void> {
+export async function assertNoConsoleErrors(page: Page, errors: string[]): Promise<void> {
   const criticalErrors = errors.filter(
-    (error) =>
-      !error.includes('[React DevTools]') &&
-      !error.includes('favicon.ico')
-  );
+    (error) => !error.includes('[React DevTools]') && !error.includes('favicon.ico')
+  )
 
-  expect(criticalErrors).toHaveLength(0);
+  expect(criticalErrors).toHaveLength(0)
 }

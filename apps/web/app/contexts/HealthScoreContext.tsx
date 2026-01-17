@@ -1,24 +1,22 @@
-'use client';
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+'use client'
+import React, { createContext, type ReactNode, useContext, useState } from 'react'
 
 interface HealthScoreContextType {
-  healthScore: number;
-  setHealthScore: (score: number) => void;
-  isLoading: boolean;
-  setIsLoading: (loading: boolean) => void;
+  healthScore: number
+  setHealthScore: (score: number) => void
+  isLoading: boolean
+  setIsLoading: (loading: boolean) => void
 }
 
-const HealthScoreContext = createContext<HealthScoreContextType | undefined>(
-  undefined
-);
+const HealthScoreContext = createContext<HealthScoreContextType | undefined>(undefined)
 
 interface HealthScoreProviderProps {
-  children: ReactNode;
+  children: ReactNode
 }
 
 export function HealthScoreProvider({ children }: HealthScoreProviderProps) {
-  const [healthScore, setHealthScore] = useState<number>(0);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [healthScore, setHealthScore] = useState<number>(0)
+  const [isLoading, setIsLoading] = useState<boolean>(true)
 
   return (
     <HealthScoreContext.Provider
@@ -31,13 +29,13 @@ export function HealthScoreProvider({ children }: HealthScoreProviderProps) {
     >
       {children}
     </HealthScoreContext.Provider>
-  );
+  )
 }
 
 export function useHealthScore() {
-  const context = useContext(HealthScoreContext);
+  const context = useContext(HealthScoreContext)
   if (context === undefined) {
-    throw new Error('useHealthScore must be used within a HealthScoreProvider');
+    throw new Error('useHealthScore must be used within a HealthScoreProvider')
   }
-  return context;
+  return context
 }

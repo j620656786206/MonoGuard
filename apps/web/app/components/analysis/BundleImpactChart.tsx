@@ -1,59 +1,54 @@
-'use client';
+'use client'
 
-import React, { useState } from 'react';
-import { BundleImpactReport, BundleBreakdown } from '@monoguard/types';
+import type { BundleBreakdown, BundleImpactReport } from '@monoguard/types'
+import type React from 'react'
+import { useState } from 'react'
 
 export interface BundleImpactChartProps {
-  bundleImpact: BundleImpactReport;
+  bundleImpact: BundleImpactReport
 }
 
-export const BundleImpactChart: React.FC<BundleImpactChartProps> = ({
-  bundleImpact,
-}) => {
-  const [sortBy, setSortBy] = useState<'size' | 'percentage' | 'duplicates'>(
-    'size'
-  );
-  const [showOnlyDuplicates, setShowOnlyDuplicates] = useState(false);
+export const BundleImpactChart: React.FC<BundleImpactChartProps> = ({ bundleImpact }) => {
+  const [sortBy, setSortBy] = useState<'size' | 'percentage' | 'duplicates'>('size')
+  const [showOnlyDuplicates, setShowOnlyDuplicates] = useState(false)
 
   const filteredBreakdown = showOnlyDuplicates
     ? bundleImpact.breakdown.filter((item) => item.duplicates > 0)
-    : bundleImpact.breakdown;
+    : bundleImpact.breakdown
 
   const sortedBreakdown = [...filteredBreakdown].sort((a, b) => {
     switch (sortBy) {
       case 'size':
-        return parseFloat(b.size) - parseFloat(a.size);
+        return parseFloat(b.size) - parseFloat(a.size)
       case 'percentage':
-        return b.percentage - a.percentage;
+        return b.percentage - a.percentage
       case 'duplicates':
-        return b.duplicates - a.duplicates;
+        return b.duplicates - a.duplicates
       default:
-        return 0;
+        return 0
     }
-  });
+  })
 
   const formatSize = (size: string): number => {
-    const match = size.match(/([\d.]+)\s*(KB|MB|GB)/i);
-    if (!match) return 0;
+    const match = size.match(/([\d.]+)\s*(KB|MB|GB)/i)
+    if (!match) return 0
 
-    const value = parseFloat(match[1]);
-    const unit = match[2].toUpperCase();
+    const value = parseFloat(match[1])
+    const unit = match[2].toUpperCase()
 
     switch (unit) {
       case 'GB':
-        return value * 1024 * 1024;
+        return value * 1024 * 1024
       case 'MB':
-        return value * 1024;
+        return value * 1024
       case 'KB':
-        return value;
+        return value
       default:
-        return value;
+        return value
     }
-  };
+  }
 
-  const maxSize = Math.max(
-    ...sortedBreakdown.map((item) => formatSize(item.size))
-  );
+  const maxSize = Math.max(...sortedBreakdown.map((item) => formatSize(item.size)))
 
   return (
     <div className="space-y-6">
@@ -63,17 +58,10 @@ export const BundleImpactChart: React.FC<BundleImpactChartProps> = ({
           <div className="flex items-center justify-between">
             <div>
               <div className="text-2xl font-bold">{bundleImpact.totalSize}</div>
-              <div className="text-sm font-medium opacity-80">
-                Total Bundle Size
-              </div>
+              <div className="text-sm font-medium opacity-80">Total Bundle Size</div>
             </div>
             <div className="opacity-60">
-              <svg
-                className="h-6 w-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
+              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -88,20 +76,11 @@ export const BundleImpactChart: React.FC<BundleImpactChartProps> = ({
         <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-yellow-700">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-2xl font-bold">
-                {bundleImpact.duplicateSize}
-              </div>
-              <div className="text-sm font-medium opacity-80">
-                Duplicate Size
-              </div>
+              <div className="text-2xl font-bold">{bundleImpact.duplicateSize}</div>
+              <div className="text-sm font-medium opacity-80">Duplicate Size</div>
             </div>
             <div className="opacity-60">
-              <svg
-                className="h-6 w-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
+              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -116,18 +95,11 @@ export const BundleImpactChart: React.FC<BundleImpactChartProps> = ({
         <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-2xl font-bold">
-                {bundleImpact.unusedSize}
-              </div>
+              <div className="text-2xl font-bold">{bundleImpact.unusedSize}</div>
               <div className="text-sm font-medium opacity-80">Unused Size</div>
             </div>
             <div className="opacity-60">
-              <svg
-                className="h-6 w-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
+              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -142,20 +114,11 @@ export const BundleImpactChart: React.FC<BundleImpactChartProps> = ({
         <div className="rounded-lg border border-green-200 bg-green-50 p-4 text-green-700">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-2xl font-bold">
-                {bundleImpact.potentialSavings}
-              </div>
-              <div className="text-sm font-medium opacity-80">
-                Potential Savings
-              </div>
+              <div className="text-2xl font-bold">{bundleImpact.potentialSavings}</div>
+              <div className="text-sm font-medium opacity-80">Potential Savings</div>
             </div>
             <div className="opacity-60">
-              <svg
-                className="h-6 w-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
+              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -172,9 +135,7 @@ export const BundleImpactChart: React.FC<BundleImpactChartProps> = ({
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-2">
-            <label className="text-sm font-medium text-gray-700">
-              Sort by:
-            </label>
+            <label className="text-sm font-medium text-gray-700">Sort by:</label>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
@@ -193,15 +154,12 @@ export const BundleImpactChart: React.FC<BundleImpactChartProps> = ({
               onChange={(e) => setShowOnlyDuplicates(e.target.checked)}
               className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
             />
-            <span className="text-sm text-gray-700">
-              Show only packages with duplicates
-            </span>
+            <span className="text-sm text-gray-700">Show only packages with duplicates</span>
           </label>
         </div>
 
         <div className="text-sm text-gray-600">
-          Showing {sortedBreakdown.length} of {bundleImpact.breakdown.length}{' '}
-          packages
+          Showing {sortedBreakdown.length} of {bundleImpact.breakdown.length} packages
         </div>
       </div>
 
@@ -222,12 +180,7 @@ export const BundleImpactChart: React.FC<BundleImpactChartProps> = ({
         <div className="divide-y divide-gray-200">
           {sortedBreakdown.length > 0 ? (
             sortedBreakdown.map((item, index) => (
-              <BundleBreakdownRow
-                key={index}
-                item={item}
-                maxSize={maxSize}
-                rank={index + 1}
-              />
+              <BundleBreakdownRow key={index} item={item} maxSize={maxSize} rank={index + 1} />
             ))
           ) : (
             <div className="px-6 py-8 text-center text-gray-500">
@@ -256,12 +209,9 @@ export const BundleImpactChart: React.FC<BundleImpactChartProps> = ({
               />
             </svg>
             <div>
-              <div className="font-medium">
-                Eliminate duplicate dependencies
-              </div>
+              <div className="font-medium">Eliminate duplicate dependencies</div>
               <div className="text-sm text-blue-700">
-                Could save {bundleImpact.duplicateSize} by consolidating
-                duplicate packages
+                Could save {bundleImpact.duplicateSize} by consolidating duplicate packages
               </div>
             </div>
           </div>
@@ -281,8 +231,7 @@ export const BundleImpactChart: React.FC<BundleImpactChartProps> = ({
             <div>
               <div className="font-medium">Remove unused dependencies</div>
               <div className="text-sm text-blue-700">
-                Additional {bundleImpact.unusedSize} can be saved by removing
-                unused packages
+                Additional {bundleImpact.unusedSize} can be saved by removing unused packages
               </div>
             </div>
           </div>
@@ -309,17 +258,17 @@ export const BundleImpactChart: React.FC<BundleImpactChartProps> = ({
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
 // Bundle Breakdown Row Component
 const BundleBreakdownRow: React.FC<{
-  item: BundleBreakdown;
-  maxSize: number;
-  rank: number;
+  item: BundleBreakdown
+  maxSize: number
+  rank: number
 }> = ({ item, maxSize, rank }) => {
-  const sizeKB = formatSize(item.size);
-  const widthPercent = maxSize > 0 ? (sizeKB / maxSize) * 100 : 0;
+  const sizeKB = formatSize(item.size)
+  const widthPercent = maxSize > 0 ? (sizeKB / maxSize) * 100 : 0
 
   return (
     <div className="px-6 py-3">
@@ -327,20 +276,14 @@ const BundleBreakdownRow: React.FC<{
         {/* Package Name */}
         <div className="col-span-4 flex items-center space-x-2">
           <span className="w-6 font-mono text-xs text-gray-400">#{rank}</span>
-          <span className="truncate font-medium text-gray-900">
-            {item.packageName}
-          </span>
+          <span className="truncate font-medium text-gray-900">{item.packageName}</span>
         </div>
 
         {/* Size */}
-        <div className="col-span-2 font-mono text-sm text-gray-600">
-          {item.size}
-        </div>
+        <div className="col-span-2 font-mono text-sm text-gray-600">{item.size}</div>
 
         {/* Percentage */}
-        <div className="col-span-2 text-sm text-gray-600">
-          {item.percentage.toFixed(1)}%
-        </div>
+        <div className="col-span-2 text-sm text-gray-600">{item.percentage.toFixed(1)}%</div>
 
         {/* Duplicates */}
         <div className="col-span-2">
@@ -366,27 +309,27 @@ const BundleBreakdownRow: React.FC<{
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
 // Helper function to format size
 const formatSize = (size: string): number => {
-  const match = size.match(/([\d.]+)\s*(B|KB|MB|GB)/i);
-  if (!match) return 0;
+  const match = size.match(/([\d.]+)\s*(B|KB|MB|GB)/i)
+  if (!match) return 0
 
-  const value = parseFloat(match[1]);
-  const unit = match[2].toUpperCase();
+  const value = parseFloat(match[1])
+  const unit = match[2].toUpperCase()
 
   switch (unit) {
     case 'GB':
-      return value * 1024 * 1024;
+      return value * 1024 * 1024
     case 'MB':
-      return value * 1024;
+      return value * 1024
     case 'KB':
-      return value;
+      return value
     case 'B':
-      return value / 1024;
+      return value / 1024
     default:
-      return value;
+      return value
   }
-};
+}

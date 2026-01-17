@@ -1,19 +1,19 @@
-'use client';
+'use client'
 
-import React, { useRef, ChangeEvent } from 'react';
-import { FileProcessingResult } from '@monoguard/types';
-import { useFileUpload } from '@/hooks/api/useFileUpload';
-import { useDragAndDrop } from '@/hooks/ui/useDragAndDrop';
-import { cn } from '@/lib/utils';
+import type { FileProcessingResult } from '@monoguard/types'
+import React, { type ChangeEvent, useRef } from 'react'
+import { useFileUpload } from '@/hooks/api/useFileUpload'
+import { useDragAndDrop } from '@/hooks/ui/useDragAndDrop'
+import { cn } from '@/lib/utils'
 
 export interface FileUploadProps {
-  onUploadComplete?: (result: FileProcessingResult) => void;
-  onUploadError?: (errors: string[]) => void;
-  className?: string;
-  disabled?: boolean;
-  accept?: string[];
-  multiple?: boolean;
-  maxFiles?: number;
+  onUploadComplete?: (result: FileProcessingResult) => void
+  onUploadError?: (errors: string[]) => void
+  className?: string
+  disabled?: boolean
+  accept?: string[]
+  multiple?: boolean
+  maxFiles?: number
 }
 
 export const FileUpload: React.FC<FileUploadProps> = ({
@@ -25,79 +25,67 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   multiple = true,
   maxFiles = 10,
 }) => {
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const {
-    isUploading,
-    progress,
-    result,
-    errors,
-    uploadFiles,
-    reset,
-    validateFiles,
-  } = useFileUpload();
+  const { isUploading, progress, result, errors, uploadFiles, reset, validateFiles } =
+    useFileUpload()
 
   const handleFileDrop = (files: File[]) => {
-    if (disabled || isUploading) return;
+    if (disabled || isUploading) return
 
-    const filesToUpload = maxFiles ? files.slice(0, maxFiles) : files;
-    handleFileUpload(filesToUpload);
-  };
+    const filesToUpload = maxFiles ? files.slice(0, maxFiles) : files
+    handleFileUpload(filesToUpload)
+  }
 
-  const {
-    isDragOver,
-    isDragActive,
-    onDragEnter,
-    onDragOver,
-    onDragLeave,
-    onDrop,
-  } = useDragAndDrop({
-    onFileDrop: handleFileDrop,
-    accept,
-  });
+  const { isDragOver, isDragActive, onDragEnter, onDragOver, onDragLeave, onDrop } = useDragAndDrop(
+    {
+      onFileDrop: handleFileDrop,
+      accept,
+    }
+  )
 
   const handleFileSelect = (e: ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
+    const files = Array.from(e.target.files || [])
     if (files.length > 0) {
-      handleFileUpload(files);
+      handleFileUpload(files)
     }
-  };
+  }
 
   const handleFileUpload = async (files: File[]) => {
     try {
-      await uploadFiles(files);
+      await uploadFiles(files)
     } catch (error) {
-      console.error('Upload failed:', error);
+      console.error('Upload failed:', error)
     }
-  };
+  }
 
   const handleButtonClick = () => {
     if (!disabled && !isUploading && fileInputRef.current) {
-      fileInputRef.current.click();
+      fileInputRef.current.click()
     }
-  };
+  }
 
   const handleReset = () => {
-    reset();
+    reset()
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = ''
     }
-  };
+  }
 
   // Handle upload completion/error
   React.useEffect(() => {
     if (result && !isUploading) {
-      onUploadComplete?.(result);
+      onUploadComplete?.(result)
     }
-  }, [result, isUploading]);
+  }, [result, isUploading])
 
   React.useEffect(() => {
     if (errors.length > 0 && !isUploading) {
-      onUploadError?.(errors);
+      onUploadError?.(errors)
     }
-  }, [errors, isUploading]);
+  }, [errors, isUploading])
 
-  const acceptString = accept.join(',');
+  const acceptString = accept.join(',')
 
   return (
     <div className={cn('w-full', className)}>
@@ -124,16 +112,13 @@ export const FileUpload: React.FC<FileUploadProps> = ({
           'min-h-[200px] cursor-pointer hover:bg-gray-50',
           {
             // Default state
-            'border-gray-300 bg-white text-gray-600':
-              !isDragActive && !isDragOver && !disabled,
+            'border-gray-300 bg-white text-gray-600': !isDragActive && !isDragOver && !disabled,
 
             // Drag states
-            'border-blue-500 bg-blue-50 text-blue-600':
-              isDragActive || isDragOver,
+            'border-blue-500 bg-blue-50 text-blue-600': isDragActive || isDragOver,
 
             // Disabled state
-            'cursor-not-allowed border-gray-200 bg-gray-50 text-gray-400':
-              disabled,
+            'cursor-not-allowed border-gray-200 bg-gray-50 text-gray-400': disabled,
 
             // Uploading state
             'border-blue-500 bg-blue-50': isUploading,
@@ -153,16 +138,14 @@ export const FileUpload: React.FC<FileUploadProps> = ({
       </div>
 
       {/* Error Messages */}
-      {errors.length > 0 && !isUploading && (
-        <ErrorMessages errors={errors} onReset={handleReset} />
-      )}
+      {errors.length > 0 && !isUploading && <ErrorMessages errors={errors} onReset={handleReset} />}
     </div>
-  );
-};
+  )
+}
 
 // Upload Progress Component
 interface UploadProgressProps {
-  progress: { percentage: number; loaded: number; total: number } | null;
+  progress: { percentage: number; loaded: number; total: number } | null
 }
 
 const UploadProgress: React.FC<UploadProgressProps> = ({ progress }) => (
@@ -191,20 +174,16 @@ const UploadProgress: React.FC<UploadProgressProps> = ({ progress }) => (
       </div>
     )}
   </div>
-);
+)
 
 // Upload Prompt Component
 interface UploadPromptProps {
-  isDragActive: boolean;
-  accept: string[];
-  disabled: boolean;
+  isDragActive: boolean
+  accept: string[]
+  disabled: boolean
 }
 
-const UploadPrompt: React.FC<UploadPromptProps> = ({
-  isDragActive,
-  accept,
-  disabled,
-}) => (
+const UploadPrompt: React.FC<UploadPromptProps> = ({ isDragActive, accept, disabled }) => (
   <>
     <div className="mb-4">
       <svg
@@ -228,20 +207,14 @@ const UploadPrompt: React.FC<UploadPromptProps> = ({
 
     <div className="space-y-2">
       <p className="text-lg font-medium">
-        {isDragActive
-          ? 'Drop files here'
-          : disabled
-            ? 'Upload disabled'
-            : 'Upload your files'}
+        {isDragActive ? 'Drop files here' : disabled ? 'Upload disabled' : 'Upload your files'}
       </p>
 
       {!disabled && (
         <>
           <p className="text-sm">
             Drag and drop files here, or{' '}
-            <span className="font-medium text-blue-600 hover:text-blue-700">
-              click to browse
-            </span>
+            <span className="font-medium text-blue-600 hover:text-blue-700">click to browse</span>
           </p>
 
           <p className="text-xs text-gray-500">
@@ -251,22 +224,19 @@ const UploadPrompt: React.FC<UploadPromptProps> = ({
       )}
     </div>
   </>
-);
+)
 
 // Error Messages Component
 interface ErrorMessagesProps {
-  errors: string[];
-  onReset: () => void;
+  errors: string[]
+  onReset: () => void
 }
 
 const ErrorMessages: React.FC<ErrorMessagesProps> = ({ errors, onReset }) => (
   <div className="mt-6 rounded-lg border border-red-200 bg-red-50 p-4">
     <div className="mb-3 flex items-center justify-between">
       <h4 className="font-medium text-red-800">Upload Failed</h4>
-      <button
-        onClick={onReset}
-        className="text-sm text-red-600 underline hover:text-red-700"
-      >
+      <button onClick={onReset} className="text-sm text-red-600 underline hover:text-red-700">
         Try Again
       </button>
     </div>
@@ -277,4 +247,4 @@ const ErrorMessages: React.FC<ErrorMessagesProps> = ({ errors, onReset }) => (
       ))}
     </ul>
   </div>
-);
+)

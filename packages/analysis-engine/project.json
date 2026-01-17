@@ -18,6 +18,14 @@
         "cwd": "packages/analysis-engine"
       }
     },
+    "test:coverage": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "make test-coverage",
+        "cwd": "packages/analysis-engine"
+      },
+      "outputs": ["{projectRoot}/coverage.out", "{projectRoot}/coverage.html"]
+    },
     "clean": {
       "executor": "nx:run-commands",
       "options": {

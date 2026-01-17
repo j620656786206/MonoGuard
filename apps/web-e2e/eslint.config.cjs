@@ -1,6 +1,6 @@
-const playwright = require('eslint-plugin-playwright');
-const tseslint = require('@typescript-eslint/eslint-plugin');
-const tsparser = require('@typescript-eslint/parser');
+const playwright = require('eslint-plugin-playwright')
+const tseslint = require('@typescript-eslint/eslint-plugin')
+const tsparser = require('@typescript-eslint/parser')
 
 module.exports = [
   // Playwright recommended config
@@ -46,4 +46,4 @@ module.exports = [
   {
     ignores: ['node_modules/**/*', 'test-results/**/*', 'playwright-report/**/*'],
   },
-];
+]

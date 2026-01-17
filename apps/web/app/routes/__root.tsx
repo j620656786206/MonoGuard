@@ -1,5 +1,5 @@
-import { createRootRoute, Outlet } from '@tanstack/react-router';
-import { lazy, Suspense } from 'react';
+import { createRootRoute, Outlet } from '@tanstack/react-router'
+import { lazy, Suspense } from 'react'
 
 // Lazy load devtools only in development to exclude from production bundle
 const TanStackRouterDevtools = import.meta.env.DEV
@@ -8,11 +8,11 @@ const TanStackRouterDevtools = import.meta.env.DEV
         default: mod.TanStackRouterDevtools,
       }))
     )
-  : () => null;
+  : () => null
 
 export const Route = createRootRoute({
   component: RootComponent,
-});
+})
 
 function RootComponent() {
   return (
@@ -24,5 +24,5 @@ function RootComponent() {
         </Suspense>
       )}
     </div>
-  );
+  )
 }

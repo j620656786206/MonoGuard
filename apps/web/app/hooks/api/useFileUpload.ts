@@ -1,25 +1,23 @@
-'use client';
+'use client'
 
-import { useState, useCallback } from 'react';
-import { FileProcessingResult } from '@monoguard/types';
-import { UploadService, UploadProgress } from '@/lib/api/services/upload';
+import type { FileProcessingResult } from '@monoguard/types'
+import { useCallback, useState } from 'react'
+import { type UploadProgress, UploadService } from '@/lib/api/services/upload'
 
 export interface UseFileUploadState {
-  isUploading: boolean;
-  progress: UploadProgress | null;
-  result: FileProcessingResult | null;
-  errors: string[];
+  isUploading: boolean
+  progress: UploadProgress | null
+  result: FileProcessingResult | null
+  errors: string[]
 }
 
 export interface UseFileUploadActions {
-  uploadFiles: (files: File[]) => Promise<void>;
-  reset: () => void;
-  validateFiles: (files: File[]) => { valid: boolean; errors: string[] };
+  uploadFiles: (files: File[]) => Promise<void>
+  reset: () => void
+  validateFiles: (files: File[]) => { valid: boolean; errors: string[] }
 }
 
-export interface UseFileUploadReturn
-  extends UseFileUploadState,
-    UseFileUploadActions {}
+export interface UseFileUploadReturn extends UseFileUploadState, UseFileUploadActions {}
 
 export const useFileUpload = (): UseFileUploadReturn => {
   const [state, setState] = useState<UseFileUploadState>({
@@ -27,7 +25,7 @@ export const useFileUpload = (): UseFileUploadReturn => {
     progress: null,
     result: null,
     errors: [],
-  });
+  })
 
   const uploadFiles = useCallback(async (files: File[]) => {
     // Reset state
@@ -36,18 +34,18 @@ export const useFileUpload = (): UseFileUploadReturn => {
       progress: null,
       result: null,
       errors: [],
-    });
+    })
 
     try {
       // Validate files first
-      const validation = UploadService.validateFiles(files);
+      const validation = UploadService.validateFiles(files)
       if (!validation.valid) {
         setState((prev) => ({
           ...prev,
           isUploading: false,
           errors: validation.errors,
-        }));
-        return;
+        }))
+        return
       }
 
       // Upload files with progress tracking
@@ -55,8 +53,8 @@ export const useFileUpload = (): UseFileUploadReturn => {
         setState((prev) => ({
           ...prev,
           progress,
-        }));
-      });
+        }))
+      })
 
       // Update state with result
       setState((prev) => ({
@@ -65,15 +63,15 @@ export const useFileUpload = (): UseFileUploadReturn => {
         result,
         progress: null,
         errors: [],
-      }));
+      }))
     } catch (error: any) {
-      console.error('Upload error:', error);
+      console.error('Upload error:', error)
 
-      let errorMessage = 'Upload failed';
+      let errorMessage = 'Upload failed'
       if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
+        errorMessage = error.response.data.message
       } else if (error.message) {
-        errorMessage = error.message;
+        errorMessage = error.message
       }
 
       setState((prev) => ({
@@ -81,9 +79,9 @@ export const useFileUpload = (): UseFileUploadReturn => {
         isUploading: false,
         progress: null,
         errors: [errorMessage],
-      }));
+      }))
     }
-  }, []);
+  }, [])
 
   const reset = useCallback(() => {
     setState({
@@ -91,17 +89,17 @@ export const useFileUpload = (): UseFileUploadReturn => {
       progress: null,
       result: null,
       errors: [],
-    });
-  }, []);
+    })
+  }, [])
 
   const validateFiles = useCallback((files: File[]) => {
-    return UploadService.validateFiles(files);
-  }, []);
+    return UploadService.validateFiles(files)
+  }, [])
 
   return {
     ...state,
     uploadFiles,
     reset,
     validateFiles,
-  };
-};
+  }
+}

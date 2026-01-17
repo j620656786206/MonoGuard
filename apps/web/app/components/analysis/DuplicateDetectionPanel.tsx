@@ -1,43 +1,33 @@
-'use client';
+'use client'
 
-import React, { useState } from 'react';
-import {
+import type {
   DuplicateDetectionResults,
   DuplicateGroup,
   DuplicateRecommendation,
-} from '@monoguard/types';
+} from '@monoguard/types'
+import type React from 'react'
+import { useState } from 'react'
 
 export interface DuplicateDetectionPanelProps {
-  duplicates: DuplicateDetectionResults;
+  duplicates: DuplicateDetectionResults
 }
 
-export const DuplicateDetectionPanel: React.FC<
-  DuplicateDetectionPanelProps
-> = ({ duplicates }) => {
-  const [activeTab, setActiveTab] = useState<
-    'overview' | 'groups' | 'recommendations'
-  >('overview');
-  const [selectedRiskLevel, setSelectedRiskLevel] = useState<string>('all');
-  const [searchTerm, setSearchTerm] = useState('');
+export const DuplicateDetectionPanel: React.FC<DuplicateDetectionPanelProps> = ({ duplicates }) => {
+  const [activeTab, setActiveTab] = useState<'overview' | 'groups' | 'recommendations'>('overview')
+  const [selectedRiskLevel, setSelectedRiskLevel] = useState<string>('all')
+  const [searchTerm, setSearchTerm] = useState('')
 
   const filteredGroups = duplicates.duplicateGroups.filter((group) => {
-    const matchesSearch = group.packageName
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    const matchesRisk =
-      selectedRiskLevel === 'all' || group.riskLevel === selectedRiskLevel;
-    return matchesSearch && matchesRisk;
-  });
+    const matchesSearch = group.packageName.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesRisk = selectedRiskLevel === 'all' || group.riskLevel === selectedRiskLevel
+    return matchesSearch && matchesRisk
+  })
 
   if (duplicates.totalDuplicates === 0) {
     return (
       <div className="rounded-lg border border-green-200 bg-green-50 p-8 text-center">
         <div className="mb-2 text-green-600">
-          <svg
-            className="mx-auto h-12 w-12"
-            fill="currentColor"
-            viewBox="0 0 20 20"
-          >
+          <svg className="mx-auto h-12 w-12" fill="currentColor" viewBox="0 0 20 20">
             <path
               fillRule="evenodd"
               d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
@@ -45,23 +35,17 @@ export const DuplicateDetectionPanel: React.FC<
             />
           </svg>
         </div>
-        <h3 className="mb-1 text-lg font-medium text-green-900">
-          No Duplicate Dependencies
-        </h3>
-        <p className="text-green-700">
-          Excellent! Your project has no duplicate dependencies.
-        </p>
+        <h3 className="mb-1 text-lg font-medium text-green-900">No Duplicate Dependencies</h3>
+        <p className="text-green-700">Excellent! Your project has no duplicate dependencies.</p>
       </div>
-    );
+    )
   }
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900">
-          Duplicate Detection
-        </h3>
+        <h3 className="text-lg font-semibold text-gray-900">Duplicate Detection</h3>
         <div className="flex rounded-lg bg-gray-100 p-1">
           <button
             onClick={() => setActiveTab('overview')}
@@ -111,20 +95,18 @@ export const DuplicateDetectionPanel: React.FC<
         <RecommendationsSection recommendations={duplicates.recommendations} />
       )}
     </div>
-  );
-};
+  )
+}
 
 // Overview Section
-const OverviewSection: React.FC<{ duplicates: DuplicateDetectionResults }> = ({
-  duplicates,
-}) => {
+const OverviewSection: React.FC<{ duplicates: DuplicateDetectionResults }> = ({ duplicates }) => {
   const riskLevelCounts = duplicates.duplicateGroups.reduce(
     (acc, group) => {
-      acc[group.riskLevel] = (acc[group.riskLevel] || 0) + 1;
-      return acc;
+      acc[group.riskLevel] = (acc[group.riskLevel] || 0) + 1
+      return acc
     },
     {} as Record<string, number>
-  );
+  )
 
   return (
     <div className="space-y-6">
@@ -133,20 +115,11 @@ const OverviewSection: React.FC<{ duplicates: DuplicateDetectionResults }> = ({
         <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-2xl font-bold">
-                {duplicates.totalDuplicates}
-              </div>
-              <div className="text-sm font-medium opacity-80">
-                Total Duplicates
-              </div>
+              <div className="text-2xl font-bold">{duplicates.totalDuplicates}</div>
+              <div className="text-sm font-medium opacity-80">Total Duplicates</div>
             </div>
             <div className="opacity-60">
-              <svg
-                className="h-6 w-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
+              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -161,20 +134,11 @@ const OverviewSection: React.FC<{ duplicates: DuplicateDetectionResults }> = ({
         <div className="rounded-lg border border-green-200 bg-green-50 p-4 text-green-700">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-2xl font-bold">
-                {duplicates.potentialSavings}
-              </div>
-              <div className="text-sm font-medium opacity-80">
-                Potential Savings
-              </div>
+              <div className="text-2xl font-bold">{duplicates.potentialSavings}</div>
+              <div className="text-sm font-medium opacity-80">Potential Savings</div>
             </div>
             <div className="opacity-60">
-              <svg
-                className="h-6 w-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
+              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -189,20 +153,11 @@ const OverviewSection: React.FC<{ duplicates: DuplicateDetectionResults }> = ({
         <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-yellow-700">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-2xl font-bold">
-                {riskLevelCounts.high || 0}
-              </div>
-              <div className="text-sm font-medium opacity-80">
-                High Risk Groups
-              </div>
+              <div className="text-2xl font-bold">{riskLevelCounts.high || 0}</div>
+              <div className="text-sm font-medium opacity-80">High Risk Groups</div>
             </div>
             <div className="opacity-60">
-              <svg
-                className="h-6 w-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
+              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -217,20 +172,11 @@ const OverviewSection: React.FC<{ duplicates: DuplicateDetectionResults }> = ({
         <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-blue-700">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-2xl font-bold">
-                {duplicates.duplicateGroups.length}
-              </div>
-              <div className="text-sm font-medium opacity-80">
-                Duplicate Groups
-              </div>
+              <div className="text-2xl font-bold">{duplicates.duplicateGroups.length}</div>
+              <div className="text-sm font-medium opacity-80">Duplicate Groups</div>
             </div>
             <div className="opacity-60">
-              <svg
-                className="h-6 w-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
+              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -245,27 +191,23 @@ const OverviewSection: React.FC<{ duplicates: DuplicateDetectionResults }> = ({
 
       {/* Risk Distribution */}
       <div className="rounded-lg border border-gray-200 bg-white p-6">
-        <h4 className="mb-4 text-lg font-medium text-gray-900">
-          Risk Level Distribution
-        </h4>
+        <h4 className="mb-4 text-lg font-medium text-gray-900">Risk Level Distribution</h4>
         <div className="space-y-3">
           {(['critical', 'high', 'medium', 'low'] as const).map((level) => {
-            const count = riskLevelCounts[level] || 0;
-            const total = duplicates.duplicateGroups.length;
-            const percentage = total > 0 ? (count / total) * 100 : 0;
+            const count = riskLevelCounts[level] || 0
+            const total = duplicates.duplicateGroups.length
+            const percentage = total > 0 ? (count / total) * 100 : 0
 
             const colors = {
               critical: 'bg-red-500',
               high: 'bg-orange-500',
               medium: 'bg-yellow-500',
               low: 'bg-green-500',
-            };
+            }
 
             return (
               <div key={level} className="flex items-center space-x-4">
-                <div className="w-20 text-sm font-medium capitalize text-gray-900">
-                  {level}
-                </div>
+                <div className="w-20 text-sm font-medium capitalize text-gray-900">{level}</div>
                 <div className="flex-1">
                   <div className="flex items-center space-x-2">
                     <div className="h-2 flex-1 rounded-full bg-gray-200">
@@ -279,51 +221,37 @@ const OverviewSection: React.FC<{ duplicates: DuplicateDetectionResults }> = ({
                     </div>
                   </div>
                 </div>
-                <div className="w-12 text-right text-sm text-gray-500">
-                  {count}
-                </div>
+                <div className="w-12 text-right text-sm text-gray-500">{count}</div>
               </div>
-            );
+            )
           })}
         </div>
       </div>
 
       {/* Top Duplicate Groups */}
       <div className="rounded-lg border border-gray-200 bg-white p-6">
-        <h4 className="mb-4 text-lg font-medium text-gray-900">
-          Top Duplicate Groups
-        </h4>
+        <h4 className="mb-4 text-lg font-medium text-gray-900">Top Duplicate Groups</h4>
         <div className="space-y-3">
           {duplicates.duplicateGroups
             .sort((a, b) => parseFloat(b.wastedSize) - parseFloat(a.wastedSize))
             .slice(0, 5)
             .map((group, index) => (
-              <DuplicateGroupSummary
-                key={index}
-                group={group}
-                rank={index + 1}
-              />
+              <DuplicateGroupSummary key={index} group={group} rank={index + 1} />
             ))}
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
 // Groups Section
 const GroupsSection: React.FC<{
-  groups: DuplicateGroup[];
-  searchTerm: string;
-  setSearchTerm: (term: string) => void;
-  selectedRiskLevel: string;
-  setSelectedRiskLevel: (level: string) => void;
-}> = ({
-  groups,
-  searchTerm,
-  setSearchTerm,
-  selectedRiskLevel,
-  setSelectedRiskLevel,
-}) => {
+  groups: DuplicateGroup[]
+  searchTerm: string
+  setSearchTerm: (term: string) => void
+  selectedRiskLevel: string
+  setSelectedRiskLevel: (level: string) => void
+}> = ({ groups, searchTerm, setSearchTerm, selectedRiskLevel, setSelectedRiskLevel }) => {
   return (
     <div className="space-y-4">
       {/* Filters */}
@@ -353,9 +281,7 @@ const GroupsSection: React.FC<{
       </div>
 
       {/* Results Count */}
-      <div className="text-sm text-gray-600">
-        Showing {groups.length} duplicate groups
-      </div>
+      <div className="text-sm text-gray-600">Showing {groups.length} duplicate groups</div>
 
       {/* Groups List */}
       <div className="space-y-4">
@@ -364,37 +290,32 @@ const GroupsSection: React.FC<{
         ))}
       </div>
     </div>
-  );
-};
+  )
+}
 
 // Recommendations Section
 const RecommendationsSection: React.FC<{
-  recommendations: DuplicateRecommendation[];
+  recommendations: DuplicateRecommendation[]
 }> = ({ recommendations }) => {
   const groupedRecommendations = recommendations.reduce(
     (acc, rec) => {
-      if (!acc[rec.type]) acc[rec.type] = [];
-      acc[rec.type].push(rec);
-      return acc;
+      if (!acc[rec.type]) acc[rec.type] = []
+      acc[rec.type].push(rec)
+      return acc
     },
     {} as Record<string, DuplicateRecommendation[]>
-  );
+  )
 
   const typeLabels = {
     consolidate: 'Consolidate Versions',
     upgrade: 'Upgrade Dependencies',
     replace: 'Replace Dependencies',
     remove: 'Remove Duplicates',
-  };
+  }
 
   const typeIcons = {
     consolidate: (
-      <svg
-        className="h-5 w-5"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
+      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -404,12 +325,7 @@ const RecommendationsSection: React.FC<{
       </svg>
     ),
     upgrade: (
-      <svg
-        className="h-5 w-5"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
+      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -419,12 +335,7 @@ const RecommendationsSection: React.FC<{
       </svg>
     ),
     replace: (
-      <svg
-        className="h-5 w-5"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
+      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -434,12 +345,7 @@ const RecommendationsSection: React.FC<{
       </svg>
     ),
     remove: (
-      <svg
-        className="h-5 w-5"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
+      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -448,19 +354,14 @@ const RecommendationsSection: React.FC<{
         />
       </svg>
     ),
-  };
+  }
 
   return (
     <div className="space-y-6">
       {Object.entries(groupedRecommendations).map(([type, recs]) => (
-        <div
-          key={type}
-          className="rounded-lg border border-gray-200 bg-white p-6"
-        >
+        <div key={type} className="rounded-lg border border-gray-200 bg-white p-6">
           <div className="mb-4 flex items-center space-x-2">
-            <div className="text-blue-600">
-              {typeIcons[type as keyof typeof typeIcons]}
-            </div>
+            <div className="text-blue-600">{typeIcons[type as keyof typeof typeIcons]}</div>
             <h4 className="text-lg font-medium text-gray-900">
               {typeLabels[type as keyof typeof typeLabels]} ({recs.length})
             </h4>
@@ -474,20 +375,20 @@ const RecommendationsSection: React.FC<{
         </div>
       ))}
     </div>
-  );
-};
+  )
+}
 
 // Duplicate Group Summary
 const DuplicateGroupSummary: React.FC<{
-  group: DuplicateGroup;
-  rank: number;
+  group: DuplicateGroup
+  rank: number
 }> = ({ group, rank }) => {
   const riskColors = {
     low: 'text-green-600 bg-green-100',
     medium: 'text-yellow-600 bg-yellow-100',
     high: 'text-orange-600 bg-orange-100',
     critical: 'text-red-600 bg-red-100',
-  };
+  }
 
   return (
     <div className="flex items-center space-x-4 rounded-lg bg-gray-50 p-3">
@@ -504,8 +405,7 @@ const DuplicateGroupSummary: React.FC<{
           </span>
         </div>
         <div className="text-sm text-gray-600">
-          {group.versions.length} versions • {group.affectedPackages.length}{' '}
-          affected packages
+          {group.versions.length} versions • {group.affectedPackages.length} affected packages
         </div>
       </div>
       <div className="text-right">
@@ -513,19 +413,19 @@ const DuplicateGroupSummary: React.FC<{
         <div className="text-sm text-gray-600">wasted</div>
       </div>
     </div>
-  );
-};
+  )
+}
 
 // Duplicate Group Card
 const DuplicateGroupCard: React.FC<{ group: DuplicateGroup }> = ({ group }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false)
 
   const riskColors = {
     low: 'bg-green-50 border-green-200 text-green-800',
     medium: 'bg-yellow-50 border-yellow-200 text-yellow-800',
     high: 'bg-orange-50 border-orange-200 text-orange-800',
     critical: 'bg-red-50 border-red-200 text-red-800',
-  };
+  }
 
   return (
     <div className={`rounded-lg border p-4 ${riskColors[group.riskLevel]}`}>
@@ -560,9 +460,7 @@ const DuplicateGroupCard: React.FC<{ group: DuplicateGroup }> = ({ group }) => {
                       className="flex items-center justify-between rounded bg-white bg-opacity-50 p-2"
                     >
                       <div className="flex items-center space-x-2">
-                        <span className="font-mono text-sm">
-                          {version.version}
-                        </span>
+                        <span className="font-mono text-sm">{version.version}</span>
                         {version.isRecommended && (
                           <span className="inline-flex items-center rounded bg-blue-100 px-1.5 py-0.5 text-xs font-medium text-blue-800">
                             Recommended
@@ -608,29 +506,27 @@ const DuplicateGroupCard: React.FC<{ group: DuplicateGroup }> = ({ group }) => {
         </button>
       </div>
     </div>
-  );
-};
+  )
+}
 
 // Recommendation Card
 const RecommendationCard: React.FC<{
-  recommendation: DuplicateRecommendation;
+  recommendation: DuplicateRecommendation
 }> = ({ recommendation }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false)
 
   const difficultyColors = {
     easy: 'text-green-700 bg-green-100',
     medium: 'text-yellow-700 bg-yellow-100',
     hard: 'text-red-700 bg-red-100',
-  };
+  }
 
   return (
     <div className="rounded-lg border border-gray-200 p-4">
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <div className="mb-2 flex items-center space-x-2">
-            <h5 className="font-medium text-gray-900">
-              {recommendation.packageName}
-            </h5>
+            <h5 className="font-medium text-gray-900">{recommendation.packageName}</h5>
             <span
               className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium capitalize ${
                 difficultyColors[recommendation.difficulty]
@@ -640,9 +536,7 @@ const RecommendationCard: React.FC<{
             </span>
           </div>
 
-          <p className="mb-2 text-sm text-gray-600">
-            {recommendation.description}
-          </p>
+          <p className="mb-2 text-sm text-gray-600">{recommendation.description}</p>
 
           <div className="text-sm text-gray-500">
             Estimated savings: {recommendation.estimatedSavings}
@@ -650,9 +544,7 @@ const RecommendationCard: React.FC<{
 
           {isExpanded && (
             <div className="mt-3 border-t border-gray-200 pt-3">
-              <h6 className="mb-2 font-medium text-gray-900">
-                Implementation Steps
-              </h6>
+              <h6 className="mb-2 font-medium text-gray-900">Implementation Steps</h6>
               <ol className="space-y-1 text-sm text-gray-600">
                 {recommendation.steps.map((step, index) => (
                   <li key={index} className="flex items-start space-x-2">
@@ -675,5 +567,5 @@ const RecommendationCard: React.FC<{
         </button>
       </div>
     </div>
-  );
-};
+  )
+}

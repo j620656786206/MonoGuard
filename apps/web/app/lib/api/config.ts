@@ -5,12 +5,11 @@
 
 export const API_CONFIG = {
   BASE_URL:
-    (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_URL) ||
-    'http://localhost:8081',
+    (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_URL) || 'http://localhost:8081',
   TIMEOUT: 30000, // 30 seconds
   RETRY_COUNT: 3,
   RETRY_DELAY: 1000, // 1 second
-} as const;
+} as const
 
 export const API_ENDPOINTS = {
   // Authentication
@@ -40,8 +39,7 @@ export const API_ENDPOINTS = {
     DEPENDENCIES: (id: string) => `/api/v1/analysis/${id}/dependencies`,
     ARCHITECTURE: (id: string) => `/api/v1/analysis/${id}/architecture`,
     UPLOAD: '/api/v1/analysis/upload',
-    COMPREHENSIVE: (uploadId: string) =>
-      `/api/v1/analysis/comprehensive/${uploadId}`,
+    COMPREHENSIVE: (uploadId: string) => `/api/v1/analysis/comprehensive/${uploadId}`,
     PROGRESS: (analysisId: string) => `/api/v1/analysis/${analysisId}/progress`,
   },
 
@@ -50,6 +48,6 @@ export const API_ENDPOINTS = {
     CHECK: '/health',
     METRICS: '/health/metrics',
   },
-} as const;
+} as const
 
-export type ApiEndpoint = string;
+export type ApiEndpoint = string

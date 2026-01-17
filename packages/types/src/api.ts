@@ -1,23 +1,23 @@
-import { z } from 'zod';
-import { PaginationMeta, BaseError } from './common';
+import { z } from 'zod'
+import type { BaseError, PaginationMeta } from './common'
 
 // API Response wrapper
 export interface ApiResponse<T = any> {
-  success: boolean;
-  data: T;
-  message?: string;
-  timestamp: string;
+  success: boolean
+  data: T
+  message?: string
+  timestamp: string
 }
 
 export interface ApiError extends BaseError {
-  statusCode: number;
-  path: string;
-  timestamp: string;
+  statusCode: number
+  path: string
+  timestamp: string
 }
 
 // Paginated response
 export interface PaginatedResponse<T = any> extends ApiResponse<T[]> {
-  pagination: PaginationMeta;
+  pagination: PaginationMeta
 }
 
 // API Request/Response schemas
@@ -27,7 +27,7 @@ export const ApiResponseSchema = <T extends z.ZodType>(dataSchema: T) =>
     data: dataSchema,
     message: z.string().optional(),
     timestamp: z.string().datetime(),
-  });
+  })
 
 export const PaginatedResponseSchema = <T extends z.ZodType>(dataSchema: T) =>
   z.object({
@@ -43,53 +43,52 @@ export const PaginatedResponseSchema = <T extends z.ZodType>(dataSchema: T) =>
       hasNextPage: z.boolean(),
       hasPreviousPage: z.boolean(),
     }),
-  });
+  })
 
 // Query parameters
 export interface QueryParams {
-  page?: number;
-  limit?: number;
-  sort?: string;
-  order?: 'asc' | 'desc';
-  search?: string;
-  filters?: Record<string, any>;
+  page?: number
+  limit?: number
+  sort?: string
+  order?: 'asc' | 'desc'
+  search?: string
+  filters?: Record<string, any>
 }
 
 // HTTP Methods
-export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 
 // API Endpoint configuration
 export interface ApiEndpoint {
-  method: HttpMethod;
-  path: string;
-  authenticated?: boolean;
-  roles?: string[];
+  method: HttpMethod
+  path: string
+  authenticated?: boolean
+  roles?: string[]
 }
 
 // File Upload Types
 export interface UploadedFile {
-  id: string;
-  originalName: string;
-  fileName: string;
-  fileSize: number;
-  mimeType: string;
-  filePath: string;
-  uploadedAt: string;
-  status: 'uploaded' | 'processing' | 'completed' | 'error';
+  id: string
+  originalName: string
+  fileName: string
+  fileSize: number
+  mimeType: string
+  filePath: string
+  uploadedAt: string
+  status: 'uploaded' | 'processing' | 'completed' | 'error'
 }
 
 export interface FileUploadResponse {
-  files: UploadedFile[];
-  totalFiles: number;
-  totalSize: number;
+  files: UploadedFile[]
+  totalFiles: number
+  totalSize: number
 }
 
 export interface PackageJsonFile {
-  path: string;
-  content: Record<string, any>;
-  name?: string;
-  version?: string;
-  dependencies?: Record<string, string>;
-  devDependencies?: Record<string, string>;
+  path: string
+  content: Record<string, any>
+  name?: string
+  version?: string
+  dependencies?: Record<string, string>
+  devDependencies?: Record<string, string>
 }
-

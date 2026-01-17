@@ -1,16 +1,16 @@
-'use client';
+'use client'
 
-import React from 'react';
-import { useAnalytics } from '../../hooks/useAnalytics';
+import React from 'react'
+import { useAnalytics } from '../../hooks/useAnalytics'
 
 export function Footer() {
-  const { trackClick } = useAnalytics();
+  const { trackClick } = useAnalytics()
 
   const handleLinkClick = (linkName: string, url?: string) => {
     trackClick(`footer_${linkName}`, linkName, {
       url: url || window.location.href,
-    });
-  };
+    })
+  }
 
   return (
     <footer className="bg-gray-900 text-white">
@@ -20,8 +20,8 @@ export function Footer() {
           <div className="md:col-span-1">
             <h3 className="mb-4 text-2xl font-bold text-white">MonoGuard</h3>
             <p className="text-sm leading-relaxed text-gray-400">
-              Comprehensive monorepo architecture analysis and validation tool
-              for modern development teams.
+              Comprehensive monorepo architecture analysis and validation tool for modern
+              development teams.
             </p>
           </div>
 
@@ -148,12 +148,10 @@ export function Footer() {
           <div className="rounded-lg bg-gradient-to-r from-indigo-900/50 to-purple-900/50 p-6">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between">
               <div>
-                <h4 className="mb-2 text-lg font-semibold text-white">
-                  🚀 Developer Preview
-                </h4>
+                <h4 className="mb-2 text-lg font-semibold text-white">🚀 Developer Preview</h4>
                 <p className="text-sm text-gray-300">
-                  MonoGuard is currently in Developer Preview. We're actively
-                  developing new features and would love your feedback.
+                  MonoGuard is currently in Developer Preview. We're actively developing new
+                  features and would love your feedback.
                 </p>
               </div>
               <div className="mt-4 md:ml-6 md:mt-0">
@@ -199,5 +197,5 @@ export function Footer() {
         </div>
       </div>
     </footer>
-  );
+  )
 }

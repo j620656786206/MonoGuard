@@ -1,78 +1,69 @@
-'use client';
+'use client'
 
-import React, { useState } from 'react';
-import { VersionConflict } from '@monoguard/types';
-import { VirtualizedList } from '@/components/ui/VirtualizedList';
+import type { VersionConflict } from '@monoguard/types'
+import type React from 'react'
+import { useState } from 'react'
+import { VirtualizedList } from '@/components/ui/VirtualizedList'
 
 export interface VersionConflictTableProps {
-  conflicts: VersionConflict[];
+  conflicts: VersionConflict[]
 }
 
-export const VersionConflictTable: React.FC<VersionConflictTableProps> = ({
-  conflicts,
-}) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedRiskLevel, setSelectedRiskLevel] = useState<string>('all');
-  const [sortBy, setSortBy] = useState<'package' | 'risk' | 'versions'>('risk');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+export const VersionConflictTable: React.FC<VersionConflictTableProps> = ({ conflicts }) => {
+  const [searchTerm, setSearchTerm] = useState('')
+  const [selectedRiskLevel, setSelectedRiskLevel] = useState<string>('all')
+  const [sortBy, setSortBy] = useState<'package' | 'risk' | 'versions'>('risk')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
 
   // Filter conflicts
   const filteredConflicts = conflicts.filter((conflict) => {
-    const matchesSearch = conflict.packageName
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    const matchesRisk =
-      selectedRiskLevel === 'all' || conflict.riskLevel === selectedRiskLevel;
-    return matchesSearch && matchesRisk;
-  });
+    const matchesSearch = conflict.packageName.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesRisk = selectedRiskLevel === 'all' || conflict.riskLevel === selectedRiskLevel
+    return matchesSearch && matchesRisk
+  })
 
   // Sort conflicts
   const sortedConflicts = [...filteredConflicts].sort((a, b) => {
-    let comparison = 0;
+    let comparison = 0
 
     switch (sortBy) {
       case 'package':
-        comparison = a.packageName.localeCompare(b.packageName);
-        break;
+        comparison = a.packageName.localeCompare(b.packageName)
+        break
       case 'risk': {
-        const riskOrder = { low: 1, medium: 2, high: 3, critical: 4 };
-        comparison = riskOrder[a.riskLevel] - riskOrder[b.riskLevel];
-        break;
+        const riskOrder = { low: 1, medium: 2, high: 3, critical: 4 }
+        comparison = riskOrder[a.riskLevel] - riskOrder[b.riskLevel]
+        break
       }
       case 'versions':
-        comparison =
-          a.conflictingVersions.length - b.conflictingVersions.length;
-        break;
+        comparison = a.conflictingVersions.length - b.conflictingVersions.length
+        break
     }
 
-    return sortOrder === 'asc' ? comparison : -comparison;
-  });
+    return sortOrder === 'asc' ? comparison : -comparison
+  })
 
   const riskLevelColors = {
     low: 'text-yellow-600 bg-yellow-100',
     medium: 'text-orange-600 bg-orange-100',
     high: 'text-red-600 bg-red-100',
     critical: 'text-red-700 bg-red-200',
-  };
+  }
 
   const handleSort = (column: typeof sortBy) => {
     if (sortBy === column) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
     } else {
-      setSortBy(column);
-      setSortOrder('desc');
+      setSortBy(column)
+      setSortOrder('desc')
     }
-  };
+  }
 
   if (conflicts.length === 0) {
     return (
       <div className="rounded-lg border border-green-200 bg-green-50 p-8 text-center">
         <div className="mb-2 text-green-600">
-          <svg
-            className="mx-auto h-12 w-12"
-            fill="currentColor"
-            viewBox="0 0 20 20"
-          >
+          <svg className="mx-auto h-12 w-12" fill="currentColor" viewBox="0 0 20 20">
             <path
               fillRule="evenodd"
               d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
@@ -80,12 +71,10 @@ export const VersionConflictTable: React.FC<VersionConflictTableProps> = ({
             />
           </svg>
         </div>
-        <h3 className="mb-1 text-lg font-medium text-green-900">
-          No Version Conflicts
-        </h3>
+        <h3 className="mb-1 text-lg font-medium text-green-900">No Version Conflicts</h3>
         <p className="text-green-700">All package versions are compatible.</p>
       </div>
-    );
+    )
   }
 
   return (
@@ -228,28 +217,26 @@ export const VersionConflictTable: React.FC<VersionConflictTableProps> = ({
         )}
       </div>
     </div>
-  );
-};
+  )
+}
 
 // Conflict Row Component
 const ConflictRow: React.FC<{ conflict: VersionConflict }> = ({ conflict }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false)
 
   const riskLevelColors = {
     low: 'text-yellow-700 bg-yellow-100',
     medium: 'text-orange-700 bg-orange-100',
     high: 'text-red-700 bg-red-100',
     critical: 'text-red-800 bg-red-200',
-  };
+  }
 
   return (
     <div className="px-6 py-4">
       <div className="flex items-center justify-between">
         <div className="grid flex-1 grid-cols-1 items-center gap-4 sm:grid-cols-3">
           {/* Package Name */}
-          <div className="font-medium text-gray-900">
-            {conflict.packageName}
-          </div>
+          <div className="font-medium text-gray-900">{conflict.packageName}</div>
 
           {/* Risk Level */}
           <div>
@@ -286,23 +273,16 @@ const ConflictRow: React.FC<{ conflict: VersionConflict }> = ({ conflict }) => {
 
           {/* Resolution */}
           <div>
-            <h4 className="mb-1 text-sm font-medium text-gray-900">
-              Resolution Strategy
-            </h4>
+            <h4 className="mb-1 text-sm font-medium text-gray-900">Resolution Strategy</h4>
             <p className="text-sm text-gray-600">{conflict.resolution}</p>
           </div>
 
           {/* Conflicting Versions */}
           <div>
-            <h4 className="mb-2 text-sm font-medium text-gray-900">
-              Conflicting Versions
-            </h4>
+            <h4 className="mb-2 text-sm font-medium text-gray-900">Conflicting Versions</h4>
             <div className="space-y-2">
               {conflict.conflictingVersions.map((version, index) => (
-                <div
-                  key={index}
-                  className="flex items-start space-x-3 rounded-lg bg-gray-50 p-3"
-                >
+                <div key={index} className="flex items-start space-x-3 rounded-lg bg-gray-50 p-3">
                   <div className="flex items-center space-x-2">
                     <span
                       className={`inline-flex items-center rounded px-2 py-1 font-mono text-xs ${
@@ -348,5 +328,5 @@ const ConflictRow: React.FC<{ conflict: VersionConflict }> = ({ conflict }) => {
         </div>
       )}
     </div>
-  );
-};
+  )
+}

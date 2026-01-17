@@ -1,21 +1,19 @@
-'use client';
+'use client'
 
-import React, { useState } from 'react';
-import { useAnalytics } from '../../hooks/useAnalytics';
+import React, { useState } from 'react'
+import { useAnalytics } from '../../hooks/useAnalytics'
 
 export function SampleResults() {
-  const [activeTab, setActiveTab] = useState<
-    'overview' | 'dependencies' | 'architecture'
-  >('overview');
-  const { trackClick, trackFeatureView } = useAnalytics();
+  const [activeTab, setActiveTab] = useState<'overview' | 'dependencies' | 'architecture'>(
+    'overview'
+  )
+  const { trackClick, trackFeatureView } = useAnalytics()
 
-  const handleTabChange = (
-    tab: 'overview' | 'dependencies' | 'architecture'
-  ) => {
-    setActiveTab(tab);
-    trackClick(`sample_results_tab_${tab}`, tab);
-    trackFeatureView(`sample_results_${tab}`);
-  };
+  const handleTabChange = (tab: 'overview' | 'dependencies' | 'architecture') => {
+    setActiveTab(tab)
+    trackClick(`sample_results_tab_${tab}`, tab)
+    trackFeatureView(`sample_results_${tab}`)
+  }
 
   const sampleData = {
     overview: {
@@ -47,19 +45,16 @@ export function SampleResults() {
       { rule: 'Import restrictions', status: 'passed', violations: 0 },
       { rule: 'Package boundaries', status: 'failed', violations: 5 },
     ],
-  };
+  }
 
   return (
     <section className="bg-gray-50 py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="mb-12 text-center">
-          <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl">
-            See What You'll Get
-          </h2>
+          <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl">See What You'll Get</h2>
           <p className="mx-auto mt-4 max-w-3xl text-xl text-gray-600">
-            Comprehensive analysis results with actionable insights and detailed
-            metrics
+            Comprehensive analysis results with actionable insights and detailed metrics
           </p>
         </div>
 
@@ -97,12 +92,8 @@ export function SampleResults() {
                   {/* Health Score */}
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-2xl font-bold text-gray-900">
-                        Project Health Score
-                      </h3>
-                      <p className="text-gray-600">
-                        Overall assessment of your codebase
-                      </p>
+                      <h3 className="text-2xl font-bold text-gray-900">Project Health Score</h3>
+                      <p className="text-gray-600">Overall assessment of your codebase</p>
                     </div>
                     <div className="text-right">
                       <div className="text-4xl font-bold text-green-600">
@@ -118,33 +109,25 @@ export function SampleResults() {
                       <div className="text-2xl font-bold text-blue-600">
                         {sampleData.overview.totalDependencies}
                       </div>
-                      <div className="text-sm text-blue-700">
-                        Total Dependencies
-                      </div>
+                      <div className="text-sm text-blue-700">Total Dependencies</div>
                     </div>
                     <div className="rounded-lg bg-red-50 p-4">
                       <div className="text-2xl font-bold text-red-600">
                         {sampleData.overview.vulnerabilities}
                       </div>
-                      <div className="text-sm text-red-700">
-                        Vulnerabilities
-                      </div>
+                      <div className="text-sm text-red-700">Vulnerabilities</div>
                     </div>
                     <div className="rounded-lg bg-yellow-50 p-4">
                       <div className="text-2xl font-bold text-yellow-600">
                         {sampleData.overview.circularDeps}
                       </div>
-                      <div className="text-sm text-yellow-700">
-                        Circular Dependencies
-                      </div>
+                      <div className="text-sm text-yellow-700">Circular Dependencies</div>
                     </div>
                     <div className="rounded-lg bg-orange-50 p-4">
                       <div className="text-2xl font-bold text-orange-600">
                         {sampleData.overview.outdatedPackages}
                       </div>
-                      <div className="text-sm text-orange-700">
-                        Outdated Packages
-                      </div>
+                      <div className="text-sm text-orange-700">Outdated Packages</div>
                     </div>
                   </div>
                 </div>
@@ -152,9 +135,7 @@ export function SampleResults() {
 
               {activeTab === 'dependencies' && (
                 <div>
-                  <h3 className="mb-6 text-2xl font-bold text-gray-900">
-                    Dependency Analysis
-                  </h3>
+                  <h3 className="mb-6 text-2xl font-bold text-gray-900">Dependency Analysis</h3>
                   <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
                       <thead className="bg-gray-50">
@@ -175,12 +156,7 @@ export function SampleResults() {
                       </thead>
                       <tbody className="divide-y divide-gray-200 bg-white">
                         {sampleData.dependencies.map((dep, index) => (
-                          <tr
-                            key={index}
-                            className={
-                              index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
-                            }
-                          >
+                          <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                             <td className="whitespace-nowrap px-6 py-4 font-medium text-gray-900">
                               {dep.name}
                             </td>
@@ -219,9 +195,7 @@ export function SampleResults() {
 
               {activeTab === 'architecture' && (
                 <div>
-                  <h3 className="mb-6 text-2xl font-bold text-gray-900">
-                    Architecture Validation
-                  </h3>
+                  <h3 className="mb-6 text-2xl font-bold text-gray-900">Architecture Validation</h3>
                   <div className="space-y-4">
                     {sampleData.architecture.map((rule, index) => (
                       <div
@@ -238,9 +212,7 @@ export function SampleResults() {
                                   : 'bg-red-500'
                             }`}
                           ></div>
-                          <span className="font-medium text-gray-900">
-                            {rule.rule}
-                          </span>
+                          <span className="font-medium text-gray-900">{rule.rule}</span>
                         </div>
                         <div className="flex items-center space-x-2">
                           <span
@@ -272,16 +244,13 @@ export function SampleResults() {
         {/* Call to Action */}
         <div className="mt-12 text-center">
           <p className="mb-6 text-gray-600">
-            This is just a sample. Your actual results will be tailored to your
-            repository.
+            This is just a sample. Your actual results will be tailored to your repository.
           </p>
           <button
             onClick={() => {
-              trackClick('try_analysis_sample_results');
+              trackClick('try_analysis_sample_results')
               if (typeof window !== 'undefined') {
-                document
-                  .getElementById('hero-section')
-                  ?.scrollIntoView({ behavior: 'smooth' });
+                document.getElementById('hero-section')?.scrollIntoView({ behavior: 'smooth' })
               }
             }}
             className="transform rounded-full bg-indigo-600 px-8 py-3 font-semibold text-white shadow-lg transition-all duration-200 hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-xl"
@@ -291,5 +260,5 @@ export function SampleResults() {
         </div>
       </div>
     </section>
-  );
+  )
 }

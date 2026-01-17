@@ -1,15 +1,15 @@
-'use client';
+'use client'
 
-import React from 'react';
-import { useVirtualizer } from '@tanstack/react-virtual';
+import { useVirtualizer } from '@tanstack/react-virtual'
+import React from 'react'
 
 interface VirtualizedListProps<T> {
-  items: T[];
-  itemHeight: number;
-  containerHeight: number;
-  renderItem: (item: T, index: number) => React.ReactNode;
-  className?: string;
-  overscan?: number;
+  items: T[]
+  itemHeight: number
+  containerHeight: number
+  renderItem: (item: T, index: number) => React.ReactNode
+  className?: string
+  overscan?: number
 }
 
 export function VirtualizedList<T>({
@@ -20,14 +20,14 @@ export function VirtualizedList<T>({
   className = '',
   overscan = 5,
 }: VirtualizedListProps<T>) {
-  const parentRef = React.useRef<HTMLDivElement>(null);
+  const parentRef = React.useRef<HTMLDivElement>(null)
 
   const virtualizer = useVirtualizer({
     count: items.length,
     getScrollElement: () => parentRef.current,
     estimateSize: () => itemHeight,
     overscan,
-  });
+  })
 
   return (
     <div
@@ -59,5 +59,5 @@ export function VirtualizedList<T>({
         ))}
       </div>
     </div>
-  );
+  )
 }

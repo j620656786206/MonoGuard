@@ -3,6 +3,9 @@ package result
 import (
 	"encoding/json"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewSuccess(t *testing.T) {
@@ -39,20 +42,15 @@ func TestNewSuccess(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			r := NewSuccess(tt.data)
 
-			if r.Error != nil {
-				t.Errorf("NewSuccess() error = %v, want nil", r.Error)
-			}
+			assert.Nil(t, r.Error, "NewSuccess() should have nil error")
 
 			// Verify JSON output contains data and no error
 			jsonStr := r.ToJSON()
 			var parsed map[string]interface{}
-			if err := json.Unmarshal([]byte(jsonStr), &parsed); err != nil {
-				t.Fatalf("Failed to parse JSON: %v", err)
-			}
+			err := json.Unmarshal([]byte(jsonStr), &parsed)
+			require.NoError(t, err, "Failed to parse JSON")
 
-			if parsed["error"] != nil {
-				t.Errorf("JSON error field = %v, want nil", parsed["error"])
-			}
+			assert.Nil(t, parsed["error"], "JSON error field should be nil")
 		})
 	}
 }
@@ -92,21 +90,10 @@ func TestNewError(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			r := NewError(tt.code, tt.message)
 
-			if r.Data != nil {
-				t.Errorf("NewError() data = %v, want nil", r.Data)
-			}
-
-			if r.Error == nil {
-				t.Fatal("NewError() error = nil, want error")
-			}
-
-			if r.Error.Code != tt.wantCode {
-				t.Errorf("Error.Code = %v, want %v", r.Error.Code, tt.wantCode)
-			}
-
-			if r.Error.Message != tt.wantMessage {
-				t.Errorf("Error.Message = %v, want %v", r.Error.Message, tt.wantMessage)
-			}
+			assert.Nil(t, r.Data, "NewError() should have nil data")
+			require.NotNil(t, r.Error, "NewError() should have error")
+			assert.Equal(t, tt.wantCode, r.Error.Code)
+			assert.Equal(t, tt.wantMessage, r.Error.Message)
 		})
 	}
 }
@@ -117,24 +104,16 @@ func TestResultToJSON(t *testing.T) {
 		jsonStr := r.ToJSON()
 
 		var parsed map[string]interface{}
-		if err := json.Unmarshal([]byte(jsonStr), &parsed); err != nil {
-			t.Fatalf("Failed to parse JSON: %v", err)
-		}
+		err := json.Unmarshal([]byte(jsonStr), &parsed)
+		require.NoError(t, err, "Failed to parse JSON")
 
 		// Verify structure matches Result<T> pattern
-		if _, ok := parsed["data"]; !ok {
-			t.Error("JSON missing 'data' field")
-		}
-
-		if parsed["error"] != nil {
-			t.Errorf("JSON error = %v, want nil", parsed["error"])
-		}
+		assert.Contains(t, parsed, "data", "JSON should have 'data' field")
+		assert.Nil(t, parsed["error"], "JSON error should be nil")
 
 		// Verify camelCase in nested data
 		data := parsed["data"].(map[string]interface{})
-		if _, ok := data["healthScore"]; !ok {
-			t.Error("Data missing 'healthScore' field (camelCase)")
-		}
+		assert.Contains(t, data, "healthScore", "Data should have 'healthScore' field (camelCase)")
 	})
 
 	t.Run("error result JSON structure", func(t *testing.T) {
@@ -142,22 +121,14 @@ func TestResultToJSON(t *testing.T) {
 		jsonStr := r.ToJSON()
 
 		var parsed map[string]interface{}
-		if err := json.Unmarshal([]byte(jsonStr), &parsed); err != nil {
-			t.Fatalf("Failed to parse JSON: %v", err)
-		}
+		err := json.Unmarshal([]byte(jsonStr), &parsed)
+		require.NoError(t, err, "Failed to parse JSON")
 
-		if parsed["data"] != nil {
-			t.Errorf("JSON data = %v, want nil", parsed["data"])
-		}
+		assert.Nil(t, parsed["data"], "JSON data should be nil")
 
 		errObj := parsed["error"].(map[string]interface{})
-		if errObj["code"] != "PARSE_ERROR" {
-			t.Errorf("error.code = %v, want PARSE_ERROR", errObj["code"])
-		}
-
-		if errObj["message"] != "Invalid input" {
-			t.Errorf("error.message = %v, want 'Invalid input'", errObj["message"])
-		}
+		assert.Equal(t, "PARSE_ERROR", errObj["code"])
+		assert.Equal(t, "Invalid input", errObj["message"])
 	})
 }
 
@@ -173,9 +144,7 @@ func TestErrorCodeFormat(t *testing.T) {
 
 	for _, code := range validCodes {
 		r := NewError(code, "test message")
-		if r.Error.Code != code {
-			t.Errorf("Error code = %v, want %v", r.Error.Code, code)
-		}
+		assert.Equal(t, code, r.Error.Code)
 	}
 }
 
@@ -240,9 +209,7 @@ func TestEscapeJSON(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := escapeJSON(tt.input)
-			if got != tt.want {
-				t.Errorf("escapeJSON(%q) = %q, want %q", tt.input, got, tt.want)
-			}
+			assert.Equal(t, tt.want, got, "escapeJSON(%q)", tt.input)
 		})
 	}
 }
@@ -257,25 +224,17 @@ func TestToJSONWithUnmarshalableData(t *testing.T) {
 
 	// Should return a MARSHAL_ERROR result
 	var parsed map[string]interface{}
-	if err := json.Unmarshal([]byte(jsonStr), &parsed); err != nil {
-		t.Fatalf("Fallback JSON should be valid: %v", err)
-	}
+	err := json.Unmarshal([]byte(jsonStr), &parsed)
+	require.NoError(t, err, "Fallback JSON should be valid")
 
-	if parsed["data"] != nil {
-		t.Error("Fallback should have null data")
-	}
+	assert.Nil(t, parsed["data"], "Fallback should have null data")
 
 	errObj, ok := parsed["error"].(map[string]interface{})
-	if !ok {
-		t.Fatal("Fallback should have error object")
-	}
+	require.True(t, ok, "Fallback should have error object")
 
-	if errObj["code"] != "MARSHAL_ERROR" {
-		t.Errorf("error code = %v, want MARSHAL_ERROR", errObj["code"])
-	}
+	assert.Equal(t, "MARSHAL_ERROR", errObj["code"])
 
 	msg, ok := errObj["message"].(string)
-	if !ok || msg == "" {
-		t.Error("error message should not be empty")
-	}
+	require.True(t, ok, "error message should be string")
+	assert.NotEmpty(t, msg, "error message should not be empty")
 }

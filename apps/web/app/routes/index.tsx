@@ -1,8 +1,8 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/')({
   component: HomePage,
-});
+})
 
 function HomePage() {
   return (
@@ -12,8 +12,8 @@ function HomePage() {
           MonoGuard
         </h1>
         <p className="mb-8 text-lg text-gray-600">
-          Analyze your monorepo dependencies and detect circular dependencies
-          with powerful visualization tools.
+          Analyze your monorepo dependencies and detect circular dependencies with powerful
+          visualization tools.
         </p>
         <div className="flex justify-center gap-4">
           <a
@@ -31,5 +31,5 @@ function HomePage() {
         </div>
       </div>
     </main>
-  );
+  )
 }

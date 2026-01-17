@@ -1,15 +1,15 @@
-'use client';
+'use client'
 
-import React from 'react';
-import { useAnalytics } from '../../hooks/useAnalytics';
+import React from 'react'
+import { useAnalytics } from '../../hooks/useAnalytics'
 
 export function FeaturesSection() {
-  const { trackFeatureView, trackClick } = useAnalytics();
+  const { trackFeatureView, trackClick } = useAnalytics()
 
   const handleFeatureClick = (featureName: string) => {
-    trackClick(`feature_${featureName}`, featureName);
-    trackFeatureView(featureName);
-  };
+    trackClick(`feature_${featureName}`, featureName)
+    trackFeatureView(featureName)
+  }
 
   const features = [
     {
@@ -18,12 +18,7 @@ export function FeaturesSection() {
       description:
         'Identify outdated packages, version conflicts, and security vulnerabilities across your entire monorepo.',
       icon: (
-        <svg
-          className="h-8 w-8"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
+        <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -45,12 +40,7 @@ export function FeaturesSection() {
       description:
         'Automatically detect and visualize circular dependencies that can cause build issues and performance problems.',
       icon: (
-        <svg
-          className="h-8 w-8"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
+        <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -72,12 +62,7 @@ export function FeaturesSection() {
       description:
         'Enforce architectural boundaries and validate layered architecture patterns across your codebase.',
       icon: (
-        <svg
-          className="h-8 w-8"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
+        <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -99,12 +84,7 @@ export function FeaturesSection() {
       description:
         'Get an overall health score based on dependency freshness, architecture quality, and best practices.',
       icon: (
-        <svg
-          className="h-8 w-8"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
+        <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -126,12 +106,7 @@ export function FeaturesSection() {
       description:
         'Specialized analysis for monorepos including workspace dependency management and cross-package analysis.',
       icon: (
-        <svg
-          className="h-8 w-8"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
+        <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -153,12 +128,7 @@ export function FeaturesSection() {
       description:
         'Generate comprehensive HTML and JSON reports that can be shared with your team or integrated into CI/CD.',
       icon: (
-        <svg
-          className="h-8 w-8"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
+        <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -174,7 +144,7 @@ export function FeaturesSection() {
         'Executive summary dashboards',
       ],
     },
-  ];
+  ]
 
   return (
     <section className="bg-white py-20">
@@ -185,8 +155,7 @@ export function FeaturesSection() {
             Comprehensive Analysis Features
           </h2>
           <p className="mx-auto mt-4 max-w-3xl text-xl text-gray-600">
-            Everything you need to maintain healthy, scalable JavaScript and
-            TypeScript projects
+            Everything you need to maintain healthy, scalable JavaScript and TypeScript projects
           </p>
         </div>
 
@@ -209,17 +178,12 @@ export function FeaturesSection() {
                   {feature.title}
                 </h3>
 
-                <p className="mt-3 leading-relaxed text-gray-600">
-                  {feature.description}
-                </p>
+                <p className="mt-3 leading-relaxed text-gray-600">{feature.description}</p>
 
                 {/* Benefits List */}
                 <ul className="mt-6 space-y-2">
                   {feature.benefits.map((benefit, index) => (
-                    <li
-                      key={index}
-                      className="flex items-center text-sm text-gray-500"
-                    >
+                    <li key={index} className="flex items-center text-sm text-gray-500">
                       <svg
                         className="mr-2 h-4 w-4 flex-shrink-0 text-green-500"
                         fill="none"
@@ -249,16 +213,14 @@ export function FeaturesSection() {
               Ready to analyze your repository?
             </h3>
             <p className="mx-auto mb-8 max-w-2xl text-gray-600">
-              Get started with our comprehensive analysis and take the first
-              step towards improving your codebase health.
+              Get started with our comprehensive analysis and take the first step towards improving
+              your codebase health.
             </p>
             <button
               onClick={() => {
-                trackClick('get_started_features_cta');
+                trackClick('get_started_features_cta')
                 if (typeof window !== 'undefined') {
-                  document
-                    .getElementById('hero-section')
-                    ?.scrollIntoView({ behavior: 'smooth' });
+                  document.getElementById('hero-section')?.scrollIntoView({ behavior: 'smooth' })
                 }
               }}
               className="transform rounded-full bg-indigo-600 px-8 py-3 font-semibold text-white shadow-lg transition-all duration-200 hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-xl"
@@ -269,5 +231,5 @@ export function FeaturesSection() {
         </div>
       </div>
     </section>
-  );
+  )
 }

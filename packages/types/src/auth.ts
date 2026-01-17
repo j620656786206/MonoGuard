@@ -1,5 +1,5 @@
-import { z } from 'zod';
-import { ID, ISODateString } from './common';
+import { z } from 'zod'
+import type { ID, ISODateString } from './common'
 
 // User roles
 export enum UserRole {
@@ -19,68 +19,68 @@ export enum AuthProvider {
 
 // User interface
 export interface User {
-  id: ID;
-  email: string;
-  name: string;
-  avatar?: string;
-  role: UserRole;
-  provider: AuthProvider;
-  providerId?: string;
-  isActive: boolean;
-  lastLoginAt?: ISODateString;
-  createdAt: ISODateString;
-  updatedAt: ISODateString;
+  id: ID
+  email: string
+  name: string
+  avatar?: string
+  role: UserRole
+  provider: AuthProvider
+  providerId?: string
+  isActive: boolean
+  lastLoginAt?: ISODateString
+  createdAt: ISODateString
+  updatedAt: ISODateString
 }
 
 // Auth token
 export interface AuthToken {
-  accessToken: string;
-  refreshToken?: string;
-  tokenType: string;
-  expiresIn: number;
-  expiresAt: ISODateString;
-  scope?: string[];
+  accessToken: string
+  refreshToken?: string
+  tokenType: string
+  expiresIn: number
+  expiresAt: ISODateString
+  scope?: string[]
 }
 
 // Login credentials
 export interface LoginCredentials {
-  email: string;
-  password: string;
-  rememberMe?: boolean;
+  email: string
+  password: string
+  rememberMe?: boolean
 }
 
 // OAuth callback data
 export interface OAuthCallback {
-  provider: AuthProvider;
-  code: string;
-  state?: string;
-  redirectUri: string;
+  provider: AuthProvider
+  code: string
+  state?: string
+  redirectUri: string
 }
 
 // Session data
 export interface Session {
-  user: User;
-  token: AuthToken;
-  expiresAt: ISODateString;
+  user: User
+  token: AuthToken
+  expiresAt: ISODateString
 }
 
 // Password reset
 export interface PasswordResetRequest {
-  email: string;
+  email: string
 }
 
 export interface PasswordReset {
-  token: string;
-  password: string;
-  confirmPassword: string;
+  token: string
+  password: string
+  confirmPassword: string
 }
 
 // Registration
 export interface UserRegistration {
-  email: string;
-  password: string;
-  name: string;
-  acceptTerms: boolean;
+  email: string
+  password: string
+  name: string
+  acceptTerms: boolean
 }
 
 // Zod Schemas for validation
@@ -96,13 +96,13 @@ export const UserSchema = z.object({
   lastLoginAt: z.string().datetime().optional(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
-});
+})
 
 export const LoginCredentialsSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
   rememberMe: z.boolean().optional(),
-});
+})
 
 export const UserRegistrationSchema = z.object({
   email: z.string().email(),
@@ -111,4 +111,4 @@ export const UserRegistrationSchema = z.object({
   acceptTerms: z.boolean().refine((val) => val === true, {
     message: 'You must accept the terms and conditions',
   }),
-});
+})

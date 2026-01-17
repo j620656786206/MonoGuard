@@ -5,23 +5,17 @@
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
-      "extends": [
-        "@nx/eslint-plugin/base"
-      ],
+      "extends": ["@nx/eslint-plugin/base"],
       "rules": {}
     },
     {
       "files": ["*.ts", "*.tsx"],
-      "extends": [
-        "@nx/eslint-plugin/typescript"
-      ],
+      "extends": ["@nx/eslint-plugin/typescript"],
       "rules": {}
     },
     {
       "files": ["*.js", "*.jsx"],
-      "extends": [
-        "@nx/eslint-plugin/javascript"
-      ],
+      "extends": ["@nx/eslint-plugin/javascript"],
       "rules": {}
     }
   ]

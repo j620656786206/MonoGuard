@@ -4,15 +4,11 @@
   "projectType": "application",
   "sourceRoot": "apps/web-e2e/src",
   "tags": [],
-  "implicitDependencies": [
-    "web"
-  ],
+  "implicitDependencies": ["web"],
   "targets": {
     "e2e": {
       "executor": "@nx/playwright:playwright",
-      "outputs": [
-        "{workspaceRoot}/dist/.playwright/web-e2e"
-      ],
+      "outputs": ["{workspaceRoot}/dist/.playwright/web-e2e"],
       "options": {
         "config": "apps/web-e2e/playwright.config.ts"
       }

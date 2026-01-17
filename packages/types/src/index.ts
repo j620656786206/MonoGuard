@@ -1,60 +1,55 @@
 // API Types
-export * from './api';
-export * from './domain';
-export * from './auth';
-export * from './common';
 
-// New WASM-compatible types
-export * from './result';
-export * from './analysis';
-export * from './wasm';
-
-// Re-export commonly used types
-export type { ApiResponse, ApiError, PaginatedResponse } from './api';
-
+export * from './analysis'
 export type {
-  Project,
-  DependencyAnalysis,
-  ArchitectureValidation,
-  HealthScore,
-  ComprehensiveAnalysisResult,
-  FileProcessingResult,
-  PackageJsonFile,
-  UploadedFile,
-  DuplicateDetectionResults,
-  DuplicateGroup,
-  BundleImpactReport,
-  BundleBreakdown,
-} from './domain';
-
-export type { User, AuthToken, LoginCredentials } from './auth';
-
-// Re-export new WASM-compatible types
-export type { Result, ResultError, ErrorCode } from './result';
-
-export { ErrorCodes, isSuccess, isError } from './result';
-
-export type {
-  DependencyGraph,
-  PackageNode,
   DependencyEdge,
+  DependencyGraph,
   DependencyType,
+  PackageNode,
   WorkspaceType,
-} from './analysis/graph';
-
+} from './analysis/graph'
 export type {
+  AnalysisMetadata,
   AnalysisResult,
+  CheckResult,
   CircularDependencyInfo,
   FixStrategy,
-  CheckResult,
   ValidationError,
   ValidationWarning,
-  AnalysisMetadata,
-} from './analysis/results';
+} from './analysis/results'
+// Re-export commonly used types
+export type { ApiError, ApiResponse, PaginatedResponse } from './api'
+export * from './api'
+export type { AuthToken, LoginCredentials, User } from './auth'
+export * from './auth'
+export * from './common'
+
+export type {
+  ArchitectureValidation,
+  BundleBreakdown,
+  BundleImpactReport,
+  ComprehensiveAnalysisResult,
+  DependencyAnalysis,
+  DuplicateDetectionResults,
+  DuplicateGroup,
+  FileProcessingResult,
+  HealthScore,
+  PackageJsonFile,
+  Project,
+  UploadedFile,
+} from './domain'
+export * from './domain'
+
+// Re-export new WASM-compatible types
+export type { ErrorCode, Result, ResultError } from './result'
+// New WASM-compatible types
+export * from './result'
+export { ErrorCodes, isError, isSuccess } from './result'
+export * from './wasm'
 
 export type {
   MonoGuardAnalyzer,
   VersionInfo,
   WasmLoaderOptions,
   WasmLoadResult,
-} from './wasm/adapter';
+} from './wasm/adapter'
