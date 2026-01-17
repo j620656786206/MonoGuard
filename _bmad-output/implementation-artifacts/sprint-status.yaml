@@ -54,7 +54,7 @@ development_status:
   epic-2: in-progress
   2-1-implement-workspace-configuration-parser: done
   2-2-build-dependency-graph-data-structure: done
-  2-3-implement-circular-dependency-detection-algorithm: ready-for-dev
+  2-3-implement-circular-dependency-detection-algorithm: review
   2-4-identify-duplicate-dependencies-with-version-conflicts: ready-for-dev
   2-5-calculate-architecture-health-score: ready-for-dev
   2-6-implement-package-exclusion-patterns: ready-for-dev

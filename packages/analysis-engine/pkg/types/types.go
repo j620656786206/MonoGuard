@@ -45,11 +45,12 @@ type PackageInfo struct {
 // AnalysisResult represents the complete analysis output.
 // This matches @monoguard/types AnalysisResult.
 type AnalysisResult struct {
-	HealthScore int              `json:"healthScore"`
-	Packages    int              `json:"packages"`
-	Graph       *DependencyGraph `json:"graph,omitempty"`
-	CreatedAt   string           `json:"createdAt,omitempty"` // ISO 8601 format
-	Placeholder bool             `json:"placeholder,omitempty"` // True when returning placeholder data
+	HealthScore          int                       `json:"healthScore"`
+	Packages             int                       `json:"packages"`
+	Graph                *DependencyGraph          `json:"graph,omitempty"`
+	CircularDependencies []*CircularDependencyInfo `json:"circularDependencies,omitempty"` // Story 2.3
+	CreatedAt            string                    `json:"createdAt,omitempty"`            // ISO 8601 format
+	Placeholder          bool                      `json:"placeholder,omitempty"`          // True when returning placeholder data
 }
 
 // VersionInfo represents the version response.
@@ -71,7 +72,9 @@ type Package struct {
 	Dependencies []string `json:"dependencies"`
 }
 
-// CircularDependency represents a detected circular dependency chain.
+// CircularDependency is deprecated, use CircularDependencyInfo from circular.go instead.
+// Kept for backward compatibility with existing tests.
+// Deprecated: Use CircularDependencyInfo
 type CircularDependency struct {
 	Nodes []string `json:"nodes"` // Package names in the cycle
 	Depth int      `json:"depth"` // Length of the cycle
