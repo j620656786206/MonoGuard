@@ -96,12 +96,6 @@ export default [
     },
   },
   {
-    ignores: [
-      '.output/**/*',
-      '.vinxi/**/*',
-      'node_modules/**/*',
-      '*.gen.ts',
-      'routeTree.gen.ts',
-    ],
+    ignores: ['.output/**/*', '.vinxi/**/*', 'node_modules/**/*', '*.gen.ts', 'routeTree.gen.ts'],
   },
 ]

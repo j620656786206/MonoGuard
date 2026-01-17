@@ -24,12 +24,6 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true
   },
-  "include": [
-    "**/*.js",
-    "**/*.jsx",
-    "**/*.ts",
-    "**/*.tsx",
-    ".vinxi/types/**/*.ts"
-  ],
+  "include": ["**/*.js", "**/*.jsx", "**/*.ts", "**/*.tsx", ".vinxi/types/**/*.ts"],
   "exclude": ["node_modules", "**/*.spec.ts", "**/*.test.ts", ".output"]
 }

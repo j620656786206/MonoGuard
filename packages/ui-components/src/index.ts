@@ -7,4 +7,4 @@
  * as the project matures.
  */
 
-export const placeholder = true;
+export const placeholder = true

@@ -82,3 +82,6 @@ test-results/
 playwright-report/
 playwright/.cache/
 **/playwright/.auth/
+
+# Claude Code TTS audio files
+.claude/audio/

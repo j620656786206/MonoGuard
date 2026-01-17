@@ -1,7 +1,7 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import { TanStackRouterVite } from '@tanstack/router-vite-plugin';
-import viteTsConfigPaths from 'vite-tsconfig-paths';
+import { TanStackRouterVite } from '@tanstack/router-vite-plugin'
+import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite'
+import viteTsConfigPaths from 'vite-tsconfig-paths'
 
 export default defineConfig({
   plugins: [
@@ -21,4 +21,4 @@ export default defineConfig({
   server: {
     port: 3000,
   },
-});
+})
