@@ -2,15 +2,40 @@
   "name": "@monoguard/analysis-engine",
   "version": "0.1.0",
   "private": true,
-  "description": "Go WASM analysis engine for MonoGuard",
+  "description": "Go WASM analysis engine with TypeScript adapter for MonoGuard",
   "type": "module",
-  "main": "./dist/wasm_exec.js",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./wasm": {
+      "import": "./dist/monoguard.wasm"
+    },
+    "./wasm-exec": {
+      "import": "./dist/wasm_exec.js"
+    }
+  },
   "files": [
     "dist/"
   ],
   "scripts": {
-    "build": "make build-wasm",
+    "build": "make build-wasm && pnpm build:ts",
+    "build:wasm": "make build-wasm",
+    "build:ts": "tsc",
     "test": "make test",
-    "clean": "make clean"
+    "test:ts": "vitest run",
+    "test:ts:watch": "vitest",
+    "clean": "make clean && rm -rf dist/*.js dist/*.d.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@monoguard/types": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.0"
   }
 }
