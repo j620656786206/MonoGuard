@@ -26,7 +26,7 @@ func NewAnalyzer() *Analyzer {
 
 // Analyze performs complete workspace analysis and returns the result.
 // This builds the dependency graph, detects circular dependencies,
-// and will include duplicate detection and health score calculation in future stories.
+// identifies version conflicts, and will include health score calculation in future stories.
 func (a *Analyzer) Analyze(workspace *types.WorkspaceData) (*types.AnalysisResult, error) {
 	// Build dependency graph (Story 2.2)
 	graph, err := a.graphBuilder.Build(workspace)
@@ -38,17 +38,21 @@ func (a *Analyzer) Analyze(workspace *types.WorkspaceData) (*types.AnalysisResul
 	packageCount := len(graph.Nodes)
 
 	// Detect circular dependencies (Story 2.3)
-	detector := NewCycleDetector(graph)
-	cycles := detector.DetectCycles()
+	cycleDetector := NewCycleDetector(graph)
+	cycles := cycleDetector.DetectCycles()
 
-	// Return result with graph and cycles
+	// Detect version conflicts (Story 2.4)
+	conflictDetector := NewConflictDetector(graph)
+	conflicts := conflictDetector.DetectConflicts()
+
+	// Return result with graph, cycles, and conflicts
 	// Note: HealthScore is placeholder (100) until Story 2.5
-	// Note: Duplicate detection comes in Story 2.4
 	return &types.AnalysisResult{
 		HealthScore:          100, // Placeholder until Story 2.5
 		Packages:             packageCount,
 		Graph:                graph,
 		CircularDependencies: cycles,
+		VersionConflicts:     conflicts,
 		CreatedAt:            time.Now().UTC().Format(time.RFC3339),
 	}, nil
 }

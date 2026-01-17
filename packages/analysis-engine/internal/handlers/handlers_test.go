@@ -376,3 +376,107 @@ func TestErrorResultStructure(t *testing.T) {
 		t.Errorf("error code = %v, want INVALID_INPUT", code)
 	}
 }
+
+// TestAnalyzeWithVersionConflicts verifies version conflict detection (Story 2.4).
+func TestAnalyzeWithVersionConflicts(t *testing.T) {
+	// Test with external dependencies that have version conflicts
+	input := `{
+		"package.json": "{\"name\": \"monorepo-root\", \"workspaces\": [\"packages/*\"]}",
+		"package-lock.json": "{}",
+		"packages/app/package.json": "{\"name\": \"@mono/app\", \"version\": \"1.0.0\", \"dependencies\": {\"lodash\": \"^4.17.21\", \"typescript\": \"^5.0.0\"}}",
+		"packages/lib/package.json": "{\"name\": \"@mono/lib\", \"version\": \"1.0.0\", \"dependencies\": {\"lodash\": \"^4.17.19\", \"typescript\": \"^4.9.0\"}}"
+	}`
+
+	result := Analyze(input)
+
+	var parsed map[string]interface{}
+	if err := json.Unmarshal([]byte(result), &parsed); err != nil {
+		t.Fatalf("Failed to parse JSON result: %v", err)
+	}
+
+	// Verify no error
+	if parsed["error"] != nil {
+		t.Fatalf("Unexpected error: %v", parsed["error"])
+	}
+
+	data, ok := parsed["data"].(map[string]interface{})
+	if !ok {
+		t.Fatal("data is not a map")
+	}
+
+	// Verify versionConflicts field exists
+	versionConflicts, ok := data["versionConflicts"].([]interface{})
+	if !ok {
+		t.Fatal("versionConflicts is not an array or missing")
+	}
+
+	// Should have 2 conflicts: lodash (patch diff) and typescript (major diff)
+	if len(versionConflicts) != 2 {
+		t.Errorf("versionConflicts count = %d, want 2", len(versionConflicts))
+	}
+
+	// Find typescript conflict and verify critical severity
+	for _, c := range versionConflicts {
+		conflict := c.(map[string]interface{})
+		if conflict["packageName"] == "typescript" {
+			if conflict["severity"] != "critical" {
+				t.Errorf("typescript severity = %v, want critical", conflict["severity"])
+			}
+
+			// Verify conflictingVersions structure
+			versions, ok := conflict["conflictingVersions"].([]interface{})
+			if !ok {
+				t.Fatal("conflictingVersions is not an array")
+			}
+			if len(versions) != 2 {
+				t.Errorf("typescript conflictingVersions count = %d, want 2", len(versions))
+			}
+
+			// Verify resolution and impact exist
+			if conflict["resolution"] == nil || conflict["resolution"] == "" {
+				t.Error("typescript conflict missing resolution")
+			}
+			if conflict["impact"] == nil || conflict["impact"] == "" {
+				t.Error("typescript conflict missing impact")
+			}
+		}
+
+		if conflict["packageName"] == "lodash" {
+			if conflict["severity"] != "info" {
+				t.Errorf("lodash severity = %v, want info", conflict["severity"])
+			}
+		}
+	}
+}
+
+// TestAnalyzeNoVersionConflictsInResult verifies no conflicts when versions match.
+func TestAnalyzeNoVersionConflictsInResult(t *testing.T) {
+	input := `{
+		"package.json": "{\"name\": \"monorepo-root\", \"workspaces\": [\"packages/*\"]}",
+		"package-lock.json": "{}",
+		"packages/app/package.json": "{\"name\": \"@mono/app\", \"version\": \"1.0.0\", \"dependencies\": {\"lodash\": \"^4.17.21\"}}",
+		"packages/lib/package.json": "{\"name\": \"@mono/lib\", \"version\": \"1.0.0\", \"dependencies\": {\"lodash\": \"^4.17.21\"}}"
+	}`
+
+	result := Analyze(input)
+
+	var parsed map[string]interface{}
+	if err := json.Unmarshal([]byte(result), &parsed); err != nil {
+		t.Fatalf("Failed to parse JSON result: %v", err)
+	}
+
+	if parsed["error"] != nil {
+		t.Fatalf("Unexpected error: %v", parsed["error"])
+	}
+
+	data := parsed["data"].(map[string]interface{})
+
+	// versionConflicts should be nil or empty when no conflicts
+	versionConflicts := data["versionConflicts"]
+	if versionConflicts != nil {
+		conflicts := versionConflicts.([]interface{})
+		if len(conflicts) != 0 {
+			t.Errorf("Expected no version conflicts, got %d", len(conflicts))
+		}
+	}
+}

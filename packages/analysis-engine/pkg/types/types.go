@@ -49,6 +49,7 @@ type AnalysisResult struct {
 	Packages             int                       `json:"packages"`
 	Graph                *DependencyGraph          `json:"graph,omitempty"`
 	CircularDependencies []*CircularDependencyInfo `json:"circularDependencies,omitempty"` // Story 2.3
+	VersionConflicts     []*VersionConflictInfo    `json:"versionConflicts,omitempty"`     // Story 2.4
 	CreatedAt            string                    `json:"createdAt,omitempty"`            // ISO 8601 format
 	Placeholder          bool                      `json:"placeholder,omitempty"`          // True when returning placeholder data
 }
@@ -80,7 +81,9 @@ type CircularDependency struct {
 	Depth int      `json:"depth"` // Length of the cycle
 }
 
-// VersionConflict represents a dependency with conflicting versions.
+// VersionConflict is deprecated, use VersionConflictInfo from version_conflict.go instead.
+// Kept for backward compatibility with existing tests.
+// Deprecated: Use VersionConflictInfo
 type VersionConflict struct {
 	PackageName string            `json:"packageName"`
 	Versions    map[string]string `json:"versions"` // dependent -> version
