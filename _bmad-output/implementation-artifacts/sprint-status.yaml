@@ -51,14 +51,14 @@ development_status:
   epic-1-retrospective: optional
 
   # Epic 2: Core Dependency Analysis Engine
-  epic-2: backlog
-  2-1-implement-workspace-configuration-parser: backlog
-  2-2-build-dependency-graph-data-structure: backlog
-  2-3-implement-circular-dependency-detection-algorithm: backlog
-  2-4-identify-duplicate-dependencies-with-version-conflicts: backlog
-  2-5-calculate-architecture-health-score: backlog
-  2-6-implement-package-exclusion-patterns: backlog
-  2-7-create-typescript-wasm-adapter: backlog
+  epic-2: in-progress
+  2-1-implement-workspace-configuration-parser: done
+  2-2-build-dependency-graph-data-structure: ready-for-dev
+  2-3-implement-circular-dependency-detection-algorithm: ready-for-dev
+  2-4-identify-duplicate-dependencies-with-version-conflicts: ready-for-dev
+  2-5-calculate-architecture-health-score: ready-for-dev
+  2-6-implement-package-exclusion-patterns: ready-for-dev
+  2-7-create-typescript-wasm-adapter: ready-for-dev
   epic-2-retrospective: optional
 
   # Epic 3: Circular Dependency Resolution Engine (Core Differentiator)

@@ -4,7 +4,10 @@
 package handlers
 
 import (
+	"encoding/json"
+
 	"github.com/j620656786206/MonoGuard/packages/analysis-engine/internal/result"
+	"github.com/j620656786206/MonoGuard/packages/analysis-engine/pkg/parser"
 	"github.com/j620656786206/MonoGuard/packages/analysis-engine/pkg/types"
 )
 
@@ -18,20 +21,44 @@ func GetVersion() string {
 }
 
 // Analyze performs dependency analysis on the provided workspace data.
-// Returns a Result JSON string with AnalysisResult or error.
+// Input should be a JSON object mapping filenames to file contents:
+//
+//	{
+//	  "package.json": "{ \"name\": \"root\", \"workspaces\": [\"packages/*\"] }",
+//	  "packages/pkg-a/package.json": "{ \"name\": \"@mono/pkg-a\", ... }"
+//	}
+//
+// Returns a Result JSON string with WorkspaceData or error.
 func Analyze(input string) string {
 	if input == "" {
-		r := result.NewError("INVALID_INPUT", "Missing JSON input")
+		r := result.NewError(result.ErrInvalidInput, "Missing JSON input")
 		return r.ToJSON()
 	}
 
-	// Placeholder - will be implemented in Epic 2
-	// TODO: Parse input JSON and perform actual analysis
-	r := result.NewSuccess(types.AnalysisResult{
-		HealthScore: 100,
-		Packages:    0,
-		Placeholder: true,
-	})
+	// Parse input JSON - map of filename to content
+	var filesInput map[string]string
+	if err := json.Unmarshal([]byte(input), &filesInput); err != nil {
+		r := result.NewError(result.ErrInvalidInput, "Failed to parse input JSON: "+err.Error())
+		return r.ToJSON()
+	}
+
+	// Convert string content to []byte
+	files := make(map[string][]byte)
+	for name, content := range filesInput {
+		files[name] = []byte(content)
+	}
+
+	// Parse workspace using the real parser
+	p := parser.NewParser("/workspace")
+	workspaceData, err := p.Parse(files)
+	if err != nil {
+		r := result.NewError(result.ErrAnalysisFailed, err.Error())
+		return r.ToJSON()
+	}
+
+	// For now, return workspace data as the analysis result
+	// Full analysis logic (dependency graph, cycles, etc.) comes in Story 2.2+
+	r := result.NewSuccess(workspaceData)
 	return r.ToJSON()
 }
 

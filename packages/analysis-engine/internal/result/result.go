@@ -5,6 +5,34 @@ package result
 
 import "encoding/json"
 
+// ========================================
+// Error Codes - UPPER_SNAKE_CASE
+// ========================================
+
+// Parser Error Codes (Story 2.1)
+const (
+	// ErrInvalidWorkspace indicates the workspace configuration is invalid.
+	ErrInvalidWorkspace = "INVALID_WORKSPACE"
+
+	// ErrMissingPackageJSON indicates the root package.json is missing.
+	ErrMissingPackageJSON = "MISSING_PACKAGE_JSON"
+
+	// ErrInvalidPackageJSON indicates the package.json file is malformed.
+	ErrInvalidPackageJSON = "INVALID_PACKAGE_JSON"
+
+	// ErrInvalidPnpmWorkspace indicates the pnpm-workspace.yaml is malformed.
+	ErrInvalidPnpmWorkspace = "INVALID_PNPM_WORKSPACE"
+
+	// ErrGlobPatternFailed indicates glob pattern expansion failed.
+	ErrGlobPatternFailed = "GLOB_PATTERN_FAILED"
+
+	// ErrInvalidInput indicates the input data is malformed.
+	ErrInvalidInput = "INVALID_INPUT"
+
+	// ErrAnalysisFailed indicates the analysis operation failed.
+	ErrAnalysisFailed = "ANALYSIS_FAILED"
+)
+
 // Result represents the unified response type for all WASM functions.
 // This matches the TypeScript Result<T> type used in the frontend.
 //

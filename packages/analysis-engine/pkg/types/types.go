@@ -2,6 +2,45 @@
 // All JSON tags use camelCase for cross-language consistency.
 package types
 
+// ========================================
+// Workspace Configuration Types (Story 2.1)
+// ========================================
+
+// WorkspaceType identifies the package manager workspace format.
+// Matches @monoguard/types WorkspaceType.
+type WorkspaceType string
+
+const (
+	WorkspaceTypeNpm     WorkspaceType = "npm"
+	WorkspaceTypeYarn    WorkspaceType = "yarn"
+	WorkspaceTypePnpm    WorkspaceType = "pnpm"
+	WorkspaceTypeUnknown WorkspaceType = "unknown"
+)
+
+// WorkspaceData represents the complete parsed workspace configuration.
+// Matches @monoguard/types WorkspaceData.
+type WorkspaceData struct {
+	RootPath      string                  `json:"rootPath"`
+	WorkspaceType WorkspaceType           `json:"workspaceType"`
+	Packages      map[string]*PackageInfo `json:"packages"`
+}
+
+// PackageInfo represents a single package in the workspace with full dependency information.
+// This is the expanded version that includes version strings for all dependencies.
+// Matches @monoguard/types Package interface.
+type PackageInfo struct {
+	Name             string            `json:"name"`
+	Version          string            `json:"version"`
+	Path             string            `json:"path"`
+	Dependencies     map[string]string `json:"dependencies"`
+	DevDependencies  map[string]string `json:"devDependencies"`
+	PeerDependencies map[string]string `json:"peerDependencies"`
+}
+
+// ========================================
+// Analysis Result Types
+// ========================================
+
 // AnalysisResult represents the complete analysis output.
 // This matches @monoguard/types AnalysisResult.
 type AnalysisResult struct {

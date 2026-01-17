@@ -41,20 +41,28 @@ func TestAnalyze(t *testing.T) {
 		errorCode string
 	}{
 		{
-			name:      "valid empty JSON input",
-			input:     "{}",
-			wantError: false,
-		},
-		{
-			name:      "valid workspace JSON",
-			input:     `{"projects": {}}`,
-			wantError: false,
-		},
-		{
 			name:      "empty string input returns error",
 			input:     "",
 			wantError: true,
 			errorCode: "INVALID_INPUT",
+		},
+		{
+			name:      "invalid JSON input returns error",
+			input:     "{invalid json",
+			wantError: true,
+			errorCode: "INVALID_INPUT",
+		},
+		{
+			name:      "empty files object returns error (missing package.json)",
+			input:     "{}",
+			wantError: true,
+			errorCode: "ANALYSIS_FAILED",
+		},
+		{
+			name:      "missing root package.json returns error",
+			input:     `{"packages/pkg-a/package.json": "{\"name\": \"pkg-a\"}"}`,
+			wantError: true,
+			errorCode: "ANALYSIS_FAILED",
 		},
 	}
 
@@ -79,26 +87,112 @@ func TestAnalyze(t *testing.T) {
 			} else {
 				if parsed["error"] != nil {
 					t.Errorf("Unexpected error: %v", parsed["error"])
-					return
-				}
-
-				data, ok := parsed["data"].(map[string]interface{})
-				if !ok {
-					t.Fatal("data is not a map")
-				}
-
-				// Verify AnalysisResult fields
-				if _, ok := data["healthScore"]; !ok {
-					t.Error("Missing healthScore field")
-				}
-				if _, ok := data["packages"]; !ok {
-					t.Error("Missing packages field")
-				}
-				if data["placeholder"] != true {
-					t.Error("Expected placeholder to be true")
 				}
 			}
 		})
+	}
+}
+
+func TestAnalyzeWithRealWorkspace(t *testing.T) {
+	// Test with a real npm workspace configuration
+	input := `{
+		"package.json": "{\"name\": \"monorepo-root\", \"workspaces\": [\"packages/*\"]}",
+		"package-lock.json": "{}",
+		"packages/pkg-a/package.json": "{\"name\": \"@mono/pkg-a\", \"version\": \"1.0.0\", \"dependencies\": {\"@mono/pkg-b\": \"^1.0.0\"}}",
+		"packages/pkg-b/package.json": "{\"name\": \"@mono/pkg-b\", \"version\": \"1.0.0\"}"
+	}`
+
+	result := Analyze(input)
+
+	var parsed map[string]interface{}
+	if err := json.Unmarshal([]byte(result), &parsed); err != nil {
+		t.Fatalf("Failed to parse JSON result: %v", err)
+	}
+
+	// Verify no error
+	if parsed["error"] != nil {
+		t.Fatalf("Unexpected error: %v", parsed["error"])
+	}
+
+	// Verify WorkspaceData structure
+	data, ok := parsed["data"].(map[string]interface{})
+	if !ok {
+		t.Fatal("data is not a map")
+	}
+
+	// Verify rootPath
+	if data["rootPath"] != "/workspace" {
+		t.Errorf("rootPath = %v, want /workspace", data["rootPath"])
+	}
+
+	// Verify workspaceType
+	if data["workspaceType"] != "npm" {
+		t.Errorf("workspaceType = %v, want npm", data["workspaceType"])
+	}
+
+	// Verify packages
+	packages, ok := data["packages"].(map[string]interface{})
+	if !ok {
+		t.Fatal("packages is not a map")
+	}
+
+	if len(packages) != 2 {
+		t.Errorf("packages count = %d, want 2", len(packages))
+	}
+
+	// Verify specific package
+	pkgA, ok := packages["@mono/pkg-a"].(map[string]interface{})
+	if !ok {
+		t.Fatal("@mono/pkg-a not found or not a map")
+	}
+
+	if pkgA["name"] != "@mono/pkg-a" {
+		t.Errorf("pkg-a name = %v, want @mono/pkg-a", pkgA["name"])
+	}
+	if pkgA["version"] != "1.0.0" {
+		t.Errorf("pkg-a version = %v, want 1.0.0", pkgA["version"])
+	}
+
+	// Verify dependencies are parsed
+	deps, ok := pkgA["dependencies"].(map[string]interface{})
+	if !ok {
+		t.Fatal("pkg-a dependencies not found or not a map")
+	}
+	if deps["@mono/pkg-b"] != "^1.0.0" {
+		t.Errorf("pkg-a dependency @mono/pkg-b = %v, want ^1.0.0", deps["@mono/pkg-b"])
+	}
+}
+
+func TestAnalyzeWithPnpmWorkspace(t *testing.T) {
+	// Test with a pnpm workspace configuration
+	input := `{
+		"pnpm-workspace.yaml": "packages:\n  - 'packages/*'",
+		"package.json": "{\"name\": \"monorepo-root\"}",
+		"packages/core/package.json": "{\"name\": \"@mono/core\", \"version\": \"2.0.0\"}"
+	}`
+
+	result := Analyze(input)
+
+	var parsed map[string]interface{}
+	if err := json.Unmarshal([]byte(result), &parsed); err != nil {
+		t.Fatalf("Failed to parse JSON result: %v", err)
+	}
+
+	if parsed["error"] != nil {
+		t.Fatalf("Unexpected error: %v", parsed["error"])
+	}
+
+	data := parsed["data"].(map[string]interface{})
+
+	// Verify pnpm workspace type
+	if data["workspaceType"] != "pnpm" {
+		t.Errorf("workspaceType = %v, want pnpm", data["workspaceType"])
+	}
+
+	// Verify package was parsed
+	packages := data["packages"].(map[string]interface{})
+	if len(packages) != 1 {
+		t.Errorf("packages count = %d, want 1", len(packages))
 	}
 }
 
@@ -173,12 +267,19 @@ func TestCheck(t *testing.T) {
 
 func TestResultStructure(t *testing.T) {
 	// Verify all handlers return proper Result<T> structure
+	// Note: Analyze needs a valid workspace to succeed
+	validWorkspace := `{
+		"package.json": "{\"name\": \"root\", \"workspaces\": [\"packages/*\"]}",
+		"package-lock.json": "{}",
+		"packages/a/package.json": "{\"name\": \"a\", \"version\": \"1.0.0\"}"
+	}`
+
 	handlers := []struct {
 		name   string
 		result string
 	}{
 		{"GetVersion", GetVersion()},
-		{"Analyze", Analyze("{}")},
+		{"Analyze", Analyze(validWorkspace)},
 		{"Check", Check("{}")},
 	}
 

@@ -211,3 +211,238 @@ func TestVersionConflictJSON(t *testing.T) {
 		t.Error("Found 'package_name' key - should be camelCase 'packageName'")
 	}
 }
+
+// ========================================
+// WorkspaceData Types Tests (Story 2.1)
+// ========================================
+
+func TestWorkspaceTypeConstants(t *testing.T) {
+	tests := []struct {
+		name     string
+		wt       WorkspaceType
+		expected string
+	}{
+		{"npm workspace type", WorkspaceTypeNpm, "npm"},
+		{"yarn workspace type", WorkspaceTypeYarn, "yarn"},
+		{"pnpm workspace type", WorkspaceTypePnpm, "pnpm"},
+		{"unknown workspace type", WorkspaceTypeUnknown, "unknown"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if string(tt.wt) != tt.expected {
+				t.Errorf("WorkspaceType = %q, want %q", tt.wt, tt.expected)
+			}
+		})
+	}
+}
+
+func TestWorkspaceDataJSON(t *testing.T) {
+	tests := []struct {
+		name            string
+		input           WorkspaceData
+		wantKeys        []string
+		wantSnakeCases  []string
+		wantType        string
+	}{
+		{
+			name: "npm workspace with packages",
+			input: WorkspaceData{
+				RootPath:      "/workspace",
+				WorkspaceType: WorkspaceTypeNpm,
+				Packages: map[string]*PackageInfo{
+					"@mono/pkg-a": {
+						Name:             "@mono/pkg-a",
+						Version:          "1.0.0",
+						Path:             "packages/pkg-a",
+						Dependencies:     map[string]string{"@mono/pkg-b": "^1.0.0"},
+						DevDependencies:  map[string]string{"typescript": "^5.0.0"},
+						PeerDependencies: map[string]string{},
+					},
+				},
+			},
+			wantKeys:       []string{"rootPath", "workspaceType", "packages"},
+			wantSnakeCases: []string{"root_path", "workspace_type"},
+			wantType:       "npm",
+		},
+		{
+			name: "pnpm workspace",
+			input: WorkspaceData{
+				RootPath:      "/workspace",
+				WorkspaceType: WorkspaceTypePnpm,
+				Packages:      map[string]*PackageInfo{},
+			},
+			wantKeys:       []string{"rootPath", "workspaceType", "packages"},
+			wantSnakeCases: []string{"root_path", "workspace_type"},
+			wantType:       "pnpm",
+		},
+		{
+			name: "yarn workspace",
+			input: WorkspaceData{
+				RootPath:      "/workspace",
+				WorkspaceType: WorkspaceTypeYarn,
+				Packages:      map[string]*PackageInfo{},
+			},
+			wantKeys:       []string{"rootPath", "workspaceType", "packages"},
+			wantSnakeCases: []string{"root_path", "workspace_type"},
+			wantType:       "yarn",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			jsonBytes, err := json.Marshal(tt.input)
+			if err != nil {
+				t.Fatalf("Failed to marshal WorkspaceData: %v", err)
+			}
+
+			var parsed map[string]interface{}
+			if err := json.Unmarshal(jsonBytes, &parsed); err != nil {
+				t.Fatalf("Failed to unmarshal JSON: %v", err)
+			}
+
+			// Verify expected camelCase keys exist
+			for _, key := range tt.wantKeys {
+				if _, ok := parsed[key]; !ok {
+					t.Errorf("Missing expected key %q in JSON output", key)
+				}
+			}
+
+			// Verify NO snake_case keys exist
+			for _, key := range tt.wantSnakeCases {
+				if _, ok := parsed[key]; ok {
+					t.Errorf("Found snake_case key %q - should be camelCase", key)
+				}
+			}
+
+			// Verify workspaceType value
+			if parsed["workspaceType"] != tt.wantType {
+				t.Errorf("workspaceType = %v, want %v", parsed["workspaceType"], tt.wantType)
+			}
+		})
+	}
+}
+
+func TestPackageInfoJSON(t *testing.T) {
+	tests := []struct {
+		name           string
+		input          PackageInfo
+		wantKeys       []string
+		wantSnakeCases []string
+	}{
+		{
+			name: "full package info with all dependency types",
+			input: PackageInfo{
+				Name:             "@mono/pkg-a",
+				Version:          "1.0.0",
+				Path:             "packages/pkg-a",
+				Dependencies:     map[string]string{"lodash": "^4.17.21"},
+				DevDependencies:  map[string]string{"typescript": "^5.0.0", "vitest": "^1.0.0"},
+				PeerDependencies: map[string]string{"react": "^18.0.0"},
+			},
+			wantKeys:       []string{"name", "version", "path", "dependencies", "devDependencies", "peerDependencies"},
+			wantSnakeCases: []string{"dev_dependencies", "peer_dependencies"},
+		},
+		{
+			name: "minimal package info",
+			input: PackageInfo{
+				Name:             "@mono/simple",
+				Version:          "0.0.1",
+				Path:             "packages/simple",
+				Dependencies:     map[string]string{},
+				DevDependencies:  map[string]string{},
+				PeerDependencies: map[string]string{},
+			},
+			wantKeys:       []string{"name", "version", "path", "dependencies", "devDependencies", "peerDependencies"},
+			wantSnakeCases: []string{"dev_dependencies", "peer_dependencies"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			jsonBytes, err := json.Marshal(tt.input)
+			if err != nil {
+				t.Fatalf("Failed to marshal PackageInfo: %v", err)
+			}
+
+			var parsed map[string]interface{}
+			if err := json.Unmarshal(jsonBytes, &parsed); err != nil {
+				t.Fatalf("Failed to unmarshal JSON: %v", err)
+			}
+
+			// Verify expected camelCase keys exist
+			for _, key := range tt.wantKeys {
+				if _, ok := parsed[key]; !ok {
+					t.Errorf("Missing expected key %q in JSON output", key)
+				}
+			}
+
+			// Verify NO snake_case keys exist
+			for _, key := range tt.wantSnakeCases {
+				if _, ok := parsed[key]; ok {
+					t.Errorf("Found snake_case key %q - should be camelCase", key)
+				}
+			}
+		})
+	}
+}
+
+func TestWorkspaceDataWithNestedPackages(t *testing.T) {
+	// Test that nested package data serializes correctly
+	ws := WorkspaceData{
+		RootPath:      "/workspace",
+		WorkspaceType: WorkspaceTypeNpm,
+		Packages: map[string]*PackageInfo{
+			"@mono/pkg-a": {
+				Name:    "@mono/pkg-a",
+				Version: "1.0.0",
+				Path:    "packages/pkg-a",
+				Dependencies: map[string]string{
+					"@mono/pkg-b": "^1.0.0",
+					"lodash":      "^4.17.21",
+				},
+				DevDependencies:  map[string]string{"typescript": "^5.0.0"},
+				PeerDependencies: map[string]string{},
+			},
+			"@mono/pkg-b": {
+				Name:             "@mono/pkg-b",
+				Version:          "1.0.0",
+				Path:             "packages/pkg-b",
+				Dependencies:     map[string]string{},
+				DevDependencies:  map[string]string{"typescript": "^5.0.0"},
+				PeerDependencies: map[string]string{},
+			},
+		},
+	}
+
+	jsonBytes, err := json.Marshal(ws)
+	if err != nil {
+		t.Fatalf("Failed to marshal WorkspaceData: %v", err)
+	}
+
+	// Unmarshal back to verify round-trip
+	var parsed WorkspaceData
+	if err := json.Unmarshal(jsonBytes, &parsed); err != nil {
+		t.Fatalf("Failed to unmarshal WorkspaceData: %v", err)
+	}
+
+	// Verify package count
+	if len(parsed.Packages) != 2 {
+		t.Errorf("Expected 2 packages, got %d", len(parsed.Packages))
+	}
+
+	// Verify specific package data
+	pkgA, ok := parsed.Packages["@mono/pkg-a"]
+	if !ok {
+		t.Fatal("Missing @mono/pkg-a package")
+	}
+	if pkgA.Name != "@mono/pkg-a" {
+		t.Errorf("Package name = %q, want %q", pkgA.Name, "@mono/pkg-a")
+	}
+	if len(pkgA.Dependencies) != 2 {
+		t.Errorf("Expected 2 dependencies, got %d", len(pkgA.Dependencies))
+	}
+	if pkgA.Dependencies["@mono/pkg-b"] != "^1.0.0" {
+		t.Errorf("Dependency version = %q, want %q", pkgA.Dependencies["@mono/pkg-b"], "^1.0.0")
+	}
+}

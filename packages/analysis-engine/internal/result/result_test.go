@@ -148,6 +148,33 @@ func TestErrorCodeFormat(t *testing.T) {
 	}
 }
 
+func TestParserErrorCodes(t *testing.T) {
+	// Verify parser error code constants are UPPER_SNAKE_CASE
+	tests := []struct {
+		name     string
+		code     string
+		expected string
+	}{
+		{"InvalidWorkspace", ErrInvalidWorkspace, "INVALID_WORKSPACE"},
+		{"MissingPackageJSON", ErrMissingPackageJSON, "MISSING_PACKAGE_JSON"},
+		{"InvalidPackageJSON", ErrInvalidPackageJSON, "INVALID_PACKAGE_JSON"},
+		{"InvalidPnpmWorkspace", ErrInvalidPnpmWorkspace, "INVALID_PNPM_WORKSPACE"},
+		{"GlobPatternFailed", ErrGlobPatternFailed, "GLOB_PATTERN_FAILED"},
+		{"InvalidInput", ErrInvalidInput, "INVALID_INPUT"},
+		{"AnalysisFailed", ErrAnalysisFailed, "ANALYSIS_FAILED"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.expected, tt.code, "Error code should be UPPER_SNAKE_CASE")
+
+			// Verify the code can be used with NewError
+			r := NewError(tt.code, "test message")
+			assert.Equal(t, tt.code, r.Error.Code)
+		})
+	}
+}
+
 func TestEscapeJSON(t *testing.T) {
 	tests := []struct {
 		name  string
