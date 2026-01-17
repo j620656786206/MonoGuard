@@ -1,6 +1,7 @@
 package analyzer
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/j620656786206/MonoGuard/packages/analysis-engine/pkg/types"
@@ -194,6 +195,38 @@ func TestConflictDetector_DevDependencyConflict(t *testing.T) {
 	}
 }
 
+func TestConflictDetector_PeerDependencyConflict(t *testing.T) {
+	// Conflict in peer dependencies
+	graph := createConflictTestGraph(map[string]map[string]map[string]string{
+		"@mono/app": {
+			"peer": {"react": "^18.0.0"},
+		},
+		"@mono/lib": {
+			"peer": {"react": "^17.0.0"},
+		},
+	})
+
+	detector := NewConflictDetector(graph)
+	conflicts := detector.DetectConflicts()
+
+	if len(conflicts) != 1 {
+		t.Fatalf("Expected 1 conflict, got %d", len(conflicts))
+	}
+
+	// Check severity (major version diff = critical)
+	conflict := conflicts[0]
+	if conflict.Severity != types.ConflictSeverityCritical {
+		t.Errorf("Expected severity 'critical' for major peer dep difference, got '%s'", conflict.Severity)
+	}
+
+	// Check depType
+	for _, cv := range conflict.ConflictingVersions {
+		if cv.DepType != types.DepTypePeer {
+			t.Errorf("Expected depType 'peer', got '%s'", cv.DepType)
+		}
+	}
+}
+
 func TestConflictDetector_MixedDepTypes(t *testing.T) {
 	// Same dependency used as prod in one package and dev in another
 	graph := createConflictTestGraph(map[string]map[string]map[string]string{
@@ -303,6 +336,40 @@ func TestConflictDetector_NilGraph(t *testing.T) {
 	}
 }
 
+func TestConflictDetector_UnparseableVersions(t *testing.T) {
+	// Test with special version strings that cannot be parsed as semver
+	graph := createConflictTestGraph(map[string]map[string]map[string]string{
+		"@mono/app": {
+			"production": {"some-pkg": "latest"},
+		},
+		"@mono/lib": {
+			"production": {"some-pkg": "*"},
+		},
+		"@mono/utils": {
+			"production": {"some-pkg": "^1.0.0"}, // Only parseable version
+		},
+	})
+
+	detector := NewConflictDetector(graph)
+	conflicts := detector.DetectConflicts()
+
+	// Should still detect conflict (3 different version strings)
+	if len(conflicts) != 1 {
+		t.Fatalf("Expected 1 conflict, got %d", len(conflicts))
+	}
+
+	conflict := conflicts[0]
+	if conflict.PackageName != "some-pkg" {
+		t.Errorf("Expected package name 'some-pkg', got '%s'", conflict.PackageName)
+	}
+
+	// With unparseable versions, severity comparison may default to major
+	// The behavior should be graceful, not panic
+	if len(conflict.ConflictingVersions) != 3 {
+		t.Errorf("Expected 3 conflicting versions, got %d", len(conflict.ConflictingVersions))
+	}
+}
+
 func TestConflictDetector_ResolutionMessage(t *testing.T) {
 	tests := []struct {
 		name           string
@@ -352,7 +419,7 @@ func TestConflictDetector_ResolutionMessage(t *testing.T) {
 				t.Errorf("Severity = %s, want %s", conflict.Severity, tt.wantSeverity)
 			}
 
-			if !containsString(conflict.Resolution, tt.containsInRes) {
+			if !strings.Contains(conflict.Resolution, tt.containsInRes) {
 				t.Errorf("Resolution %q should contain %q", conflict.Resolution, tt.containsInRes)
 			}
 		})
@@ -377,10 +444,10 @@ func TestConflictDetector_ImpactMessage(t *testing.T) {
 	}
 
 	impact := conflicts[0].Impact
-	if !containsString(impact, "lodash") {
+	if !strings.Contains(impact, "lodash") {
 		t.Errorf("Impact should mention the package name")
 	}
-	if !containsString(impact, "Breaking changes") {
+	if !strings.Contains(impact, "Breaking changes") {
 		t.Errorf("Impact should mention breaking changes for critical severity")
 	}
 }
@@ -432,12 +499,3 @@ func TestIsBreakingVersion(t *testing.T) {
 	}
 }
 
-// Helper function
-func containsString(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
-}

@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/json"
+	"strings"
 	"testing"
 )
 
@@ -48,7 +49,7 @@ func TestVersionConflictInfo_JSONSerialization(t *testing.T) {
 	}
 
 	for _, key := range expectedKeys {
-		if !contains(jsonStr, key) {
+		if !strings.Contains(jsonStr, key) {
 			t.Errorf("Expected JSON to contain key %s, but it didn't. JSON: %s", key, jsonStr)
 		}
 	}
@@ -167,26 +168,13 @@ func TestVersionConflictInfo_CriticalSeverity(t *testing.T) {
 	}
 
 	// Verify severity is "critical"
-	if !contains(string(data), `"severity":"critical"`) {
+	if !strings.Contains(string(data), `"severity":"critical"`) {
 		t.Errorf("Expected severity to be 'critical' in JSON: %s", string(data))
 	}
 
 	// Verify isBreaking is true for the first version
-	if !contains(string(data), `"isBreaking":true`) {
+	if !strings.Contains(string(data), `"isBreaking":true`) {
 		t.Errorf("Expected isBreaking:true in JSON: %s", string(data))
 	}
 }
 
-// Helper function
-func contains(s, substr string) bool {
-	return len(s) >= len(substr) && (s == substr || len(s) > 0 && containsHelper(s, substr))
-}
-
-func containsHelper(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
-}
