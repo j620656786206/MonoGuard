@@ -29,12 +29,13 @@ type WorkspaceData struct {
 // This is the expanded version that includes version strings for all dependencies.
 // Matches @monoguard/types Package interface.
 type PackageInfo struct {
-	Name             string            `json:"name"`
-	Version          string            `json:"version"`
-	Path             string            `json:"path"`
-	Dependencies     map[string]string `json:"dependencies"`
-	DevDependencies  map[string]string `json:"devDependencies"`
-	PeerDependencies map[string]string `json:"peerDependencies"`
+	Name                 string            `json:"name"`
+	Version              string            `json:"version"`
+	Path                 string            `json:"path"`
+	Dependencies         map[string]string `json:"dependencies"`
+	DevDependencies      map[string]string `json:"devDependencies"`
+	PeerDependencies     map[string]string `json:"peerDependencies"`
+	OptionalDependencies map[string]string `json:"optionalDependencies,omitempty"`
 }
 
 // ========================================
@@ -44,10 +45,11 @@ type PackageInfo struct {
 // AnalysisResult represents the complete analysis output.
 // This matches @monoguard/types AnalysisResult.
 type AnalysisResult struct {
-	HealthScore int    `json:"healthScore"`
-	Packages    int    `json:"packages"`
-	CreatedAt   string `json:"createdAt,omitempty"` // ISO 8601 format
-	Placeholder bool   `json:"placeholder,omitempty"` // True when returning placeholder data
+	HealthScore int              `json:"healthScore"`
+	Packages    int              `json:"packages"`
+	Graph       *DependencyGraph `json:"graph,omitempty"`
+	CreatedAt   string           `json:"createdAt,omitempty"` // ISO 8601 format
+	Placeholder bool             `json:"placeholder,omitempty"` // True when returning placeholder data
 }
 
 // VersionInfo represents the version response.

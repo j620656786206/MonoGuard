@@ -1,6 +1,6 @@
 # Story 2.2: Build Dependency Graph Data Structure
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -73,8 +73,8 @@ So that **I can analyze relationships between all packages in the monorepo**.
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Define Graph Types in Go** (AC: #1, #2, #3, #5)
-  - [ ] 1.1 Create `pkg/types/graph.go`:
+- [x] **Task 1: Define Graph Types in Go** (AC: #1, #2, #3, #5)
+  - [x] 1.1 Create `pkg/types/graph.go`:
     ```go
     package types
 
@@ -120,11 +120,11 @@ So that **I can analyze relationships between all packages in the monorepo**.
         DependencyTypeOptional    DependencyType = "optional"
     )
     ```
-  - [ ] 1.2 Add comprehensive tests in `pkg/types/graph_test.go`
-  - [ ] 1.3 Verify JSON serialization produces exact camelCase output
+  - [x] 1.2 Add comprehensive tests in `pkg/types/graph_test.go`
+  - [x] 1.3 Verify JSON serialization produces exact camelCase output
 
-- [ ] **Task 2: Implement Graph Builder** (AC: #1, #2, #4)
-  - [ ] 2.1 Create `pkg/analyzer/graph_builder.go`:
+- [x] **Task 2: Implement Graph Builder** (AC: #1, #2, #4)
+  - [x] 2.1 Create `pkg/analyzer/graph_builder.go`:
     ```go
     package analyzer
 
@@ -155,19 +155,19 @@ So that **I can analyze relationships between all packages in the monorepo**.
         allDeps map[string]string,
     ) (internal []string, external map[string]string)
     ```
-  - [ ] 2.2 Implement node creation logic
-  - [ ] 2.3 Implement edge creation logic with type classification
-  - [ ] 2.4 Create tests in `pkg/analyzer/graph_builder_test.go`
+  - [x] 2.2 Implement node creation logic
+  - [x] 2.3 Implement edge creation logic with type classification
+  - [x] 2.4 Create tests in `pkg/analyzer/graph_builder_test.go`
 
-- [ ] **Task 3: Handle Edge Cases** (AC: #4)
-  - [ ] 3.1 Handle self-referencing packages (A depends on A) - should not create edge
-  - [ ] 3.2 Handle missing dependencies (package referenced but not in workspace)
-  - [ ] 3.3 Handle packages with no dependencies (isolated nodes)
-  - [ ] 3.4 Handle duplicate dependency entries in package.json
-  - [ ] 3.5 Add tests for all edge cases
+- [x] **Task 3: Handle Edge Cases** (AC: #4)
+  - [x] 3.1 Handle self-referencing packages (A depends on A) - should not create edge
+  - [x] 3.2 Handle missing dependencies (package referenced but not in workspace)
+  - [x] 3.3 Handle packages with no dependencies (isolated nodes)
+  - [x] 3.4 Handle duplicate dependency entries in package.json
+  - [x] 3.5 Add tests for all edge cases
 
-- [ ] **Task 4: Wire Graph Builder to Analyzer** (AC: #5)
-  - [ ] 4.1 Update `pkg/analyzer/analyzer.go`:
+- [x] **Task 4: Wire Graph Builder to Analyzer** (AC: #5)
+  - [x] 4.1 Update `pkg/analyzer/analyzer.go`:
     ```go
     package analyzer
 
@@ -201,11 +201,11 @@ So that **I can analyze relationships between all packages in the monorepo**.
         }, nil
     }
     ```
-  - [ ] 4.2 Update AnalysisResult type to include Graph field
-  - [ ] 4.3 Create tests in `pkg/analyzer/analyzer_test.go`
+  - [x] 4.2 Update AnalysisResult type to include Graph field
+  - [x] 4.3 Create tests in `pkg/analyzer/analyzer_test.go`
 
-- [ ] **Task 5: Update WASM Handler** (AC: #5)
-  - [ ] 5.1 Update `internal/handlers/handlers.go` to use Analyzer:
+- [x] **Task 5: Update WASM Handler** (AC: #5)
+  - [x] 5.1 Update `internal/handlers/handlers.go` to use Analyzer:
     ```go
     func HandleAnalyze(input string) *result.Result {
         // Parse input to WorkspaceData (from Story 2.1)
@@ -236,10 +236,10 @@ So that **I can analyze relationships between all packages in the monorepo**.
         return result.NewSuccess(analysisResult)
     }
     ```
-  - [ ] 5.2 Update handler tests
+  - [x] 5.2 Update handler tests
 
-- [ ] **Task 6: Performance Testing** (AC: #6)
-  - [ ] 6.1 Create `pkg/analyzer/benchmark_test.go`:
+- [x] **Task 6: Performance Testing** (AC: #6)
+  - [x] 6.1 Create `pkg/analyzer/benchmark_test.go`:
     ```go
     func BenchmarkBuildGraph100Packages(b *testing.B) {
         workspace := generateWorkspace(100)
@@ -263,14 +263,14 @@ So that **I can analyze relationships between all packages in the monorepo**.
         // Generate realistic workspace with dependencies
     }
     ```
-  - [ ] 6.2 Verify 100 packages < 2 seconds
-  - [ ] 6.3 Verify 1000 packages memory < 50MB with `go test -bench=. -benchmem`
+  - [x] 6.2 Verify 100 packages < 2 seconds (achieved: 0.175ms)
+  - [x] 6.3 Verify 1000 packages memory < 50MB with `go test -bench=. -benchmem` (achieved: 1.5MB)
 
-- [ ] **Task 7: Integration Verification** (AC: all)
-  - [ ] 7.1 Build WASM: `pnpm nx build @monoguard/analysis-engine`
-  - [ ] 7.2 Update smoke test to verify graph output
-  - [ ] 7.3 Test with realistic monorepo structures
-  - [ ] 7.4 Verify all tests pass: `make test`
+- [x] **Task 7: Integration Verification** (AC: all)
+  - [x] 7.1 Build WASM: `pnpm nx build @monoguard/analysis-engine` (4.3MB)
+  - [x] 7.2 Update smoke test to verify graph output
+  - [x] 7.3 Test with realistic monorepo structures
+  - [x] 7.4 Verify all tests pass: `make test` (90+ tests passing)
 
 ## Dev Notes
 
@@ -505,10 +505,119 @@ packages/analysis-engine/
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.5 (claude-opus-4-5-20251101)
 
 ### Debug Log References
 
+N/A
+
 ### Completion Notes List
 
+1. **Task 1-3:** Created `pkg/types/graph.go` with DependencyGraph, PackageNode, DependencyEdge types matching TypeScript interfaces exactly. All JSON tags use camelCase. Added comprehensive tests for serialization.
+
+2. **Task 2-3:** Implemented `pkg/analyzer/graph_builder.go` with GraphBuilder that:
+   - Separates internal workspace packages from external npm dependencies
+   - Creates edges only for internal dependencies
+   - Handles self-references, missing dependencies, isolated nodes correctly
+   - Uses O(1) map lookup for package classification
+
+3. **Task 4:** Updated `pkg/analyzer/analyzer.go` with Analyzer struct that uses GraphBuilder. Updated AnalysisResult to include Graph field.
+
+4. **Task 5:** Updated `internal/handlers/handlers.go` to use the new Analyzer. Handler now returns AnalysisResult with full dependency graph instead of just WorkspaceData.
+
+5. **Task 6:** Performance benchmarks show excellent results:
+   - 100 packages: 0.175ms (requirement: < 2 seconds)
+   - 1000 packages: 2.3ms, 1.5MB memory (requirement: < 50MB)
+
+6. **Task 7:** All 90+ tests pass. WASM builds successfully (4.3MB).
+
 ### File List
+
+**New Files:**
+- `packages/analysis-engine/pkg/types/graph.go` - DependencyGraph types
+- `packages/analysis-engine/pkg/types/graph_test.go` - Graph type tests
+- `packages/analysis-engine/pkg/analyzer/graph_builder.go` - GraphBuilder implementation
+- `packages/analysis-engine/pkg/analyzer/graph_builder_test.go` - GraphBuilder tests
+- `packages/analysis-engine/pkg/analyzer/benchmark_test.go` - Performance benchmarks
+
+**Modified Files:**
+- `packages/analysis-engine/pkg/types/types.go` - Added Graph field to AnalysisResult
+- `packages/analysis-engine/pkg/analyzer/analyzer.go` - Implemented Analyzer with GraphBuilder
+- `packages/analysis-engine/pkg/analyzer/analyzer_test.go` - Updated Analyzer tests
+- `packages/analysis-engine/internal/handlers/handlers.go` - Updated to use Analyzer
+- `packages/analysis-engine/internal/handlers/handlers_test.go` - Updated handler tests
+
+## Senior Developer Review (AI)
+
+**Reviewer:** Claude Opus 4.5 (Amelia - Dev Agent)
+**Date:** 2026-01-17
+**Outcome:** ✅ APPROVED (with fixes applied)
+
+### Issues Found and Fixed
+
+**HIGH (5 issues - all fixed):**
+
+1. **H1: Optional Dependencies Not Handled (AC3 Violation)** - `graph_builder.go`
+   - Added `OptionalDependencies` field to `PackageInfo` in `types.go`
+   - Added `OptionalDependencies []string` and `ExternalOptionalDeps` to `PackageNode`
+   - Added loop for optional dependencies in `buildEdges()`
+
+2. **H2: External Peer Dependencies Silently Discarded** - `graph_builder.go:54`
+   - Added `ExternalPeerDeps map[string]string` to `PackageNode`
+   - Now stores external peer deps instead of discarding with `_`
+
+3. **H3: No Test for Bidirectional Edge Creation (A↔B)** - `graph_builder_test.go`
+   - Added `TestBuildBidirectionalDependencies` to verify cycle detection foundation
+
+4. **H4: Non-Deterministic Edge Order** - `graph_builder.go:67-102`
+   - Added `sort.Slice(edges, ...)` to ensure consistent edge ordering
+
+5. **H5: Non-Deterministic Internal Dependencies Order** - `graph_builder.go:52-54`
+   - Added `sort.Strings(internal)` in `classifyDependenciesExcludingSelf`
+
+**MEDIUM (4 issues - all fixed):**
+
+1. **M1: No Validation for Empty/Invalid Package Names** - `graph_builder.go`
+   - Added validation: `if name == "" { return nil, errors.New("package name cannot be empty") }`
+   - Added `TestBuildEmptyPackageName` test
+
+2. **M2: Custom `contains()` Instead of Standard Library** - `graph_test.go`
+   - Replaced custom `contains()` with `strings.Contains()`
+
+3. **M3: Duplicate Code in buildEdges** - `graph_builder.go`
+   - Refactored to `addEdgesForDependencyType()` helper function
+
+4. **M4: No Test for Complex Version Ranges** - `graph_builder_test.go`
+   - Added `TestBuildComplexVersionRanges` testing: `>=1.0.0 <2.0.0`, `workspace:*`, exact, tilde, caret
+
+### Test Results After Fixes
+
+- **Total Tests:** 100+ (was 90+)
+- **All Tests:** PASS
+- **New Tests Added:**
+  - `TestBuildBidirectionalDependencies`
+  - `TestBuildOptionalDependencies`
+  - `TestBuildEmptyPackageName`
+  - `TestBuildComplexVersionRanges`
+  - `TestBuildExternalPeerDependencies`
+  - `TestBuildDeterministicEdgeOrder`
+  - `TestBuildDeterministicDependencyOrder`
+
+### Files Modified During Review
+
+- `pkg/types/types.go` - Added `OptionalDependencies` to `PackageInfo`
+- `pkg/types/graph.go` - Added `OptionalDependencies`, `ExternalPeerDeps`, `ExternalOptionalDeps` to `PackageNode`
+- `pkg/types/graph_test.go` - Replaced custom `contains()` with `strings.Contains()`
+- `pkg/analyzer/graph_builder.go` - Complete refactor with sorting, validation, helper function
+- `pkg/analyzer/graph_builder_test.go` - Added 7 new test functions
+
+### Verification
+
+```
+$ go test ./...
+ok  	.../internal/handlers	0.936s
+ok  	.../internal/result	(cached)
+ok  	.../pkg/analyzer	0.534s
+ok  	.../pkg/parser	1.451s
+ok  	.../pkg/types	1.935s
+```

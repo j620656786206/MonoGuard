@@ -114,52 +114,85 @@ func TestAnalyzeWithRealWorkspace(t *testing.T) {
 		t.Fatalf("Unexpected error: %v", parsed["error"])
 	}
 
-	// Verify WorkspaceData structure
+	// Verify AnalysisResult structure
 	data, ok := parsed["data"].(map[string]interface{})
 	if !ok {
 		t.Fatal("data is not a map")
 	}
 
-	// Verify rootPath
-	if data["rootPath"] != "/workspace" {
-		t.Errorf("rootPath = %v, want /workspace", data["rootPath"])
-	}
-
-	// Verify workspaceType
-	if data["workspaceType"] != "npm" {
-		t.Errorf("workspaceType = %v, want npm", data["workspaceType"])
-	}
-
-	// Verify packages
-	packages, ok := data["packages"].(map[string]interface{})
+	// Verify healthScore
+	healthScore, ok := data["healthScore"].(float64)
 	if !ok {
-		t.Fatal("packages is not a map")
+		t.Fatal("healthScore is not a number")
+	}
+	if healthScore != 100 {
+		t.Errorf("healthScore = %v, want 100 (placeholder)", healthScore)
 	}
 
-	if len(packages) != 2 {
-		t.Errorf("packages count = %d, want 2", len(packages))
-	}
-
-	// Verify specific package
-	pkgA, ok := packages["@mono/pkg-a"].(map[string]interface{})
+	// Verify packages count
+	packages, ok := data["packages"].(float64)
 	if !ok {
-		t.Fatal("@mono/pkg-a not found or not a map")
+		t.Fatal("packages is not a number")
+	}
+	if packages != 2 {
+		t.Errorf("packages = %v, want 2", packages)
 	}
 
+	// Verify graph exists and has correct structure
+	graph, ok := data["graph"].(map[string]interface{})
+	if !ok {
+		t.Fatal("graph is not a map")
+	}
+
+	// Verify graph rootPath
+	if graph["rootPath"] != "/workspace" {
+		t.Errorf("graph.rootPath = %v, want /workspace", graph["rootPath"])
+	}
+
+	// Verify graph workspaceType
+	if graph["workspaceType"] != "npm" {
+		t.Errorf("graph.workspaceType = %v, want npm", graph["workspaceType"])
+	}
+
+	// Verify graph nodes
+	nodes, ok := graph["nodes"].(map[string]interface{})
+	if !ok {
+		t.Fatal("graph.nodes is not a map")
+	}
+	if len(nodes) != 2 {
+		t.Errorf("graph.nodes count = %d, want 2", len(nodes))
+	}
+
+	// Verify specific node
+	pkgA, ok := nodes["@mono/pkg-a"].(map[string]interface{})
+	if !ok {
+		t.Fatal("@mono/pkg-a node not found or not a map")
+	}
 	if pkgA["name"] != "@mono/pkg-a" {
 		t.Errorf("pkg-a name = %v, want @mono/pkg-a", pkgA["name"])
 	}
-	if pkgA["version"] != "1.0.0" {
-		t.Errorf("pkg-a version = %v, want 1.0.0", pkgA["version"])
+
+	// Verify graph edges (should have 1 edge: pkg-a -> pkg-b)
+	edges, ok := graph["edges"].([]interface{})
+	if !ok {
+		t.Fatal("graph.edges is not an array")
+	}
+	if len(edges) != 1 {
+		t.Errorf("graph.edges count = %d, want 1", len(edges))
 	}
 
-	// Verify dependencies are parsed
-	deps, ok := pkgA["dependencies"].(map[string]interface{})
-	if !ok {
-		t.Fatal("pkg-a dependencies not found or not a map")
-	}
-	if deps["@mono/pkg-b"] != "^1.0.0" {
-		t.Errorf("pkg-a dependency @mono/pkg-b = %v, want ^1.0.0", deps["@mono/pkg-b"])
+	// Verify edge details
+	if len(edges) > 0 {
+		edge := edges[0].(map[string]interface{})
+		if edge["from"] != "@mono/pkg-a" {
+			t.Errorf("edge.from = %v, want @mono/pkg-a", edge["from"])
+		}
+		if edge["to"] != "@mono/pkg-b" {
+			t.Errorf("edge.to = %v, want @mono/pkg-b", edge["to"])
+		}
+		if edge["type"] != "production" {
+			t.Errorf("edge.type = %v, want production", edge["type"])
+		}
 	}
 }
 
@@ -184,15 +217,25 @@ func TestAnalyzeWithPnpmWorkspace(t *testing.T) {
 
 	data := parsed["data"].(map[string]interface{})
 
-	// Verify pnpm workspace type
-	if data["workspaceType"] != "pnpm" {
-		t.Errorf("workspaceType = %v, want pnpm", data["workspaceType"])
+	// Verify packages count (AnalysisResult)
+	packages, ok := data["packages"].(float64)
+	if !ok {
+		t.Fatal("packages is not a number")
+	}
+	if packages != 1 {
+		t.Errorf("packages = %v, want 1", packages)
 	}
 
-	// Verify package was parsed
-	packages := data["packages"].(map[string]interface{})
-	if len(packages) != 1 {
-		t.Errorf("packages count = %d, want 1", len(packages))
+	// Verify graph has pnpm workspace type
+	graph := data["graph"].(map[string]interface{})
+	if graph["workspaceType"] != "pnpm" {
+		t.Errorf("graph.workspaceType = %v, want pnpm", graph["workspaceType"])
+	}
+
+	// Verify node was created
+	nodes := graph["nodes"].(map[string]interface{})
+	if len(nodes) != 1 {
+		t.Errorf("graph.nodes count = %d, want 1", len(nodes))
 	}
 }
 

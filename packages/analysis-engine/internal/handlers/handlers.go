@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 
 	"github.com/j620656786206/MonoGuard/packages/analysis-engine/internal/result"
+	"github.com/j620656786206/MonoGuard/packages/analysis-engine/pkg/analyzer"
 	"github.com/j620656786206/MonoGuard/packages/analysis-engine/pkg/parser"
 	"github.com/j620656786206/MonoGuard/packages/analysis-engine/pkg/types"
 )
@@ -28,7 +29,7 @@ func GetVersion() string {
 //	  "packages/pkg-a/package.json": "{ \"name\": \"@mono/pkg-a\", ... }"
 //	}
 //
-// Returns a Result JSON string with WorkspaceData or error.
+// Returns a Result JSON string with AnalysisResult (including dependency graph) or error.
 func Analyze(input string) string {
 	if input == "" {
 		r := result.NewError(result.ErrInvalidInput, "Missing JSON input")
@@ -56,9 +57,15 @@ func Analyze(input string) string {
 		return r.ToJSON()
 	}
 
-	// For now, return workspace data as the analysis result
-	// Full analysis logic (dependency graph, cycles, etc.) comes in Story 2.2+
-	r := result.NewSuccess(workspaceData)
+	// Run analysis (builds dependency graph)
+	a := analyzer.NewAnalyzer()
+	analysisResult, err := a.Analyze(workspaceData)
+	if err != nil {
+		r := result.NewError(result.ErrAnalysisFailed, err.Error())
+		return r.ToJSON()
+	}
+
+	r := result.NewSuccess(analysisResult)
 	return r.ToJSON()
 }
 
