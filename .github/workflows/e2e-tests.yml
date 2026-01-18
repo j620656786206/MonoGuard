@@ -150,6 +150,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Build CLI binary for E2E tests
+        run: cd apps/cli && make build
+
       - name: Run unit tests
         run: pnpm nx run-many --target=test --all --parallel=3
 
