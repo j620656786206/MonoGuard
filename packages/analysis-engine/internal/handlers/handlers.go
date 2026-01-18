@@ -22,11 +22,19 @@ func GetVersion() string {
 }
 
 // Analyze performs dependency analysis on the provided workspace data.
-// Input should be a JSON object mapping filenames to file contents:
+// Input can be either:
+// 1. Legacy format - JSON object mapping filenames to file contents:
 //
 //	{
 //	  "package.json": "{ \"name\": \"root\", \"workspaces\": [\"packages/*\"] }",
 //	  "packages/pkg-a/package.json": "{ \"name\": \"@mono/pkg-a\", ... }"
+//	}
+//
+// 2. New format (Story 2.6) - AnalysisInput with optional config:
+//
+//	{
+//	  "files": { "package.json": "...", ... },
+//	  "config": { "exclude": ["packages/legacy", "regex:.*-test$"] }
 //	}
 //
 // Returns a Result JSON string with AnalysisResult (including dependency graph) or error.
@@ -36,11 +44,21 @@ func Analyze(input string) string {
 		return r.ToJSON()
 	}
 
-	// Parse input JSON - map of filename to content
+	// Try to parse as AnalysisInput first (Story 2.6 format)
+	var analysisInput types.AnalysisInput
 	var filesInput map[string]string
-	if err := json.Unmarshal([]byte(input), &filesInput); err != nil {
-		r := result.NewError(result.ErrInvalidInput, "Failed to parse input JSON: "+err.Error())
-		return r.ToJSON()
+	var config *types.AnalysisConfig
+
+	if err := json.Unmarshal([]byte(input), &analysisInput); err == nil && analysisInput.Files != nil {
+		// New format with optional config
+		filesInput = analysisInput.Files
+		config = analysisInput.Config
+	} else {
+		// Legacy format - just files map
+		if err := json.Unmarshal([]byte(input), &filesInput); err != nil {
+			r := result.NewError(result.ErrInvalidInput, "Failed to parse input JSON: "+err.Error())
+			return r.ToJSON()
+		}
 	}
 
 	// Convert string content to []byte
@@ -57,8 +75,13 @@ func Analyze(input string) string {
 		return r.ToJSON()
 	}
 
-	// Run analysis (builds dependency graph)
-	a := analyzer.NewAnalyzer()
+	// Run analysis with config (Story 2.6: exclusion patterns)
+	a, err := analyzer.NewAnalyzerWithConfig(config)
+	if err != nil {
+		r := result.NewError(result.ErrInvalidInput, "Invalid exclusion pattern: "+err.Error())
+		return r.ToJSON()
+	}
+
 	analysisResult, err := a.Analyze(workspaceData)
 	if err != nil {
 		r := result.NewError(result.ErrAnalysisFailed, err.Error())

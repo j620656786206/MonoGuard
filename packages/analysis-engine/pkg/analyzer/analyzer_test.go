@@ -412,3 +412,389 @@ func TestAnalyzeNoVersionConflicts(t *testing.T) {
 		t.Errorf("VersionConflicts count = %d, want 0", len(result.VersionConflicts))
 	}
 }
+
+// ========================================
+// Story 2.6: Exclusion Pattern Tests
+// ========================================
+
+// TestNewAnalyzerWithConfig verifies analyzer creation with config.
+func TestNewAnalyzerWithConfig(t *testing.T) {
+	config := &types.AnalysisConfig{
+		Exclude: []string{"packages/legacy", "packages/deprecated-*"},
+	}
+
+	a, err := NewAnalyzerWithConfig(config)
+	if err != nil {
+		t.Fatalf("NewAnalyzerWithConfig failed: %v", err)
+	}
+	if a == nil {
+		t.Fatal("Analyzer is nil")
+	}
+	if a.config != config {
+		t.Error("Analyzer config not set correctly")
+	}
+}
+
+// TestNewAnalyzerWithConfigNil verifies nil config creates default analyzer.
+func TestNewAnalyzerWithConfigNil(t *testing.T) {
+	a, err := NewAnalyzerWithConfig(nil)
+	if err != nil {
+		t.Fatalf("NewAnalyzerWithConfig(nil) failed: %v", err)
+	}
+	if a == nil {
+		t.Fatal("Analyzer is nil")
+	}
+}
+
+// TestNewAnalyzerWithConfigInvalidRegex verifies error on invalid regex.
+func TestNewAnalyzerWithConfigInvalidRegex(t *testing.T) {
+	config := &types.AnalysisConfig{
+		Exclude: []string{"regex:[invalid"},
+	}
+
+	_, err := NewAnalyzerWithConfig(config)
+	if err == nil {
+		t.Error("Expected error for invalid regex, got nil")
+	}
+}
+
+// TestAnalyzeWithExclusions verifies exclusion patterns are applied.
+func TestAnalyzeWithExclusions(t *testing.T) {
+	config := &types.AnalysisConfig{
+		Exclude: []string{"@mono/legacy"},
+	}
+
+	a, err := NewAnalyzerWithConfig(config)
+	if err != nil {
+		t.Fatalf("NewAnalyzerWithConfig failed: %v", err)
+	}
+
+	workspace := &types.WorkspaceData{
+		RootPath:      "/workspace",
+		WorkspaceType: types.WorkspaceTypePnpm,
+		Packages: map[string]*types.PackageInfo{
+			"@mono/app": {
+				Name:    "@mono/app",
+				Version: "1.0.0",
+				Path:    "apps/web",
+				Dependencies: map[string]string{
+					"@mono/legacy": "^1.0.0",
+				},
+				DevDependencies:  map[string]string{},
+				PeerDependencies: map[string]string{},
+			},
+			"@mono/legacy": {
+				Name:             "@mono/legacy",
+				Version:          "1.0.0",
+				Path:             "packages/legacy",
+				Dependencies:     map[string]string{},
+				DevDependencies:  map[string]string{},
+				PeerDependencies: map[string]string{},
+			},
+			"@mono/core": {
+				Name:             "@mono/core",
+				Version:          "1.0.0",
+				Path:             "packages/core",
+				Dependencies:     map[string]string{},
+				DevDependencies:  map[string]string{},
+				PeerDependencies: map[string]string{},
+			},
+		},
+	}
+
+	result, err := a.Analyze(workspace)
+	if err != nil {
+		t.Fatalf("Analyze failed: %v", err)
+	}
+
+	// Verify excluded count
+	if result.ExcludedPackages != 1 {
+		t.Errorf("ExcludedPackages = %d, want 1", result.ExcludedPackages)
+	}
+
+	// Verify non-excluded package count
+	if result.Packages != 2 {
+		t.Errorf("Packages = %d, want 2 (excluding legacy)", result.Packages)
+	}
+
+	// Verify excluded package is marked in graph
+	legacyNode := result.Graph.Nodes["@mono/legacy"]
+	if legacyNode == nil {
+		t.Fatal("Legacy node missing from graph")
+	}
+	if !legacyNode.Excluded {
+		t.Error("Legacy node should be marked as excluded")
+	}
+
+	// Verify non-excluded packages are not marked
+	appNode := result.Graph.Nodes["@mono/app"]
+	if appNode == nil {
+		t.Fatal("App node missing from graph")
+	}
+	if appNode.Excluded {
+		t.Error("App node should not be marked as excluded")
+	}
+}
+
+// TestAnalyzeExcludedFromCycles verifies excluded packages don't affect cycle detection.
+func TestAnalyzeExcludedFromCycles(t *testing.T) {
+	config := &types.AnalysisConfig{
+		Exclude: []string{"@mono/legacy"},
+	}
+
+	a, err := NewAnalyzerWithConfig(config)
+	if err != nil {
+		t.Fatalf("NewAnalyzerWithConfig failed: %v", err)
+	}
+
+	// Create workspace where legacy creates a cycle, but it should be excluded
+	workspace := &types.WorkspaceData{
+		RootPath:      "/workspace",
+		WorkspaceType: types.WorkspaceTypePnpm,
+		Packages: map[string]*types.PackageInfo{
+			"@mono/app": {
+				Name:    "@mono/app",
+				Version: "1.0.0",
+				Path:    "apps/web",
+				Dependencies: map[string]string{
+					"@mono/legacy": "^1.0.0",
+				},
+				DevDependencies:  map[string]string{},
+				PeerDependencies: map[string]string{},
+			},
+			"@mono/legacy": {
+				Name:    "@mono/legacy",
+				Version: "1.0.0",
+				Path:    "packages/legacy",
+				Dependencies: map[string]string{
+					"@mono/app": "^1.0.0", // Creates cycle with app
+				},
+				DevDependencies:  map[string]string{},
+				PeerDependencies: map[string]string{},
+			},
+		},
+	}
+
+	result, err := a.Analyze(workspace)
+	if err != nil {
+		t.Fatalf("Analyze failed: %v", err)
+	}
+
+	// No cycles should be detected because legacy is excluded
+	if len(result.CircularDependencies) != 0 {
+		t.Errorf("CircularDependencies = %d, want 0 (legacy excluded)", len(result.CircularDependencies))
+	}
+}
+
+// TestAnalyzeExcludedFromConflicts verifies excluded packages don't affect conflict detection.
+func TestAnalyzeExcludedFromConflicts(t *testing.T) {
+	config := &types.AnalysisConfig{
+		Exclude: []string{"@mono/legacy"},
+	}
+
+	a, err := NewAnalyzerWithConfig(config)
+	if err != nil {
+		t.Fatalf("NewAnalyzerWithConfig failed: %v", err)
+	}
+
+	// Create workspace where legacy has conflicting version
+	workspace := &types.WorkspaceData{
+		RootPath:      "/workspace",
+		WorkspaceType: types.WorkspaceTypePnpm,
+		Packages: map[string]*types.PackageInfo{
+			"@mono/app": {
+				Name:    "@mono/app",
+				Version: "1.0.0",
+				Path:    "apps/web",
+				Dependencies: map[string]string{
+					"typescript": "^5.0.0",
+				},
+				DevDependencies:  map[string]string{},
+				PeerDependencies: map[string]string{},
+			},
+			"@mono/legacy": {
+				Name:    "@mono/legacy",
+				Version: "1.0.0",
+				Path:    "packages/legacy",
+				Dependencies: map[string]string{
+					"typescript": "^4.0.0", // Conflicts with app
+				},
+				DevDependencies:  map[string]string{},
+				PeerDependencies: map[string]string{},
+			},
+		},
+	}
+
+	result, err := a.Analyze(workspace)
+	if err != nil {
+		t.Fatalf("Analyze failed: %v", err)
+	}
+
+	// No conflicts should be detected because legacy is excluded
+	if len(result.VersionConflicts) != 0 {
+		t.Errorf("VersionConflicts = %d, want 0 (legacy excluded)", len(result.VersionConflicts))
+	}
+}
+
+// TestFilterExcludedPackages verifies filtering logic.
+func TestFilterExcludedPackages(t *testing.T) {
+	// Create a graph with some excluded packages
+	graph := types.NewDependencyGraph("/workspace", types.WorkspaceTypePnpm)
+
+	// Add nodes
+	appNode := types.NewPackageNode("@mono/app", "1.0.0", "apps/web")
+	appNode.Dependencies = []string{"@mono/legacy", "@mono/core"}
+	graph.Nodes["@mono/app"] = appNode
+
+	legacyNode := types.NewPackageNode("@mono/legacy", "1.0.0", "packages/legacy")
+	legacyNode.Excluded = true
+	graph.Nodes["@mono/legacy"] = legacyNode
+
+	coreNode := types.NewPackageNode("@mono/core", "1.0.0", "packages/core")
+	graph.Nodes["@mono/core"] = coreNode
+
+	// Add edges
+	graph.Edges = []*types.DependencyEdge{
+		{From: "@mono/app", To: "@mono/legacy", Type: types.DependencyTypeProduction},
+		{From: "@mono/app", To: "@mono/core", Type: types.DependencyTypeProduction},
+	}
+
+	// Filter
+	filtered := filterExcludedPackages(graph)
+
+	// Verify excluded node is removed
+	if _, ok := filtered.Nodes["@mono/legacy"]; ok {
+		t.Error("Excluded node should be removed from filtered graph")
+	}
+
+	// Verify non-excluded nodes are present
+	if _, ok := filtered.Nodes["@mono/app"]; !ok {
+		t.Error("App node should be in filtered graph")
+	}
+	if _, ok := filtered.Nodes["@mono/core"]; !ok {
+		t.Error("Core node should be in filtered graph")
+	}
+
+	// Verify edges to excluded packages are removed
+	if len(filtered.Edges) != 1 {
+		t.Errorf("Filtered edges count = %d, want 1", len(filtered.Edges))
+	}
+
+	// Verify dependency list is filtered
+	filteredApp := filtered.Nodes["@mono/app"]
+	if len(filteredApp.Dependencies) != 1 {
+		t.Errorf("Filtered app dependencies = %d, want 1", len(filteredApp.Dependencies))
+	}
+	if filteredApp.Dependencies[0] != "@mono/core" {
+		t.Errorf("Filtered app dependency = %s, want @mono/core", filteredApp.Dependencies[0])
+	}
+}
+
+// TestAnalyzeWithGlobExclusion verifies glob pattern exclusion.
+func TestAnalyzeWithGlobExclusion(t *testing.T) {
+	config := &types.AnalysisConfig{
+		Exclude: []string{"@mono/deprecated-*"},
+	}
+
+	a, err := NewAnalyzerWithConfig(config)
+	if err != nil {
+		t.Fatalf("NewAnalyzerWithConfig failed: %v", err)
+	}
+
+	workspace := &types.WorkspaceData{
+		RootPath:      "/workspace",
+		WorkspaceType: types.WorkspaceTypePnpm,
+		Packages: map[string]*types.PackageInfo{
+			"@mono/app": {
+				Name:             "@mono/app",
+				Version:          "1.0.0",
+				Path:             "apps/web",
+				Dependencies:     map[string]string{},
+				DevDependencies:  map[string]string{},
+				PeerDependencies: map[string]string{},
+			},
+			"@mono/deprecated-utils": {
+				Name:             "@mono/deprecated-utils",
+				Version:          "1.0.0",
+				Path:             "packages/deprecated-utils",
+				Dependencies:     map[string]string{},
+				DevDependencies:  map[string]string{},
+				PeerDependencies: map[string]string{},
+			},
+			"@mono/deprecated-api": {
+				Name:             "@mono/deprecated-api",
+				Version:          "1.0.0",
+				Path:             "packages/deprecated-api",
+				Dependencies:     map[string]string{},
+				DevDependencies:  map[string]string{},
+				PeerDependencies: map[string]string{},
+			},
+		},
+	}
+
+	result, err := a.Analyze(workspace)
+	if err != nil {
+		t.Fatalf("Analyze failed: %v", err)
+	}
+
+	// 2 packages should be excluded (deprecated-*)
+	if result.ExcludedPackages != 2 {
+		t.Errorf("ExcludedPackages = %d, want 2", result.ExcludedPackages)
+	}
+
+	// Only app should be counted
+	if result.Packages != 1 {
+		t.Errorf("Packages = %d, want 1", result.Packages)
+	}
+}
+
+// TestAnalyzeWithRegexExclusion verifies regex pattern exclusion.
+func TestAnalyzeWithRegexExclusion(t *testing.T) {
+	config := &types.AnalysisConfig{
+		Exclude: []string{"regex:.*-test$"},
+	}
+
+	a, err := NewAnalyzerWithConfig(config)
+	if err != nil {
+		t.Fatalf("NewAnalyzerWithConfig failed: %v", err)
+	}
+
+	workspace := &types.WorkspaceData{
+		RootPath:      "/workspace",
+		WorkspaceType: types.WorkspaceTypePnpm,
+		Packages: map[string]*types.PackageInfo{
+			"@mono/app": {
+				Name:             "@mono/app",
+				Version:          "1.0.0",
+				Path:             "apps/web",
+				Dependencies:     map[string]string{},
+				DevDependencies:  map[string]string{},
+				PeerDependencies: map[string]string{},
+			},
+			"@mono/core-test": {
+				Name:             "@mono/core-test",
+				Version:          "1.0.0",
+				Path:             "packages/core-test",
+				Dependencies:     map[string]string{},
+				DevDependencies:  map[string]string{},
+				PeerDependencies: map[string]string{},
+			},
+		},
+	}
+
+	result, err := a.Analyze(workspace)
+	if err != nil {
+		t.Fatalf("Analyze failed: %v", err)
+	}
+
+	// core-test should be excluded
+	if result.ExcludedPackages != 1 {
+		t.Errorf("ExcludedPackages = %d, want 1", result.ExcludedPackages)
+	}
+
+	// Verify the test package is marked excluded
+	testNode := result.Graph.Nodes["@mono/core-test"]
+	if testNode == nil || !testNode.Excluded {
+		t.Error("core-test should be marked as excluded")
+	}
+}

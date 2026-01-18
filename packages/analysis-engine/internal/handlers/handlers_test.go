@@ -480,3 +480,259 @@ func TestAnalyzeNoVersionConflictsInResult(t *testing.T) {
 		}
 	}
 }
+
+// ========================================
+// Story 2.6: Exclusion Pattern Tests
+// ========================================
+
+// TestAnalyzeWithExclusionConfig verifies exclusion config is accepted.
+func TestAnalyzeWithExclusionConfig(t *testing.T) {
+	// New AnalysisInput format with config
+	input := `{
+		"files": {
+			"package.json": "{\"name\": \"monorepo-root\", \"workspaces\": [\"packages/*\"]}",
+			"package-lock.json": "{}",
+			"packages/app/package.json": "{\"name\": \"@mono/app\", \"version\": \"1.0.0\"}",
+			"packages/legacy/package.json": "{\"name\": \"@mono/legacy\", \"version\": \"1.0.0\"}"
+		},
+		"config": {
+			"exclude": ["@mono/legacy"]
+		}
+	}`
+
+	result := Analyze(input)
+
+	var parsed map[string]interface{}
+	if err := json.Unmarshal([]byte(result), &parsed); err != nil {
+		t.Fatalf("Failed to parse JSON result: %v", err)
+	}
+
+	// Verify no error
+	if parsed["error"] != nil {
+		t.Fatalf("Unexpected error: %v", parsed["error"])
+	}
+
+	data, ok := parsed["data"].(map[string]interface{})
+	if !ok {
+		t.Fatal("data is not a map")
+	}
+
+	// Verify excludedPackages count
+	excludedPackages, ok := data["excludedPackages"].(float64)
+	if !ok {
+		t.Fatal("excludedPackages is not a number")
+	}
+	if excludedPackages != 1 {
+		t.Errorf("excludedPackages = %v, want 1", excludedPackages)
+	}
+
+	// Verify packages count (excludes legacy)
+	packages, ok := data["packages"].(float64)
+	if !ok {
+		t.Fatal("packages is not a number")
+	}
+	if packages != 1 {
+		t.Errorf("packages = %v, want 1 (excluding legacy)", packages)
+	}
+
+	// Verify legacy is in graph with excluded flag
+	graph := data["graph"].(map[string]interface{})
+	nodes := graph["nodes"].(map[string]interface{})
+
+	legacyNode, ok := nodes["@mono/legacy"].(map[string]interface{})
+	if !ok {
+		t.Fatal("legacy node not found in graph")
+	}
+	if legacyNode["excluded"] != true {
+		t.Error("legacy node should have excluded=true")
+	}
+
+	// Verify app is not excluded
+	appNode, ok := nodes["@mono/app"].(map[string]interface{})
+	if !ok {
+		t.Fatal("app node not found in graph")
+	}
+	// excluded should be false or omitted (omitempty)
+	if appNode["excluded"] == true {
+		t.Error("app node should not be excluded")
+	}
+}
+
+// TestAnalyzeLegacyFormatStillWorks verifies old format still works.
+func TestAnalyzeLegacyFormatStillWorks(t *testing.T) {
+	// Old format: just map of files (no config wrapper)
+	input := `{
+		"package.json": "{\"name\": \"monorepo-root\", \"workspaces\": [\"packages/*\"]}",
+		"package-lock.json": "{}",
+		"packages/app/package.json": "{\"name\": \"@mono/app\", \"version\": \"1.0.0\"}"
+	}`
+
+	result := Analyze(input)
+
+	var parsed map[string]interface{}
+	if err := json.Unmarshal([]byte(result), &parsed); err != nil {
+		t.Fatalf("Failed to parse JSON result: %v", err)
+	}
+
+	// Verify no error
+	if parsed["error"] != nil {
+		t.Fatalf("Unexpected error: %v", parsed["error"])
+	}
+
+	data, ok := parsed["data"].(map[string]interface{})
+	if !ok {
+		t.Fatal("data is not a map")
+	}
+
+	// Verify packages count
+	packages, ok := data["packages"].(float64)
+	if !ok {
+		t.Fatal("packages is not a number")
+	}
+	if packages != 1 {
+		t.Errorf("packages = %v, want 1", packages)
+	}
+}
+
+// TestAnalyzeWithGlobExclusion verifies glob pattern exclusion.
+func TestAnalyzeWithGlobExclusion(t *testing.T) {
+	input := `{
+		"files": {
+			"package.json": "{\"name\": \"monorepo-root\", \"workspaces\": [\"packages/*\"]}",
+			"package-lock.json": "{}",
+			"packages/app/package.json": "{\"name\": \"@mono/app\", \"version\": \"1.0.0\"}",
+			"packages/deprecated-utils/package.json": "{\"name\": \"@mono/deprecated-utils\", \"version\": \"1.0.0\"}",
+			"packages/deprecated-api/package.json": "{\"name\": \"@mono/deprecated-api\", \"version\": \"1.0.0\"}"
+		},
+		"config": {
+			"exclude": ["@mono/deprecated-*"]
+		}
+	}`
+
+	result := Analyze(input)
+
+	var parsed map[string]interface{}
+	if err := json.Unmarshal([]byte(result), &parsed); err != nil {
+		t.Fatalf("Failed to parse JSON result: %v", err)
+	}
+
+	if parsed["error"] != nil {
+		t.Fatalf("Unexpected error: %v", parsed["error"])
+	}
+
+	data := parsed["data"].(map[string]interface{})
+
+	// 2 packages should be excluded
+	excludedPackages := data["excludedPackages"].(float64)
+	if excludedPackages != 2 {
+		t.Errorf("excludedPackages = %v, want 2", excludedPackages)
+	}
+
+	// Only app should be counted
+	packages := data["packages"].(float64)
+	if packages != 1 {
+		t.Errorf("packages = %v, want 1", packages)
+	}
+}
+
+// TestAnalyzeWithRegexExclusion verifies regex pattern exclusion.
+func TestAnalyzeWithRegexExclusion(t *testing.T) {
+	input := `{
+		"files": {
+			"package.json": "{\"name\": \"monorepo-root\", \"workspaces\": [\"packages/*\"]}",
+			"package-lock.json": "{}",
+			"packages/app/package.json": "{\"name\": \"@mono/app\", \"version\": \"1.0.0\"}",
+			"packages/core-test/package.json": "{\"name\": \"@mono/core-test\", \"version\": \"1.0.0\"}"
+		},
+		"config": {
+			"exclude": ["regex:.*-test$"]
+		}
+	}`
+
+	result := Analyze(input)
+
+	var parsed map[string]interface{}
+	if err := json.Unmarshal([]byte(result), &parsed); err != nil {
+		t.Fatalf("Failed to parse JSON result: %v", err)
+	}
+
+	if parsed["error"] != nil {
+		t.Fatalf("Unexpected error: %v", parsed["error"])
+	}
+
+	data := parsed["data"].(map[string]interface{})
+
+	// core-test should be excluded
+	excludedPackages := data["excludedPackages"].(float64)
+	if excludedPackages != 1 {
+		t.Errorf("excludedPackages = %v, want 1", excludedPackages)
+	}
+}
+
+// TestAnalyzeWithInvalidRegexPattern verifies error on invalid regex.
+func TestAnalyzeWithInvalidRegexPattern(t *testing.T) {
+	input := `{
+		"files": {
+			"package.json": "{\"name\": \"root\", \"workspaces\": [\"packages/*\"]}",
+			"package-lock.json": "{}"
+		},
+		"config": {
+			"exclude": ["regex:[invalid"]
+		}
+	}`
+
+	result := Analyze(input)
+
+	var parsed map[string]interface{}
+	if err := json.Unmarshal([]byte(result), &parsed); err != nil {
+		t.Fatalf("Failed to parse JSON result: %v", err)
+	}
+
+	// Should return error for invalid regex
+	if parsed["error"] == nil {
+		t.Error("Expected error for invalid regex pattern")
+		return
+	}
+
+	errObj := parsed["error"].(map[string]interface{})
+	if errObj["code"] != "INVALID_INPUT" {
+		t.Errorf("error code = %v, want INVALID_INPUT", errObj["code"])
+	}
+}
+
+// TestAnalyzeExcludedFromConflictDetection verifies excluded packages don't affect conflicts.
+func TestAnalyzeExcludedFromConflictDetection(t *testing.T) {
+	input := `{
+		"files": {
+			"package.json": "{\"name\": \"monorepo-root\", \"workspaces\": [\"packages/*\"]}",
+			"package-lock.json": "{}",
+			"packages/app/package.json": "{\"name\": \"@mono/app\", \"version\": \"1.0.0\", \"dependencies\": {\"typescript\": \"^5.0.0\"}}",
+			"packages/legacy/package.json": "{\"name\": \"@mono/legacy\", \"version\": \"1.0.0\", \"dependencies\": {\"typescript\": \"^4.0.0\"}}"
+		},
+		"config": {
+			"exclude": ["@mono/legacy"]
+		}
+	}`
+
+	result := Analyze(input)
+
+	var parsed map[string]interface{}
+	if err := json.Unmarshal([]byte(result), &parsed); err != nil {
+		t.Fatalf("Failed to parse JSON result: %v", err)
+	}
+
+	if parsed["error"] != nil {
+		t.Fatalf("Unexpected error: %v", parsed["error"])
+	}
+
+	data := parsed["data"].(map[string]interface{})
+
+	// No conflicts should be detected because legacy is excluded
+	versionConflicts := data["versionConflicts"]
+	if versionConflicts != nil {
+		conflicts := versionConflicts.([]interface{})
+		if len(conflicts) != 0 {
+			t.Errorf("Expected no version conflicts (legacy excluded), got %d", len(conflicts))
+		}
+	}
+}

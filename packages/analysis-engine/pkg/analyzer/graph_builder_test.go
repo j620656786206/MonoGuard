@@ -1135,3 +1135,249 @@ func TestBuildNodeLookupPerformance(t *testing.T) {
 		}
 	}
 }
+
+// ========================================
+// Story 2.6: Exclusion Tests
+// ========================================
+
+// TestNewGraphBuilderWithExclusions verifies exclusion matcher integration.
+func TestNewGraphBuilderWithExclusions(t *testing.T) {
+	patterns := []string{"@mono/legacy", "@mono/deprecated-*", "regex:.*-test$"}
+
+	gb, err := NewGraphBuilderWithExclusions(patterns)
+	if err != nil {
+		t.Fatalf("NewGraphBuilderWithExclusions failed: %v", err)
+	}
+	if gb == nil {
+		t.Fatal("GraphBuilder is nil")
+	}
+	if gb.exclusionMatcher == nil {
+		t.Error("exclusionMatcher is nil")
+	}
+	if gb.exclusionMatcher.PatternCount() != 3 {
+		t.Errorf("PatternCount = %d, want 3", gb.exclusionMatcher.PatternCount())
+	}
+}
+
+// TestNewGraphBuilderWithExclusionsInvalidRegex verifies error on invalid regex.
+func TestNewGraphBuilderWithExclusionsInvalidRegex(t *testing.T) {
+	patterns := []string{"regex:[invalid"}
+
+	_, err := NewGraphBuilderWithExclusions(patterns)
+	if err == nil {
+		t.Error("Expected error for invalid regex, got nil")
+	}
+}
+
+// TestNewGraphBuilderWithExclusionsEmpty verifies empty patterns work.
+func TestNewGraphBuilderWithExclusionsEmpty(t *testing.T) {
+	gb, err := NewGraphBuilderWithExclusions([]string{})
+	if err != nil {
+		t.Fatalf("NewGraphBuilderWithExclusions failed: %v", err)
+	}
+	if gb == nil {
+		t.Fatal("GraphBuilder is nil")
+	}
+	if gb.exclusionMatcher == nil {
+		t.Error("exclusionMatcher should not be nil")
+	}
+}
+
+// TestBuildWithExclusionFlag verifies excluded packages are marked.
+func TestBuildWithExclusionFlag(t *testing.T) {
+	gb, err := NewGraphBuilderWithExclusions([]string{"@mono/legacy"})
+	if err != nil {
+		t.Fatalf("NewGraphBuilderWithExclusions failed: %v", err)
+	}
+
+	workspace := &types.WorkspaceData{
+		RootPath:      "/workspace",
+		WorkspaceType: types.WorkspaceTypePnpm,
+		Packages: map[string]*types.PackageInfo{
+			"@mono/app": {
+				Name:             "@mono/app",
+				Version:          "1.0.0",
+				Path:             "apps/web",
+				Dependencies:     map[string]string{},
+				DevDependencies:  map[string]string{},
+				PeerDependencies: map[string]string{},
+			},
+			"@mono/legacy": {
+				Name:             "@mono/legacy",
+				Version:          "1.0.0",
+				Path:             "packages/legacy",
+				Dependencies:     map[string]string{},
+				DevDependencies:  map[string]string{},
+				PeerDependencies: map[string]string{},
+			},
+		},
+	}
+
+	graph, err := gb.Build(workspace)
+	if err != nil {
+		t.Fatalf("Build failed: %v", err)
+	}
+
+	// Verify legacy is marked excluded
+	legacyNode := graph.Nodes["@mono/legacy"]
+	if legacyNode == nil {
+		t.Fatal("Legacy node missing")
+	}
+	if !legacyNode.Excluded {
+		t.Error("Legacy node should be marked as excluded")
+	}
+
+	// Verify app is not marked excluded
+	appNode := graph.Nodes["@mono/app"]
+	if appNode == nil {
+		t.Fatal("App node missing")
+	}
+	if appNode.Excluded {
+		t.Error("App node should not be marked as excluded")
+	}
+}
+
+// TestBuildWithGlobExclusionFlag verifies glob patterns mark packages.
+func TestBuildWithGlobExclusionFlag(t *testing.T) {
+	gb, err := NewGraphBuilderWithExclusions([]string{"@mono/deprecated-*"})
+	if err != nil {
+		t.Fatalf("NewGraphBuilderWithExclusions failed: %v", err)
+	}
+
+	workspace := &types.WorkspaceData{
+		RootPath:      "/workspace",
+		WorkspaceType: types.WorkspaceTypePnpm,
+		Packages: map[string]*types.PackageInfo{
+			"@mono/app": {
+				Name:             "@mono/app",
+				Version:          "1.0.0",
+				Path:             "apps/web",
+				Dependencies:     map[string]string{},
+				DevDependencies:  map[string]string{},
+				PeerDependencies: map[string]string{},
+			},
+			"@mono/deprecated-utils": {
+				Name:             "@mono/deprecated-utils",
+				Version:          "1.0.0",
+				Path:             "packages/deprecated-utils",
+				Dependencies:     map[string]string{},
+				DevDependencies:  map[string]string{},
+				PeerDependencies: map[string]string{},
+			},
+			"@mono/deprecated-api": {
+				Name:             "@mono/deprecated-api",
+				Version:          "1.0.0",
+				Path:             "packages/deprecated-api",
+				Dependencies:     map[string]string{},
+				DevDependencies:  map[string]string{},
+				PeerDependencies: map[string]string{},
+			},
+		},
+	}
+
+	graph, err := gb.Build(workspace)
+	if err != nil {
+		t.Fatalf("Build failed: %v", err)
+	}
+
+	// Count excluded packages
+	excludedCount := 0
+	for _, node := range graph.Nodes {
+		if node.Excluded {
+			excludedCount++
+		}
+	}
+
+	if excludedCount != 2 {
+		t.Errorf("Excluded count = %d, want 2", excludedCount)
+	}
+}
+
+// TestBuildWithNoExclusion verifies normal builder has no exclusions.
+func TestBuildWithNoExclusion(t *testing.T) {
+	gb := NewGraphBuilder() // No exclusions
+
+	workspace := &types.WorkspaceData{
+		RootPath:      "/workspace",
+		WorkspaceType: types.WorkspaceTypePnpm,
+		Packages: map[string]*types.PackageInfo{
+			"@mono/app": {
+				Name:             "@mono/app",
+				Version:          "1.0.0",
+				Path:             "apps/web",
+				Dependencies:     map[string]string{},
+				DevDependencies:  map[string]string{},
+				PeerDependencies: map[string]string{},
+			},
+		},
+	}
+
+	graph, err := gb.Build(workspace)
+	if err != nil {
+		t.Fatalf("Build failed: %v", err)
+	}
+
+	// No packages should be excluded
+	for name, node := range graph.Nodes {
+		if node.Excluded {
+			t.Errorf("Node %s should not be excluded (no exclusion matcher)", name)
+		}
+	}
+}
+
+// TestBuildExcludedPackagesStillInGraph verifies AC5: excluded packages ARE in graph.
+func TestBuildExcludedPackagesStillInGraph(t *testing.T) {
+	gb, err := NewGraphBuilderWithExclusions([]string{"@mono/legacy"})
+	if err != nil {
+		t.Fatalf("NewGraphBuilderWithExclusions failed: %v", err)
+	}
+
+	workspace := &types.WorkspaceData{
+		RootPath:      "/workspace",
+		WorkspaceType: types.WorkspaceTypePnpm,
+		Packages: map[string]*types.PackageInfo{
+			"@mono/app": {
+				Name:    "@mono/app",
+				Version: "1.0.0",
+				Path:    "apps/web",
+				Dependencies: map[string]string{
+					"@mono/legacy": "^1.0.0",
+				},
+				DevDependencies:  map[string]string{},
+				PeerDependencies: map[string]string{},
+			},
+			"@mono/legacy": {
+				Name:             "@mono/legacy",
+				Version:          "1.0.0",
+				Path:             "packages/legacy",
+				Dependencies:     map[string]string{},
+				DevDependencies:  map[string]string{},
+				PeerDependencies: map[string]string{},
+			},
+		},
+	}
+
+	graph, err := gb.Build(workspace)
+	if err != nil {
+		t.Fatalf("Build failed: %v", err)
+	}
+
+	// AC5: Excluded packages ARE included in graph nodes (for visualization)
+	if len(graph.Nodes) != 2 {
+		t.Errorf("Graph.Nodes count = %d, want 2 (including excluded)", len(graph.Nodes))
+	}
+
+	// AC5: Edges to/from excluded packages are still included
+	if len(graph.Edges) != 1 {
+		t.Errorf("Graph.Edges count = %d, want 1 (edge to excluded package)", len(graph.Edges))
+	}
+
+	// Verify the excluded node exists with flag
+	legacyNode := graph.Nodes["@mono/legacy"]
+	if legacyNode == nil {
+		t.Fatal("Excluded node should still be in graph")
+	}
+	if !legacyNode.Excluded {
+		t.Error("Excluded node should have Excluded=true")
+	}
+}

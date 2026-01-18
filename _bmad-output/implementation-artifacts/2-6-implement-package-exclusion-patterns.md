@@ -71,8 +71,8 @@ So that **I can focus on relevant parts of my monorepo**.
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Define AnalysisConfig Types** (AC: #6)
-  - [ ] 1.1 Create `pkg/types/config.go`:
+- [x] **Task 1: Define AnalysisConfig Types** (AC: #6)
+  - [x] 1.1 Create `pkg/types/config.go`:
     ```go
     package types
 
@@ -87,11 +87,11 @@ So that **I can focus on relevant parts of my monorepo**.
         Config *AnalysisConfig   `json:"config"` // Optional config
     }
     ```
-  - [ ] 1.2 Add JSON serialization tests
-  - [ ] 1.3 Update WASM handler to accept AnalysisInput
+  - [x] 1.2 Add JSON serialization tests
+  - [x] 1.3 Update WASM handler to accept AnalysisInput
 
-- [ ] **Task 2: Implement Pattern Matcher** (AC: #1, #2, #3)
-  - [ ] 2.1 Create `pkg/analyzer/exclusion_matcher.go`:
+- [x] **Task 2: Implement Pattern Matcher** (AC: #1, #2, #3)
+  - [x] 2.1 Create `pkg/analyzer/exclusion_matcher.go`:
     ```go
     package analyzer
 
@@ -126,13 +126,13 @@ So that **I can focus on relevant parts of my monorepo**.
         PatternTypeRegex = "regex"
     )
     ```
-  - [ ] 2.2 Implement exact matching (simple map lookup)
-  - [ ] 2.3 Implement glob matching (support *, **, ?)
-  - [ ] 2.4 Implement regex matching (patterns prefixed with `regex:`)
-  - [ ] 2.5 Create comprehensive tests in `pkg/analyzer/exclusion_matcher_test.go`
+  - [x] 2.2 Implement exact matching (simple map lookup)
+  - [x] 2.3 Implement glob matching (support *, **, ?)
+  - [x] 2.4 Implement regex matching (patterns prefixed with `regex:`)
+  - [x] 2.5 Create comprehensive tests in `pkg/analyzer/exclusion_matcher_test.go`
 
-- [ ] **Task 3: Update PackageNode for Exclusion Flag** (AC: #5)
-  - [ ] 3.1 Update `pkg/types/graph.go`:
+- [x] **Task 3: Update PackageNode for Exclusion Flag** (AC: #5)
+  - [x] 3.1 Update `pkg/types/graph.go`:
     ```go
     type PackageNode struct {
         Name             string   `json:"name"`
@@ -144,10 +144,10 @@ So that **I can focus on relevant parts of my monorepo**.
         Excluded         bool     `json:"excluded,omitempty"` // NEW: True if excluded
     }
     ```
-  - [ ] 3.2 Update graph builder tests
+  - [x] 3.2 Update graph builder tests
 
-- [ ] **Task 4: Integrate Exclusion into Graph Builder** (AC: #4, #5)
-  - [ ] 4.1 Update `pkg/analyzer/graph_builder.go`:
+- [x] **Task 4: Integrate Exclusion into Graph Builder** (AC: #4, #5)
+  - [x] 4.1 Update `pkg/analyzer/graph_builder.go`:
     ```go
     type GraphBuilder struct {
         workspacePackages map[string]bool
@@ -178,10 +178,10 @@ So that **I can focus on relevant parts of my monorepo**.
         return nodes
     }
     ```
-  - [ ] 4.2 Update tests
+  - [x] 4.2 Update tests
 
-- [ ] **Task 5: Filter Excluded from Detectors** (AC: #4)
-  - [ ] 5.1 Update `pkg/analyzer/cycle_detector.go`:
+- [x] **Task 5: Filter Excluded from Detectors** (AC: #4)
+  - [x] 5.1 Update `pkg/analyzer/cycle_detector.go`:
     ```go
     func (cd *CycleDetector) DetectCycles() []*types.CircularDependencyInfo {
         // Filter out excluded packages before detection
@@ -194,7 +194,7 @@ So that **I can focus on relevant parts of my monorepo**.
         // Create new graph with only non-excluded packages
     }
     ```
-  - [ ] 5.2 Update `pkg/analyzer/conflict_detector.go`:
+  - [x] 5.2 Update `pkg/analyzer/conflict_detector.go`:
     ```go
     func (cd *ConflictDetector) DetectConflicts() []*types.VersionConflict {
         // Skip excluded packages when collecting dependencies
@@ -206,11 +206,11 @@ So that **I can focus on relevant parts of my monorepo**.
         }
     }
     ```
-  - [ ] 5.3 Update `pkg/analyzer/health_calculator.go` to exclude from depth/coupling
-  - [ ] 5.4 Update tests for all detectors
+  - [x] 5.3 Update `pkg/analyzer/health_calculator.go` to exclude from depth/coupling
+  - [x] 5.4 Update tests for all detectors
 
-- [ ] **Task 6: Update Analyzer to Accept Config** (AC: #6)
-  - [ ] 6.1 Update `pkg/analyzer/analyzer.go`:
+- [x] **Task 6: Update Analyzer to Accept Config** (AC: #6)
+  - [x] 6.1 Update `pkg/analyzer/analyzer.go`:
     ```go
     type Analyzer struct {
         config *types.AnalysisConfig
@@ -232,21 +232,21 @@ So that **I can focus on relevant parts of my monorepo**.
         // ... rest of analysis
     }
     ```
-  - [ ] 6.2 Update handler to parse AnalysisInput
-  - [ ] 6.3 Update tests
+  - [x] 6.2 Update handler to parse AnalysisInput
+  - [x] 6.3 Update tests
 
-- [ ] **Task 7: Update AnalysisResult** (AC: #4)
-  - [ ] 7.1 Add excluded count to result:
+- [x] **Task 7: Update AnalysisResult** (AC: #4)
+  - [x] 7.1 Add excluded count to result:
     ```go
     type AnalysisResult struct {
         // ... existing fields
         ExcludedPackages int `json:"excludedPackages"` // Count of excluded
     }
     ```
-  - [ ] 7.2 Update tests
+  - [x] 7.2 Update tests
 
-- [ ] **Task 8: Performance Testing** (AC: #7)
-  - [ ] 8.1 Create `pkg/analyzer/exclusion_matcher_benchmark_test.go`:
+- [x] **Task 8: Performance Testing** (AC: #7)
+  - [x] 8.1 Create `pkg/analyzer/exclusion_matcher_benchmark_test.go`:
     ```go
     func BenchmarkExclusionMatcher(b *testing.B) {
         patterns := generatePatterns(20) // 20 mixed patterns
@@ -261,14 +261,14 @@ So that **I can focus on relevant parts of my monorepo**.
         }
     }
     ```
-  - [ ] 8.2 Verify 100 packages × 20 patterns < 50ms
+  - [x] 8.2 Verify 100 packages × 20 patterns < 50ms
 
-- [ ] **Task 9: Integration Verification** (AC: all)
-  - [ ] 9.1 Build WASM: `pnpm nx build @monoguard/analysis-engine`
-  - [ ] 9.2 Update smoke test with exclusion examples
-  - [ ] 9.3 Verify excluded packages appear in graph with flag
-  - [ ] 9.4 Verify excluded packages don't affect metrics
-  - [ ] 9.5 Verify all tests pass: `make test`
+- [x] **Task 9: Integration Verification** (AC: all)
+  - [x] 9.1 Build WASM: `pnpm nx build @monoguard/analysis-engine`
+  - [x] 9.2 Update smoke test with exclusion examples
+  - [x] 9.3 Verify excluded packages appear in graph with flag
+  - [x] 9.4 Verify excluded packages don't affect metrics
+  - [x] 9.5 Verify all tests pass: `make test`
 
 ## Dev Notes
 
