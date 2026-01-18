@@ -2,6 +2,25 @@ import type { AnalysisResult, CheckResult } from '../analysis/results'
 import type { Result } from '../result'
 
 /**
+ * Workspace input for analyze and check functions
+ * Provides type-safe input instead of raw JSON strings
+ */
+export interface WorkspaceInput {
+  /** Map of filename to file content */
+  files: Record<string, string>
+  /** Optional analysis configuration */
+  config?: AnalysisConfig
+}
+
+/**
+ * Analysis configuration options
+ */
+export interface AnalysisConfig {
+  /** Patterns to exclude from analysis (exact, glob, or regex:) */
+  exclude?: string[]
+}
+
+/**
  * MonoGuardAnalyzer - WASM adapter interface
  *
  * This interface defines the contract between TypeScript and Go WASM.
@@ -12,14 +31,33 @@ import type { Result } from '../result'
  *
  * @example
  * ```typescript
- * const analyzer: MonoGuardAnalyzer = await loadWasm();
- * const result = await analyzer.analyze(JSON.stringify(workspaceConfig));
+ * import { MonoGuardAnalyzer, isSuccess } from '@monoguard/analysis-engine';
+ *
+ * const analyzer = new MonoGuardAnalyzer();
+ * await analyzer.init();
+ *
+ * const result = await analyzer.analyze({
+ *   files: { 'package.json': '{"workspaces": ["packages/*"]}' }
+ * });
+ *
  * if (isSuccess(result)) {
  *   console.log(result.data.healthScore);
  * }
  * ```
  */
 export interface MonoGuardAnalyzer {
+  /**
+   * Initialize the WASM module
+   * Must be called before analyze/check/getVersion
+   */
+  init(options?: WasmLoaderOptions): Promise<void>
+
+  /**
+   * Check if the analyzer is initialized
+   * @returns true if WASM is loaded and ready
+   */
+  isInitialized(): boolean
+
   /**
    * Get MonoGuard version
    * @returns Version information
@@ -28,17 +66,17 @@ export interface MonoGuardAnalyzer {
 
   /**
    * Analyze workspace dependencies
-   * @param input JSON string of workspace configuration
+   * @param input Workspace files and optional configuration
    * @returns Complete analysis result
    */
-  analyze(input: string): Promise<Result<AnalysisResult>>
+  analyze(input: WorkspaceInput): Promise<Result<AnalysisResult>>
 
   /**
    * Check workspace for CI/CD validation
-   * @param input JSON string of workspace configuration
+   * @param input Workspace files and optional configuration
    * @returns Pass/fail result with errors
    */
-  check(input: string): Promise<Result<CheckResult>>
+  check(input: WorkspaceInput): Promise<Result<CheckResult>>
 }
 
 /**

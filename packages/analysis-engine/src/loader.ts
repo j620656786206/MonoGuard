@@ -23,23 +23,23 @@ export class WasmLoadError extends Error {
 
 /**
  * Global Go instance for WASM runtime
+ *
+ * Note: MonoGuardGlobal interface is defined in bridge.ts to avoid duplication
  */
 declare global {
   interface Window {
     Go: new () => GoInstance
-    MonoGuard?: MonoGuardGlobal
+    MonoGuard?: {
+      getVersion(): string
+      analyze(input: string): string
+      check(input: string): string
+    }
   }
 }
 
 interface GoInstance {
   importObject: WebAssembly.Imports
   run(instance: WebAssembly.Instance): Promise<void>
-}
-
-interface MonoGuardGlobal {
-  getVersion(): string
-  analyze(input: string): string
-  check(input: string): string
 }
 
 let wasmInitialized = false

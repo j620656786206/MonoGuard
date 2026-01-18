@@ -1,6 +1,6 @@
 # Story 2.7: Create TypeScript WASM Adapter
 
-Status: review
+Status: done
 
 ## Story
 
@@ -415,7 +415,7 @@ So that **I can call analysis functions with full type safety from the web app**
   - [ ] 6.3 Create bridge tests
 
 - [x] **Task 7: Performance Testing** (AC: #8)
-  - [ ] 7.1 Create `packages/analysis-engine/src/__tests__/performance.test.ts`:
+  - [x] 7.1 Create `packages/analysis-engine/src/__tests__/performance.test.ts`:
     ```typescript
     import { describe, it, expect } from 'vitest';
     import { MonoGuardAnalyzer } from '../analyzer';
@@ -444,7 +444,7 @@ So that **I can call analysis functions with full type safety from the web app**
     });
     ```
 
-- [x] **Task 8: Integration with Web App** (AC: all)
+- [x] **Task 8: Integration with Web App** (AC: all) *[Deferred: Adapter ready, web app usage in future story]*
   - [ ] 8.1 Verify import works in apps/web:
     ```typescript
     import {
@@ -668,6 +668,13 @@ N/A
 - Fixed tsconfig.json to properly handle rootDir and exclude test files
 - Fixed types package tsconfig.json to exclude vitest.config.ts
 
+9. **Code Review #1** - Adversarial review found 0 HIGH, 3 MEDIUM, 2 LOW issues. Fixed:
+   - M1: Created performance.test.ts with init time and serialization overhead tests (AC8)
+   - M2: Documented Task 8 (web app integration) as deferred - adapter is ready for use
+   - M3: Updated MonoGuardAnalyzer interface in @monoguard/types to match implementation (typed WorkspaceInput instead of raw string)
+   - L1: Consolidated MonoGuardGlobal interface documentation between loader.ts and bridge.ts
+   - L2: Updated story task checkboxes for consistency
+
 ### File List
 
 **New TypeScript Files:**
@@ -678,9 +685,11 @@ N/A
 - packages/analysis-engine/src/__tests__/loader.test.ts
 - packages/analysis-engine/src/__tests__/bridge.test.ts
 - packages/analysis-engine/src/__tests__/analyzer.test.ts
+- packages/analysis-engine/src/__tests__/performance.test.ts (Code Review #1)
 
 **Configuration Files:**
 - packages/analysis-engine/tsconfig.json (created)
 - packages/analysis-engine/vitest.config.ts (created)
 - packages/analysis-engine/package.json (updated with TypeScript build scripts)
 - packages/types/tsconfig.json (fixed include pattern)
+- packages/types/src/wasm/adapter.ts (Code Review #1 - updated interface signature)
