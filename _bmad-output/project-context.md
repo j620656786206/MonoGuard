@@ -426,6 +426,30 @@ WIP
   2. Test: `pnpm nx run-many --target=test --all`
   3. Build: `pnpm nx run-many --target=build --all`
   4. E2E: `pnpm nx run web-e2e:e2e` (on `main` only)
+
+**🚨 MANDATORY CI Verification Before Story Completion:**
+
+Dev agents MUST verify CI passes BEFORE marking any story as "done":
+
+```bash
+# REQUIRED: Run this before marking story as done
+pnpm nx affected --target=lint,test,type-check --base=main
+
+# If any E2E tests might be affected:
+pnpm nx run web-e2e:e2e
+
+# Go tests (if analysis-engine changes):
+cd packages/analysis-engine && make test
+```
+
+**CI Verification Checklist (add to every story):**
+- [ ] `pnpm nx affected --target=lint --base=main` passes
+- [ ] `pnpm nx affected --target=test --base=main` passes
+- [ ] `pnpm nx affected --target=type-check --base=main` passes
+- [ ] Go tests pass: `cd packages/analysis-engine && make test`
+- [ ] E2E tests pass (if UI affected): `pnpm nx run web-e2e:e2e`
+
+**⚠️ CRITICAL: A story is NOT done if CI fails. Local Go tests (`make test`) alone are INSUFFICIENT.**
 - **Deployment Triggers:**
   - `main` branch: Auto-deploy to production (Render)
   - Pull requests: Preview deployments (manual trigger on Render)
@@ -784,6 +808,13 @@ const DependencyGraph = React.memo(
 - Core analysis logic MUST have integration tests
 - E2E tests MUST cover upload → analyze → visualize flow
 
+**🎯 CI Must Pass Before Story Completion:**
+
+- NEVER mark a story as "done" if CI is failing
+- Running `make test` in analysis-engine is INSUFFICIENT - must run full `pnpm nx affected`
+- E2E tests MUST be verified if any UI or routing changes were made
+- This is a BLOCKING requirement - no exceptions
+
 ---
 
 ## Usage Guidelines
@@ -802,4 +833,4 @@ const DependencyGraph = React.memo(
 - Review quarterly for outdated rules
 - Remove rules that become obvious over time
 
-Last Updated: 2026-01-16
+Last Updated: 2026-01-18
