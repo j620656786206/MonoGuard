@@ -2,8 +2,8 @@
  * MonoGuard E2E Tests - Analysis Functionality
  *
  * Tests for the core analysis features including:
- * - File upload
- * - Analysis processing
+ * - Analyze page display
+ * - Workspace upload
  * - Results display
  *
  * Uses fixtures and factories from support/fixtures.
@@ -16,24 +16,77 @@ import {
 } from './support/fixtures/factories/workspace-factory'
 
 test.describe('Analysis Feature', () => {
-  test.describe('Upload Flow', () => {
-    test('should display upload area on upload page', async ({ page }) => {
-      await page.goto('/upload')
+  test.describe('Analyze Page', () => {
+    test('should display analyze page heading', async ({ page }) => {
+      await page.goto('/analyze')
 
-      // The upload area should be visible
-      const uploadArea = page.locator('[data-testid="file-upload-area"]')
-      await expect(uploadArea).toBeVisible()
+      // The analyze page should have proper heading
+      await expect(page.locator('h1')).toContainText('Analyze')
     })
 
-    test('should show supported file format hint', async ({ page }) => {
-      await page.goto('/upload')
+    test('should show upload instructions', async ({ page }) => {
+      await page.goto('/analyze')
 
       // Should indicate workspace.json is supported
-      await expect(page.getByText(/workspace\.json|JSON/i)).toBeVisible()
+      await expect(page.getByText(/workspace\.json/)).toBeVisible()
+    })
+
+    test('should have Select File button', async ({ page }) => {
+      await page.goto('/analyze')
+
+      // Should have a button to select file
+      await expect(page.getByText(/Select File/i)).toBeVisible()
     })
   })
 
-  test.describe('Analysis Results', () => {
+  test.describe('Results Page', () => {
+    test('should display results page heading', async ({ page }) => {
+      await page.goto('/results')
+
+      // Results page should have proper heading
+      await expect(page.locator('h1')).toContainText('Analysis Results')
+    })
+
+    test('should show Health Score card', async ({ page }) => {
+      await page.goto('/results')
+
+      // Health Score section should be visible
+      await expect(page.getByText(/Health Score/i)).toBeVisible()
+    })
+
+    test('should show Circular Dependencies card', async ({ page }) => {
+      await page.goto('/results')
+
+      // Circular Dependencies section should be visible
+      await expect(page.getByText(/Circular Dependencies/i)).toBeVisible()
+    })
+
+    test('should show Total Packages card', async ({ page }) => {
+      await page.goto('/results')
+
+      // Total Packages section should be visible
+      await expect(page.getByText(/Total Packages/i)).toBeVisible()
+    })
+
+    test('should have Start New Analysis link', async ({ page }) => {
+      await page.goto('/results')
+
+      // Should have a link to start new analysis
+      await expect(page.getByText(/Start New Analysis/i)).toBeVisible()
+    })
+
+    test('should navigate to analyze page when clicking Start New Analysis', async ({ page }) => {
+      await page.goto('/results')
+
+      // Click Start New Analysis
+      await page.getByText(/Start New Analysis/i).click()
+
+      // Should navigate to analyze page
+      await expect(page).toHaveURL(/analyze/)
+    })
+  })
+
+  test.describe('Workspace Factory Tests', () => {
     test('should use workspace factory for test data', async ({ workspaceFactory }) => {
       // Demonstrate factory usage - creates a valid workspace structure
       const workspace = workspaceFactory.create({
@@ -65,15 +118,6 @@ test.describe('Analysis Feature', () => {
 
       expect(Object.keys(minimalWorkspace.projects)).toHaveLength(1)
       expect(minimalWorkspace.projects['single-app'].projectType).toBe('application')
-    })
-  })
-
-  test.describe('Dashboard', () => {
-    test('should navigate to dashboard', async ({ page }) => {
-      await page.goto('/dashboard')
-
-      // Dashboard should have some content
-      await expect(page.locator('body')).toBeVisible()
     })
   })
 })
