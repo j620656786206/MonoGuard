@@ -100,7 +100,7 @@ class ApiClient {
             await this.refreshToken()
             // Retry the original request with new token
             return this.axiosInstance(originalRequest)
-          } catch (refreshError) {
+          } catch {
             this.clearAuth()
             throw this.createApiError(error)
           }

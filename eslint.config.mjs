@@ -3,6 +3,19 @@ import tseslint from '@typescript-eslint/eslint-plugin'
 import tsparser from '@typescript-eslint/parser'
 
 export default [
+  {
+    ignores: [
+      '**/node_modules/**',
+      '**/.output/**',
+      '**/.vinxi/**',
+      '**/dist/**',
+      '**/build/**',
+      '**/*.gen.ts',
+      '**/routeTree.gen.ts',
+      '**/coverage/**',
+      '**/.next/**',
+    ],
+  },
   js.configs.recommended,
   {
     files: ['**/*.ts', '**/*.tsx'],
@@ -94,18 +107,5 @@ export default [
       'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
     },
-  },
-  {
-    ignores: [
-      '**/node_modules/**',
-      '**/.output/**',
-      '**/.vinxi/**',
-      '**/dist/**',
-      '**/build/**',
-      '**/*.gen.ts',
-      '**/routeTree.gen.ts',
-      '**/coverage/**',
-      '**/.next/**',
-    ],
   },
 ]

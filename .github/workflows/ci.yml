@@ -184,6 +184,9 @@ jobs:
       - name: Run TypeScript tests (affected)
         run: pnpm nx affected -t test --parallel=3 --coverage
 
+      - name: Build CLI binary for E2E tests
+        run: cd apps/cli && make build
+
       - name: Run Go tests
         run: |
           cd packages/analysis-engine && go test -v ./...
