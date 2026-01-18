@@ -134,6 +134,9 @@ jobs:
       - name: Run ESLint (affected)
         run: pnpm nx affected -t lint --parallel=3
 
+      - name: Build types package
+        run: pnpm nx build @monoguard/types
+
       - name: Run TypeScript type check
         run: pnpm nx affected -t type-check --parallel=3
 

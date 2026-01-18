@@ -230,11 +230,15 @@ export interface ComprehensiveAnalysisResult {
   progress: number
   currentStep?: string
   results?: {
+    summary?: AnalysisSummary
     dependencyAnalysis?: DependencyAnalysisResults
     architectureValidation?: ArchitectureValidationResults
     healthScore?: HealthScore
     bundleImpact?: BundleImpactReport
     duplicateDetection?: DuplicateDetectionResults
+    circularDependencies?: CircularDependency[]
+    versionConflicts?: VersionConflict[]
+    duplicates?: DuplicateGroup[]
   }
   error?: string
   warnings?: string[]

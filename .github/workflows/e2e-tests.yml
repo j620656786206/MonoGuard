@@ -118,9 +118,11 @@ jobs:
       - name: Run ESLint
         run: pnpm nx run-many --target=lint --all --parallel=3
 
+      - name: Build types package
+        run: pnpm nx build @monoguard/types
+
       - name: Run Type Check
         run: pnpm nx run-many --target=type-check --all --parallel=3
-        continue-on-error: true # Type check may not be configured for all projects
 
   # ============================================
   # Stage 3: Unit Tests

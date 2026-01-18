@@ -194,7 +194,7 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis, onNe
                     weight: 0.3,
                     description: `${results.summary?.duplicateCount || 0} duplicate dependencies found`,
                     recommendations:
-                      results.summary?.duplicateCount > 0 ? ['Remove duplicate dependencies'] : [],
+                      (results.summary?.duplicateCount ?? 0) > 0 ? ['Remove duplicate dependencies'] : [],
                   },
                   {
                     name: 'Circular Dependencies',
@@ -202,7 +202,7 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis, onNe
                     weight: 0.2,
                     description: `${results.summary?.circularCount || 0} circular dependencies detected`,
                     recommendations:
-                      results.summary?.circularCount > 0 ? ['Refactor circular dependencies'] : [],
+                      (results.summary?.circularCount ?? 0) > 0 ? ['Refactor circular dependencies'] : [],
                   },
                   {
                     name: 'Version Conflicts',
@@ -210,7 +210,7 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis, onNe
                     weight: 0.2,
                     description: `${results.summary?.conflictCount || 0} version conflicts found`,
                     recommendations:
-                      results.summary?.conflictCount > 0 ? ['Resolve version conflicts'] : [],
+                      (results.summary?.conflictCount ?? 0) > 0 ? ['Resolve version conflicts'] : [],
                   },
                   {
                     name: 'Bundle Size',
@@ -302,15 +302,19 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis, onNe
 const OverviewPanel: React.FC<{ analysis: ComprehensiveAnalysisResult }> = ({ analysis }) => {
   const { results } = analysis
 
+  const healthScoreValue = typeof results?.healthScore === 'number'
+    ? results.healthScore
+    : (results?.healthScore?.overall ?? results?.summary?.healthScore ?? 0)
+
   const stats = [
     {
       label: 'Health Score',
-      value: results?.healthScore || results?.summary?.healthScore || 0,
+      value: healthScoreValue,
       suffix: '/100',
       color:
-        (results?.healthScore || results?.summary?.healthScore || 0) >= 80
+        healthScoreValue >= 80
           ? 'green'
-          : (results?.healthScore || results?.summary?.healthScore || 0) >= 60
+          : healthScoreValue >= 60
             ? 'yellow'
             : 'red',
       icon: (
