@@ -22,20 +22,36 @@ func GetVersion() string {
 }
 
 // Analyze performs dependency analysis on the provided workspace data.
-// Input can be either:
-// 1. Legacy format - JSON object mapping filenames to file contents:
+//
+// # Input Formats (Backward Compatible)
+//
+// The function accepts two JSON input formats:
+//
+// ## Format 1: Legacy (pre-Story 2.6)
+//
+// A flat JSON object where keys are file paths and values are file contents.
+// This format does NOT support exclusion patterns.
 //
 //	{
 //	  "package.json": "{ \"name\": \"root\", \"workspaces\": [\"packages/*\"] }",
 //	  "packages/pkg-a/package.json": "{ \"name\": \"@mono/pkg-a\", ... }"
 //	}
 //
-// 2. New format (Story 2.6) - AnalysisInput with optional config:
+// ## Format 2: AnalysisInput (Story 2.6+)
+//
+// A structured object with "files" and optional "config" fields.
+// Use this format to specify exclusion patterns.
 //
 //	{
 //	  "files": { "package.json": "...", ... },
 //	  "config": { "exclude": ["packages/legacy", "regex:.*-test$"] }
 //	}
+//
+// # Detection Logic
+//
+// The function first attempts to parse as AnalysisInput (Format 2).
+// If the parsed object has a non-nil "files" field, it uses Format 2.
+// Otherwise, it falls back to Format 1 (legacy flat map).
 //
 // Returns a Result JSON string with AnalysisResult (including dependency graph) or error.
 func Analyze(input string) string {
@@ -44,17 +60,18 @@ func Analyze(input string) string {
 		return r.ToJSON()
 	}
 
-	// Try to parse as AnalysisInput first (Story 2.6 format)
+	// Parse input: try AnalysisInput format first, fallback to legacy format
 	var analysisInput types.AnalysisInput
 	var filesInput map[string]string
 	var config *types.AnalysisConfig
 
 	if err := json.Unmarshal([]byte(input), &analysisInput); err == nil && analysisInput.Files != nil {
-		// New format with optional config
+		// Format 2: AnalysisInput with "files" field (and optional "config")
 		filesInput = analysisInput.Files
 		config = analysisInput.Config
 	} else {
-		// Legacy format - just files map
+		// Format 1: Legacy flat map (keys=paths, values=contents)
+		// Note: This path also handles Format 2 parse failures gracefully
 		if err := json.Unmarshal([]byte(input), &filesInput); err != nil {
 			r := result.NewError(result.ErrInvalidInput, "Failed to parse input JSON: "+err.Error())
 			return r.ToJSON()

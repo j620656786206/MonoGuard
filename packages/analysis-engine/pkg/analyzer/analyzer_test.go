@@ -798,3 +798,158 @@ func TestAnalyzeWithRegexExclusion(t *testing.T) {
 		t.Error("core-test should be marked as excluded")
 	}
 }
+
+// ========================================
+// Story 2.6: filterExcludedPackages Edge Cases
+// ========================================
+
+// TestFilterExcludedPackages_AllExcluded verifies behavior when all packages are excluded.
+func TestFilterExcludedPackages_AllExcluded(t *testing.T) {
+	graph := types.NewDependencyGraph("/workspace", types.WorkspaceTypePnpm)
+
+	// Add nodes - all excluded
+	node1 := types.NewPackageNode("@mono/legacy-a", "1.0.0", "packages/legacy-a")
+	node1.Excluded = true
+	graph.Nodes["@mono/legacy-a"] = node1
+
+	node2 := types.NewPackageNode("@mono/legacy-b", "1.0.0", "packages/legacy-b")
+	node2.Excluded = true
+	graph.Nodes["@mono/legacy-b"] = node2
+
+	// Add edge between excluded packages
+	graph.Edges = []*types.DependencyEdge{
+		{From: "@mono/legacy-a", To: "@mono/legacy-b", Type: types.DependencyTypeProduction},
+	}
+
+	// Filter
+	filtered := filterExcludedPackages(graph)
+
+	// All nodes should be removed
+	if len(filtered.Nodes) != 0 {
+		t.Errorf("Filtered nodes = %d, want 0 (all excluded)", len(filtered.Nodes))
+	}
+
+	// All edges should be removed
+	if len(filtered.Edges) != 0 {
+		t.Errorf("Filtered edges = %d, want 0 (all excluded)", len(filtered.Edges))
+	}
+}
+
+// TestFilterExcludedPackages_NoneExcluded verifies behavior when no packages are excluded.
+func TestFilterExcludedPackages_NoneExcluded(t *testing.T) {
+	graph := types.NewDependencyGraph("/workspace", types.WorkspaceTypePnpm)
+
+	// Add nodes - none excluded
+	node1 := types.NewPackageNode("@mono/app", "1.0.0", "apps/web")
+	node1.Dependencies = []string{"@mono/core"}
+	graph.Nodes["@mono/app"] = node1
+
+	node2 := types.NewPackageNode("@mono/core", "1.0.0", "packages/core")
+	graph.Nodes["@mono/core"] = node2
+
+	// Add edge
+	graph.Edges = []*types.DependencyEdge{
+		{From: "@mono/app", To: "@mono/core", Type: types.DependencyTypeProduction},
+	}
+
+	// Filter
+	filtered := filterExcludedPackages(graph)
+
+	// All nodes should be preserved
+	if len(filtered.Nodes) != 2 {
+		t.Errorf("Filtered nodes = %d, want 2", len(filtered.Nodes))
+	}
+
+	// All edges should be preserved
+	if len(filtered.Edges) != 1 {
+		t.Errorf("Filtered edges = %d, want 1", len(filtered.Edges))
+	}
+
+	// Dependency list should be preserved
+	appNode := filtered.Nodes["@mono/app"]
+	if len(appNode.Dependencies) != 1 || appNode.Dependencies[0] != "@mono/core" {
+		t.Errorf("App dependencies = %v, want [@mono/core]", appNode.Dependencies)
+	}
+}
+
+// TestFilterExcludedPackages_AllDependencyTypes verifies filtering across all dependency types.
+func TestFilterExcludedPackages_AllDependencyTypes(t *testing.T) {
+	graph := types.NewDependencyGraph("/workspace", types.WorkspaceTypePnpm)
+
+	// Add non-excluded node with all dependency types pointing to excluded
+	appNode := types.NewPackageNode("@mono/app", "1.0.0", "apps/web")
+	appNode.Dependencies = []string{"@mono/prod-excluded", "@mono/prod-ok"}
+	appNode.DevDependencies = []string{"@mono/dev-excluded", "@mono/dev-ok"}
+	appNode.PeerDependencies = []string{"@mono/peer-excluded", "@mono/peer-ok"}
+	appNode.OptionalDependencies = []string{"@mono/opt-excluded", "@mono/opt-ok"}
+	graph.Nodes["@mono/app"] = appNode
+
+	// Add excluded packages
+	for _, name := range []string{"@mono/prod-excluded", "@mono/dev-excluded", "@mono/peer-excluded", "@mono/opt-excluded"} {
+		node := types.NewPackageNode(name, "1.0.0", "packages/"+name)
+		node.Excluded = true
+		graph.Nodes[name] = node
+	}
+
+	// Add non-excluded packages
+	for _, name := range []string{"@mono/prod-ok", "@mono/dev-ok", "@mono/peer-ok", "@mono/opt-ok"} {
+		node := types.NewPackageNode(name, "1.0.0", "packages/"+name)
+		graph.Nodes[name] = node
+	}
+
+	// Filter
+	filtered := filterExcludedPackages(graph)
+
+	// Should have 5 nodes (app + 4 non-excluded)
+	if len(filtered.Nodes) != 5 {
+		t.Errorf("Filtered nodes = %d, want 5", len(filtered.Nodes))
+	}
+
+	// Verify dependency lists are filtered
+	filteredApp := filtered.Nodes["@mono/app"]
+
+	if len(filteredApp.Dependencies) != 1 || filteredApp.Dependencies[0] != "@mono/prod-ok" {
+		t.Errorf("Filtered Dependencies = %v, want [@mono/prod-ok]", filteredApp.Dependencies)
+	}
+	if len(filteredApp.DevDependencies) != 1 || filteredApp.DevDependencies[0] != "@mono/dev-ok" {
+		t.Errorf("Filtered DevDependencies = %v, want [@mono/dev-ok]", filteredApp.DevDependencies)
+	}
+	if len(filteredApp.PeerDependencies) != 1 || filteredApp.PeerDependencies[0] != "@mono/peer-ok" {
+		t.Errorf("Filtered PeerDependencies = %v, want [@mono/peer-ok]", filteredApp.PeerDependencies)
+	}
+	if len(filteredApp.OptionalDependencies) != 1 || filteredApp.OptionalDependencies[0] != "@mono/opt-ok" {
+		t.Errorf("Filtered OptionalDependencies = %v, want [@mono/opt-ok]", filteredApp.OptionalDependencies)
+	}
+}
+
+// TestFilterExcludedPackages_PreservesExternalDeps verifies external deps are preserved.
+func TestFilterExcludedPackages_PreservesExternalDeps(t *testing.T) {
+	graph := types.NewDependencyGraph("/workspace", types.WorkspaceTypePnpm)
+
+	// Add node with external dependencies
+	appNode := types.NewPackageNode("@mono/app", "1.0.0", "apps/web")
+	appNode.ExternalDeps = map[string]string{"react": "^18.0.0", "lodash": "^4.17.21"}
+	appNode.ExternalDevDeps = map[string]string{"typescript": "^5.0.0"}
+	appNode.ExternalPeerDeps = map[string]string{"react-dom": "^18.0.0"}
+	appNode.ExternalOptionalDeps = map[string]string{"fsevents": "^2.3.0"}
+	graph.Nodes["@mono/app"] = appNode
+
+	// Filter
+	filtered := filterExcludedPackages(graph)
+
+	// Verify external deps are preserved
+	filteredApp := filtered.Nodes["@mono/app"]
+
+	if filteredApp.ExternalDeps["react"] != "^18.0.0" {
+		t.Errorf("ExternalDeps[react] = %s, want ^18.0.0", filteredApp.ExternalDeps["react"])
+	}
+	if filteredApp.ExternalDevDeps["typescript"] != "^5.0.0" {
+		t.Errorf("ExternalDevDeps[typescript] = %s, want ^5.0.0", filteredApp.ExternalDevDeps["typescript"])
+	}
+	if filteredApp.ExternalPeerDeps["react-dom"] != "^18.0.0" {
+		t.Errorf("ExternalPeerDeps[react-dom] = %s, want ^18.0.0", filteredApp.ExternalPeerDeps["react-dom"])
+	}
+	if filteredApp.ExternalOptionalDeps["fsevents"] != "^2.3.0" {
+		t.Errorf("ExternalOptionalDeps[fsevents] = %s, want ^2.3.0", filteredApp.ExternalOptionalDeps["fsevents"])
+	}
+}

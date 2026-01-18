@@ -57,7 +57,7 @@ development_status:
   2-3-implement-circular-dependency-detection-algorithm: done
   2-4-identify-duplicate-dependencies-with-version-conflicts: done
   2-5-calculate-architecture-health-score: done
-  2-6-implement-package-exclusion-patterns: review
+  2-6-implement-package-exclusion-patterns: done
   2-7-create-typescript-wasm-adapter: review
   epic-2-retrospective: optional
 
