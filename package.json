@@ -127,8 +127,11 @@
     "*.{js,jsx,ts,tsx}": [
       "biome check --write"
     ],
-    "!(_bmad-output)/**/*.{json,md,yml,yaml}": [
+    "!(_bmad-output)/**/*.{json,md}": [
       "biome format --write"
+    ],
+    "!(_bmad-output)/**/*.{yml,yaml}": [
+      "prettier --write"
     ],
     "apps/api/**/*.go": [
       "gofmt -s -w",
