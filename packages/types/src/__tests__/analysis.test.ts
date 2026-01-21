@@ -93,6 +93,7 @@ describe('Analysis types', () => {
         cycle: ['package-a', 'package-b', 'package-a'],
         type: 'direct',
         severity: 'critical',
+        depth: 2,
         impact: 'Build failure due to circular dependency',
         complexity: 5,
       }
@@ -106,6 +107,7 @@ describe('Analysis types', () => {
         cycle: ['package-a', 'package-b', 'package-c', 'package-a'],
         type: 'indirect',
         severity: 'warning',
+        depth: 3,
         impact: 'Potential build issues',
         complexity: 7,
         fixStrategy: {
