@@ -953,3 +953,179 @@ func TestFilterExcludedPackages_PreservesExternalDeps(t *testing.T) {
 		t.Errorf("ExternalOptionalDeps[fsevents] = %s, want ^2.3.0", filteredApp.ExternalOptionalDeps["fsevents"])
 	}
 }
+
+// ========================================
+// Story 3.1: Root Cause Analysis Integration Tests
+// ========================================
+
+// TestAnalyzeCyclesHaveRootCause verifies cycles are enriched with root cause analysis.
+func TestAnalyzeCyclesHaveRootCause(t *testing.T) {
+	a := NewAnalyzer()
+	// Create workspace with a simple cycle: A → B → A
+	workspace := &types.WorkspaceData{
+		RootPath:      "/workspace",
+		WorkspaceType: types.WorkspaceTypePnpm,
+		Packages: map[string]*types.PackageInfo{
+			"@mono/app": {
+				Name:    "@mono/app",
+				Version: "1.0.0",
+				Path:    "apps/web",
+				Dependencies: map[string]string{
+					"@mono/lib": "^1.0.0",
+				},
+				DevDependencies:  map[string]string{},
+				PeerDependencies: map[string]string{},
+			},
+			"@mono/lib": {
+				Name:    "@mono/lib",
+				Version: "1.0.0",
+				Path:    "packages/lib",
+				Dependencies: map[string]string{
+					"@mono/app": "^1.0.0", // Creates cycle
+				},
+				DevDependencies:  map[string]string{},
+				PeerDependencies: map[string]string{},
+			},
+		},
+	}
+
+	result, err := a.Analyze(workspace)
+	if err != nil {
+		t.Fatalf("Analyze failed: %v", err)
+	}
+
+	// Verify cycle detected
+	if len(result.CircularDependencies) != 1 {
+		t.Fatalf("CircularDependencies = %d, want 1", len(result.CircularDependencies))
+	}
+
+	cycle := result.CircularDependencies[0]
+
+	// Verify root cause is populated (Story 3.1)
+	if cycle.RootCause == nil {
+		t.Fatal("RootCause should be populated for detected cycles")
+	}
+
+	// Verify root cause fields
+	if cycle.RootCause.OriginatingPackage == "" {
+		t.Error("RootCause.OriginatingPackage should not be empty")
+	}
+	if cycle.RootCause.Confidence == 0 {
+		t.Error("RootCause.Confidence should be > 0")
+	}
+	if cycle.RootCause.Explanation == "" {
+		t.Error("RootCause.Explanation should not be empty")
+	}
+	if len(cycle.RootCause.Chain) == 0 {
+		t.Error("RootCause.Chain should not be empty")
+	}
+}
+
+// TestAnalyzeCyclesRootCauseIndirectCycle verifies root cause for indirect cycles.
+func TestAnalyzeCyclesRootCauseIndirectCycle(t *testing.T) {
+	a := NewAnalyzer()
+	// Create workspace with indirect cycle: A → B → C → A
+	workspace := &types.WorkspaceData{
+		RootPath:      "/workspace",
+		WorkspaceType: types.WorkspaceTypePnpm,
+		Packages: map[string]*types.PackageInfo{
+			"@mono/app": {
+				Name:    "@mono/app",
+				Version: "1.0.0",
+				Path:    "apps/web",
+				Dependencies: map[string]string{
+					"@mono/service": "^1.0.0",
+				},
+				DevDependencies:  map[string]string{},
+				PeerDependencies: map[string]string{},
+			},
+			"@mono/service": {
+				Name:    "@mono/service",
+				Version: "1.0.0",
+				Path:    "packages/service",
+				Dependencies: map[string]string{
+					"@mono/core": "^1.0.0",
+				},
+				DevDependencies:  map[string]string{},
+				PeerDependencies: map[string]string{},
+			},
+			"@mono/core": {
+				Name:    "@mono/core",
+				Version: "1.0.0",
+				Path:    "packages/core",
+				Dependencies: map[string]string{
+					"@mono/app": "^1.0.0", // Creates indirect cycle
+				},
+				DevDependencies:  map[string]string{},
+				PeerDependencies: map[string]string{},
+			},
+		},
+	}
+
+	result, err := a.Analyze(workspace)
+	if err != nil {
+		t.Fatalf("Analyze failed: %v", err)
+	}
+
+	// Verify cycle detected
+	if len(result.CircularDependencies) != 1 {
+		t.Fatalf("CircularDependencies = %d, want 1", len(result.CircularDependencies))
+	}
+
+	cycle := result.CircularDependencies[0]
+
+	// Verify root cause is populated
+	if cycle.RootCause == nil {
+		t.Fatal("RootCause should be populated for indirect cycles")
+	}
+
+	// For indirect cycle with "core" package, core should NOT be the root cause
+	if cycle.RootCause.OriginatingPackage == "@mono/core" {
+		t.Error("RootCause should not be 'core' package (name pattern heuristic)")
+	}
+
+	// Verify chain has 3 edges for 3-node cycle
+	if len(cycle.RootCause.Chain) != 3 {
+		t.Errorf("RootCause.Chain length = %d, want 3", len(cycle.RootCause.Chain))
+	}
+}
+
+// TestAnalyzeCyclesNoCycleNoRootCause verifies no root cause when no cycles.
+func TestAnalyzeCyclesNoCycleNoRootCause(t *testing.T) {
+	a := NewAnalyzer()
+	// Create workspace without cycles
+	workspace := &types.WorkspaceData{
+		RootPath:      "/workspace",
+		WorkspaceType: types.WorkspaceTypePnpm,
+		Packages: map[string]*types.PackageInfo{
+			"@mono/app": {
+				Name:    "@mono/app",
+				Version: "1.0.0",
+				Path:    "apps/web",
+				Dependencies: map[string]string{
+					"@mono/lib": "^1.0.0",
+				},
+				DevDependencies:  map[string]string{},
+				PeerDependencies: map[string]string{},
+			},
+			"@mono/lib": {
+				Name:             "@mono/lib",
+				Version:          "1.0.0",
+				Path:             "packages/lib",
+				Dependencies:     map[string]string{},
+				DevDependencies:  map[string]string{},
+				PeerDependencies: map[string]string{},
+			},
+		},
+	}
+
+	result, err := a.Analyze(workspace)
+	if err != nil {
+		t.Fatalf("Analyze failed: %v", err)
+	}
+
+	// Verify no cycles
+	if len(result.CircularDependencies) != 0 {
+		t.Errorf("CircularDependencies = %d, want 0", len(result.CircularDependencies))
+	}
+}

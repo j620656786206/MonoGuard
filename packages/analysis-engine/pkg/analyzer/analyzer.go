@@ -74,6 +74,12 @@ func (a *Analyzer) Analyze(workspace *types.WorkspaceData) (*types.AnalysisResul
 	cycleDetector := NewCycleDetector(filteredGraph)
 	cycles := cycleDetector.DetectCycles()
 
+	// Story 3.1: Enrich cycles with root cause analysis
+	rootCauseAnalyzer := NewRootCauseAnalyzer(filteredGraph)
+	for _, cycle := range cycles {
+		cycle.RootCause = rootCauseAnalyzer.Analyze(cycle)
+	}
+
 	// Detect version conflicts (Story 2.4)
 	// Story 2.6: Use filtered graph to exclude excluded packages
 	conflictDetector := NewConflictDetector(filteredGraph)

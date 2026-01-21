@@ -1,4 +1,4 @@
-import type { DependencyGraph, WorkspaceType } from './graph'
+import type { DependencyGraph, DependencyType, WorkspaceType } from './graph'
 
 /**
  * AnalysisResult - Complete analysis output
@@ -47,6 +47,44 @@ export interface CircularDependencyInfo {
   fixStrategy?: FixStrategy
   /** Refactoring complexity (1-10) */
   complexity: number
+  /** Root cause analysis (Story 3.1) */
+  rootCause?: RootCauseAnalysis
+}
+
+/**
+ * RootCauseAnalysis - Analysis of why a circular dependency exists
+ *
+ * Matches Go: pkg/types/root_cause.go (Story 3.1)
+ */
+export interface RootCauseAnalysis {
+  /** Package most likely responsible for the cycle */
+  originatingPackage: string
+  /** The specific dependency creating the cycle */
+  problematicDependency: RootCauseEdge
+  /** Confidence score (0-100) indicating analysis certainty */
+  confidence: number
+  /** Human-readable description of the root cause */
+  explanation: string
+  /** Ordered dependency chain forming the cycle */
+  chain: RootCauseEdge[]
+  /** The edge most likely to break if removed (optional) */
+  criticalEdge?: RootCauseEdge
+}
+
+/**
+ * RootCauseEdge - Single dependency relationship in root cause analysis
+ *
+ * Matches Go: pkg/types/root_cause.go (Story 3.1)
+ */
+export interface RootCauseEdge {
+  /** Source package */
+  from: string
+  /** Target package */
+  to: string
+  /** Dependency type */
+  type: DependencyType
+  /** If true, this edge is key to breaking the cycle */
+  critical: boolean
 }
 
 /**

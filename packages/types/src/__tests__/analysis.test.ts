@@ -6,6 +6,8 @@ import type {
   DependencyEdge,
   DependencyGraph,
   PackageNode,
+  RootCauseAnalysis,
+  RootCauseEdge,
 } from '../analysis'
 
 describe('Analysis types', () => {
@@ -233,5 +235,140 @@ describe('WorkspaceType', () => {
     expect(graph3.workspaceType).toBe('pnpm')
     expect(graph4.workspaceType).toBe('nx')
     expect(graph5.workspaceType).toBe('unknown')
+  })
+})
+
+// Story 3.1: Root Cause Analysis Types
+describe('RootCauseAnalysis', () => {
+  it('can represent root cause analysis with all fields', () => {
+    const rootCause: RootCauseAnalysis = {
+      originatingPackage: 'pkg-ui',
+      problematicDependency: {
+        from: 'pkg-ui',
+        to: 'pkg-api',
+        type: 'production',
+        critical: false,
+      },
+      confidence: 82,
+      explanation: "Package 'pkg-ui' is highly likely the root cause.",
+      chain: [
+        { from: 'pkg-ui', to: 'pkg-api', type: 'production', critical: false },
+        { from: 'pkg-api', to: 'pkg-core', type: 'production', critical: false },
+        { from: 'pkg-core', to: 'pkg-ui', type: 'production', critical: true },
+      ],
+      criticalEdge: {
+        from: 'pkg-core',
+        to: 'pkg-ui',
+        type: 'production',
+        critical: true,
+      },
+    }
+
+    expect(rootCause.originatingPackage).toBe('pkg-ui')
+    expect(rootCause.confidence).toBe(82)
+    expect(rootCause.chain).toHaveLength(3)
+    expect(rootCause.criticalEdge?.critical).toBe(true)
+  })
+
+  it('criticalEdge is optional', () => {
+    const rootCause: RootCauseAnalysis = {
+      originatingPackage: 'pkg-a',
+      problematicDependency: {
+        from: 'pkg-a',
+        to: 'pkg-b',
+        type: 'development',
+        critical: false,
+      },
+      confidence: 65,
+      explanation: "Package 'pkg-a' is likely the root cause.",
+      chain: [
+        { from: 'pkg-a', to: 'pkg-b', type: 'development', critical: false },
+        { from: 'pkg-b', to: 'pkg-a', type: 'production', critical: true },
+      ],
+    }
+
+    expect(rootCause.criticalEdge).toBeUndefined()
+    expect(rootCause.chain).toHaveLength(2)
+  })
+})
+
+describe('RootCauseEdge', () => {
+  it('supports all dependency types', () => {
+    const edges: RootCauseEdge[] = [
+      { from: 'a', to: 'b', type: 'production', critical: false },
+      { from: 'a', to: 'c', type: 'development', critical: true },
+      { from: 'a', to: 'd', type: 'peer', critical: false },
+      { from: 'a', to: 'e', type: 'optional', critical: true },
+    ]
+
+    expect(edges[0].type).toBe('production')
+    expect(edges[1].type).toBe('development')
+    expect(edges[2].type).toBe('peer')
+    expect(edges[3].type).toBe('optional')
+  })
+
+  it('critical flag indicates edge importance', () => {
+    const criticalEdge: RootCauseEdge = {
+      from: 'pkg-core',
+      to: 'pkg-ui',
+      type: 'production',
+      critical: true,
+    }
+
+    const normalEdge: RootCauseEdge = {
+      from: 'pkg-ui',
+      to: 'pkg-api',
+      type: 'production',
+      critical: false,
+    }
+
+    expect(criticalEdge.critical).toBe(true)
+    expect(normalEdge.critical).toBe(false)
+  })
+})
+
+describe('CircularDependencyInfo with RootCause', () => {
+  it('can include root cause analysis', () => {
+    const circular: CircularDependencyInfo = {
+      cycle: ['pkg-ui', 'pkg-api', 'pkg-core', 'pkg-ui'],
+      type: 'indirect',
+      severity: 'info',
+      depth: 3,
+      impact: 'Indirect circular dependency involving 3 packages',
+      complexity: 5,
+      rootCause: {
+        originatingPackage: 'pkg-ui',
+        problematicDependency: {
+          from: 'pkg-ui',
+          to: 'pkg-api',
+          type: 'production',
+          critical: false,
+        },
+        confidence: 82,
+        explanation: "Package 'pkg-ui' is highly likely the root cause.",
+        chain: [
+          { from: 'pkg-ui', to: 'pkg-api', type: 'production', critical: false },
+          { from: 'pkg-api', to: 'pkg-core', type: 'production', critical: false },
+          { from: 'pkg-core', to: 'pkg-ui', type: 'production', critical: true },
+        ],
+      },
+    }
+
+    expect(circular.rootCause).toBeDefined()
+    expect(circular.rootCause?.originatingPackage).toBe('pkg-ui')
+    expect(circular.rootCause?.confidence).toBe(82)
+  })
+
+  it('rootCause is optional for backward compatibility', () => {
+    const circular: CircularDependencyInfo = {
+      cycle: ['package-a', 'package-b', 'package-a'],
+      type: 'direct',
+      severity: 'warning',
+      depth: 2,
+      impact: 'Direct circular dependency',
+      complexity: 3,
+    }
+
+    expect(circular.rootCause).toBeUndefined()
   })
 })

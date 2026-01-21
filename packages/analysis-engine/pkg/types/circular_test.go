@@ -337,3 +337,136 @@ func TestComplexityConstants(t *testing.T) {
 		t.Errorf("ComplexityMax = %d, want 10", ComplexityMax)
 	}
 }
+
+// ========================================
+// RootCause Integration Tests (Story 3.1)
+// ========================================
+
+func TestCircularDependencyInfo_WithRootCause(t *testing.T) {
+	// Test that RootCause field is optional and omitted when nil
+	info := &CircularDependencyInfo{
+		Cycle:      []string{"A", "B", "A"},
+		Type:       CircularTypeDirect,
+		Severity:   CircularSeverityWarning,
+		Depth:      2,
+		Impact:     "Direct circular dependency between A and B",
+		Complexity: 3,
+		RootCause:  nil, // Should be omitted in JSON
+	}
+
+	data, err := json.Marshal(info)
+	if err != nil {
+		t.Fatalf("Failed to marshal: %v", err)
+	}
+
+	jsonStr := string(data)
+
+	// RootCause should NOT be in JSON when nil (omitempty)
+	if strings.Contains(jsonStr, "rootCause") {
+		t.Errorf("Expected rootCause to be omitted when nil, got: %s", jsonStr)
+	}
+}
+
+func TestCircularDependencyInfo_WithRootCausePresent(t *testing.T) {
+	// Test that RootCause field is included when present
+	info := &CircularDependencyInfo{
+		Cycle:      []string{"pkg-ui", "pkg-api", "pkg-core", "pkg-ui"},
+		Type:       CircularTypeIndirect,
+		Severity:   CircularSeverityInfo,
+		Depth:      3,
+		Impact:     "Indirect circular dependency involving 3 packages",
+		Complexity: 5,
+		RootCause: &RootCauseAnalysis{
+			OriginatingPackage: "pkg-ui",
+			ProblematicDependency: RootCauseEdge{
+				From:     "pkg-ui",
+				To:       "pkg-api",
+				Type:     DependencyTypeProduction,
+				Critical: false,
+			},
+			Confidence:  82,
+			Explanation: "Package 'pkg-ui' is highly likely the root cause.",
+			Chain: []RootCauseEdge{
+				{From: "pkg-ui", To: "pkg-api", Type: DependencyTypeProduction, Critical: false},
+				{From: "pkg-api", To: "pkg-core", Type: DependencyTypeProduction, Critical: false},
+				{From: "pkg-core", To: "pkg-ui", Type: DependencyTypeProduction, Critical: true},
+			},
+			CriticalEdge: &RootCauseEdge{
+				From:     "pkg-core",
+				To:       "pkg-ui",
+				Type:     DependencyTypeProduction,
+				Critical: true,
+			},
+		},
+	}
+
+	data, err := json.Marshal(info)
+	if err != nil {
+		t.Fatalf("Failed to marshal: %v", err)
+	}
+
+	jsonStr := string(data)
+
+	// RootCause should be in JSON when present
+	expectedFields := []string{
+		`"rootCause"`,
+		`"originatingPackage"`,
+		`"problematicDependency"`,
+		`"confidence"`,
+		`"explanation"`,
+		`"chain"`,
+		`"criticalEdge"`,
+	}
+
+	for _, field := range expectedFields {
+		if !strings.Contains(jsonStr, field) {
+			t.Errorf("Expected JSON to contain %s, got: %s", field, jsonStr)
+		}
+	}
+
+	// Verify round-trip
+	var decoded CircularDependencyInfo
+	if err := json.Unmarshal(data, &decoded); err != nil {
+		t.Fatalf("Failed to unmarshal: %v", err)
+	}
+
+	if decoded.RootCause == nil {
+		t.Fatal("RootCause should not be nil after round-trip")
+	}
+	if decoded.RootCause.OriginatingPackage != "pkg-ui" {
+		t.Errorf("OriginatingPackage = %s, want pkg-ui", decoded.RootCause.OriginatingPackage)
+	}
+	if decoded.RootCause.Confidence != 82 {
+		t.Errorf("Confidence = %d, want 82", decoded.RootCause.Confidence)
+	}
+}
+
+func TestCircularDependencyInfo_BackwardCompatibility(t *testing.T) {
+	// Test that existing JSON without rootCause still deserializes correctly
+	jsonStr := `{
+		"cycle": ["A", "B", "A"],
+		"type": "direct",
+		"severity": "warning",
+		"depth": 2,
+		"impact": "Direct circular dependency between A and B",
+		"complexity": 3
+	}`
+
+	var decoded CircularDependencyInfo
+	if err := json.Unmarshal([]byte(jsonStr), &decoded); err != nil {
+		t.Fatalf("Failed to unmarshal legacy JSON: %v", err)
+	}
+
+	// RootCause should be nil for legacy JSON
+	if decoded.RootCause != nil {
+		t.Error("RootCause should be nil for legacy JSON without rootCause field")
+	}
+
+	// Other fields should be correct
+	if decoded.Type != CircularTypeDirect {
+		t.Errorf("Type = %q, want %q", decoded.Type, CircularTypeDirect)
+	}
+	if decoded.Severity != CircularSeverityWarning {
+		t.Errorf("Severity = %q, want %q", decoded.Severity, CircularSeverityWarning)
+	}
+}
