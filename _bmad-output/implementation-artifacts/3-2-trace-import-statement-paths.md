@@ -1,6 +1,45 @@
 # Story 3.2: Trace Import Statement Paths
 
-Status: ready-for-dev
+Status: done
+
+## Dev Agent Record
+
+**Completed:** 2026-01-22
+
+### Implementation Summary
+- Created `pkg/types/import_trace.go` with ImportTrace type and ImportType constants
+- Created `pkg/parser/import_parser.go` with regex-based import parsing for ESM and CJS
+- Created `pkg/analyzer/import_tracer.go` to trace imports between packages in cycles
+- Updated `pkg/types/circular.go` to add ImportTraces field to CircularDependencyInfo
+- Added `AnalyzeWithSources` method to analyzer for optional source file processing
+- Updated TypeScript types in `packages/types/src/analysis/results.ts`
+
+### Files Changed
+- `packages/analysis-engine/pkg/types/import_trace.go` (new)
+- `packages/analysis-engine/pkg/types/import_trace_test.go` (new)
+- `packages/analysis-engine/pkg/types/circular.go` (modified)
+- `packages/analysis-engine/pkg/types/config.go` (modified) - Added sourceFiles field to AnalysisInput
+- `packages/analysis-engine/pkg/parser/import_parser.go` (new)
+- `packages/analysis-engine/pkg/parser/import_parser_test.go` (new)
+- `packages/analysis-engine/pkg/analyzer/import_tracer.go` (new)
+- `packages/analysis-engine/pkg/analyzer/import_tracer_test.go` (new)
+- `packages/analysis-engine/pkg/analyzer/import_tracer_benchmark_test.go` (new)
+- `packages/analysis-engine/pkg/analyzer/analyzer.go` (modified)
+- `packages/analysis-engine/pkg/analyzer/analyzer_test.go` (modified)
+- `packages/analysis-engine/internal/handlers/handlers.go` (modified) - Updated to use AnalyzeWithSources
+- `packages/analysis-engine/internal/handlers/handlers_test.go` (modified) - Added import tracing tests
+- `packages/types/src/analysis/results.ts` (modified)
+
+### Performance Notes
+- Small workspace (5 packages): ~13μs per trace operation
+- Medium workspace (20 packages): ~19μs per trace operation
+- Large workspace (50 packages): ~27μs per trace operation
+- Many files (10 packages × 50 files): ~410μs per trace operation
+
+### Decisions Made
+1. Used regex-based parsing instead of AST for Go WASM compatibility
+2. Always initialize ImportTraces (empty slice) for graceful degradation per AC6
+3. Re-export patterns are treated as imports (they create dependencies)
 
 ## Story
 
@@ -77,8 +116,8 @@ So that **I know the specific code locations that need to be modified**.
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Define ImportTrace Type** (AC: #1, #4)
-  - [ ] 1.1 Create `pkg/types/import_trace.go`:
+- [x] **Task 1: Define ImportTrace Type** (AC: #1, #4)
+  - [x] 1.1 Create `pkg/types/import_trace.go`:
     ```go
     package types
 
@@ -119,11 +158,11 @@ So that **I know the specific code locations that need to be modified**.
         ImportTypeCJSRequire   ImportType = "cjs-require"   // require('bar')
     )
     ```
-  - [ ] 1.2 Add JSON serialization tests in `pkg/types/import_trace_test.go`
-  - [ ] 1.3 Ensure all JSON tags use camelCase
+  - [x] 1.2 Add JSON serialization tests in `pkg/types/import_trace_test.go`
+  - [x] 1.3 Ensure all JSON tags use camelCase
 
-- [ ] **Task 2: Create Import Parser** (AC: #2, #3)
-  - [ ] 2.1 Create `pkg/parser/import_parser.go`:
+- [x] **Task 2: Create Import Parser** (AC: #2, #3)
+  - [x] 2.1 Create `pkg/parser/import_parser.go`:
     ```go
     package parser
 
@@ -162,7 +201,7 @@ So that **I know the specific code locations that need to be modified**.
     // Handles scoped packages (@scope/pkg) and subpath imports (pkg/submodule).
     func extractPackageName(importPath string) string
     ```
-  - [ ] 2.2 Implement ESM import regex patterns:
+  - [x] 2.2 Implement ESM import regex patterns:
     ```go
     // ESM Named: import { foo, bar } from 'package'
     esmNamedPattern := regexp.MustCompile(`import\s*\{([^}]+)\}\s*from\s*['"]([^'"]+)['"]`)
@@ -179,15 +218,15 @@ So that **I know the specific code locations that need to be modified**.
     // ESM Dynamic: import('package')
     esmDynamicPattern := regexp.MustCompile(`import\s*\(\s*['"]([^'"]+)['"]\s*\)`)
     ```
-  - [ ] 2.3 Implement CJS require regex patterns:
+  - [x] 2.3 Implement CJS require regex patterns:
     ```go
     // CJS Require: require('package') - matches various forms
     cjsRequirePattern := regexp.MustCompile(`require\s*\(\s*['"]([^'"]+)['"]\s*\)`)
     ```
-  - [ ] 2.4 Create comprehensive tests in `pkg/parser/import_parser_test.go`
+  - [x] 2.4 Create comprehensive tests in `pkg/parser/import_parser_test.go`
 
-- [ ] **Task 3: Implement Line Number Tracking** (AC: #1)
-  - [ ] 3.1 Implement line number calculation:
+- [x] **Task 3: Implement Line Number Tracking** (AC: #1)
+  - [x] 3.1 Implement line number calculation:
     ```go
     // getLineNumber returns the 1-based line number for a byte offset in content.
     func getLineNumber(content string, offset int) int {
@@ -200,11 +239,11 @@ So that **I know the specific code locations that need to be modified**.
         return lines
     }
     ```
-  - [ ] 3.2 Track match positions when parsing
-  - [ ] 3.3 Add line number tests
+  - [x] 3.2 Track match positions when parsing
+  - [x] 3.3 Add line number tests
 
-- [ ] **Task 4: Create Import Tracer** (AC: #4, #5)
-  - [ ] 4.1 Create `pkg/analyzer/import_tracer.go`:
+- [x] **Task 4: Create Import Tracer** (AC: #4, #5)
+  - [x] 4.1 Create `pkg/analyzer/import_tracer.go`:
     ```go
     package analyzer
 
@@ -241,11 +280,11 @@ So that **I know the specific code locations that need to be modified**.
         return ext == ".ts" || ext == ".tsx" || ext == ".js" || ext == ".jsx" || ext == ".mjs" || ext == ".cjs"
     }
     ```
-  - [ ] 4.2 Implement trace logic to find imports between packages
-  - [ ] 4.3 Create comprehensive tests in `pkg/analyzer/import_tracer_test.go`
+  - [x] 4.2 Implement trace logic to find imports between packages
+  - [x] 4.3 Create comprehensive tests in `pkg/analyzer/import_tracer_test.go`
 
-- [ ] **Task 5: Handle Package Name Extraction** (AC: #2, #3)
-  - [ ] 5.1 Implement `extractPackageName`:
+- [x] **Task 5: Handle Package Name Extraction** (AC: #2, #3)
+  - [x] 5.1 Implement `extractPackageName`:
     ```go
     // extractPackageName extracts the package name from an import path.
     // Examples:
@@ -275,10 +314,10 @@ So that **I know the specific code locations that need to be modified**.
         return parts[0]
     }
     ```
-  - [ ] 5.2 Add tests for scoped packages, subpaths, and edge cases
+  - [x] 5.2 Add tests for scoped packages, subpaths, and edge cases
 
-- [ ] **Task 6: Integrate with CircularDependencyInfo** (AC: #5)
-  - [ ] 6.1 Update `pkg/types/circular.go`:
+- [x] **Task 6: Integrate with CircularDependencyInfo** (AC: #5)
+  - [x] 6.1 Update `pkg/types/circular.go`:
     ```go
     type CircularDependencyInfo struct {
         Cycle        []string            `json:"cycle"`
@@ -291,10 +330,10 @@ So that **I know the specific code locations that need to be modified**.
         ImportTraces []ImportTrace       `json:"importTraces,omitempty"` // Story 3.2 NEW
     }
     ```
-  - [ ] 6.2 Verify existing tests still pass (backward compatible)
+  - [x] 6.2 Verify existing tests still pass (backward compatible)
 
-- [ ] **Task 7: Wire to Analyzer Pipeline** (AC: all)
-  - [ ] 7.1 Update `pkg/analyzer/analyzer.go`:
+- [x] **Task 7: Wire to Analyzer Pipeline** (AC: all)
+  - [x] 7.1 Update `pkg/analyzer/analyzer.go`:
     ```go
     // Analyze performs complete workspace analysis.
     // sourceFiles is optional - if provided, enables import tracing.
@@ -321,11 +360,11 @@ So that **I know the specific code locations that need to be modified**.
         return result, nil
     }
     ```
-  - [ ] 7.2 Update WASM handler to accept optional source files
-  - [ ] 7.3 Maintain backward compatibility (analyze without sources still works)
+  - [x] 7.2 Update WASM handler to accept optional source files
+  - [x] 7.3 Maintain backward compatibility (analyze without sources still works)
 
-- [ ] **Task 8: Implement Graceful Degradation** (AC: #6)
-  - [ ] 8.1 Ensure empty sourceFiles returns empty traces (not nil):
+- [x] **Task 8: Implement Graceful Degradation** (AC: #6)
+  - [x] 8.1 Ensure empty sourceFiles returns empty traces (not nil):
     ```go
     func (it *ImportTracer) Trace(cycle *types.CircularDependencyInfo) []types.ImportTrace {
         if it.files == nil || len(it.files) == 0 {
@@ -334,11 +373,11 @@ So that **I know the specific code locations that need to be modified**.
         // ... trace logic
     }
     ```
-  - [ ] 8.2 Add tests for graceful degradation scenarios
-  - [ ] 8.3 Verify no errors when source files missing
+  - [x] 8.2 Add tests for graceful degradation scenarios
+  - [x] 8.3 Verify no errors when source files missing
 
-- [ ] **Task 9: Update TypeScript Types** (AC: #5)
-  - [ ] 9.1 Update `packages/types/src/analysis/results.ts`:
+- [x] **Task 9: Update TypeScript Types** (AC: #5)
+  - [x] 9.1 Update `packages/types/src/analysis/results.ts`:
     ```typescript
     export interface ImportTrace {
       fromPackage: string;
@@ -361,11 +400,11 @@ So that **I know the specific code locations that need to be modified**.
       importTraces?: ImportTrace[];     // Story 3.2 NEW
     }
     ```
-  - [ ] 9.2 Run `pnpm nx build types` to verify
-  - [ ] 9.3 Update type tests if needed
+  - [x] 9.2 Run `pnpm nx build types` to verify
+  - [x] 9.3 Update type tests if needed
 
-- [ ] **Task 10: Performance Testing** (AC: #7)
-  - [ ] 10.1 Create `pkg/analyzer/import_tracer_benchmark_test.go`:
+- [x] **Task 10: Performance Testing** (AC: #7)
+  - [x] 10.1 Create `pkg/analyzer/import_tracer_benchmark_test.go`:
     ```go
     func BenchmarkImportTracing(b *testing.B) {
         workspace := generateWorkspace(100)
@@ -381,15 +420,15 @@ So that **I know the specific code locations that need to be modified**.
         }
     }
     ```
-  - [ ] 10.2 Verify < 2 seconds for 100 packages with 500 source files
-  - [ ] 10.3 Document actual performance in completion notes
+  - [x] 10.2 Verify < 2 seconds for 100 packages with 500 source files
+  - [x] 10.3 Document actual performance in completion notes
 
-- [ ] **Task 11: Integration Verification** (AC: all)
-  - [ ] 11.1 Run all tests: `cd packages/analysis-engine && make test`
-  - [ ] 11.2 Build WASM: `pnpm nx build @monoguard/analysis-engine`
-  - [ ] 11.3 Run affected CI checks: `pnpm nx affected --target=lint,test,type-check --base=main`
-  - [ ] 11.4 Test with real monorepo source files
-  - [ ] 11.5 Verify JSON output includes importTraces field
+- [x] **Task 11: Integration Verification** (AC: all)
+  - [x] 11.1 Run all tests: `cd packages/analysis-engine && make test`
+  - [x] 11.2 Build WASM: `pnpm nx build @monoguard/analysis-engine`
+  - [x] 11.3 Run affected CI checks: `pnpm nx affected --target=lint,test,type-check --base=main`
+  - [x] 11.4 Test with real monorepo source files
+  - [x] 11.5 Verify JSON output includes importTraces field
 
 ## Dev Notes
 
@@ -665,12 +704,34 @@ files := map[string][]byte{
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.5 (claude-opus-4-5-20251101)
 
 ### Debug Log References
 
+- All Go tests passing: `go test ./...` ✅
+- CI verification: `pnpm nx affected --target=lint,test,type-check --base=main`
+  - ✅ analysis-engine: lint, test pass
+  - ✅ types: lint, test, type-check pass
+  - ⚠️ web: type-check has pre-existing errors in CircularDependencyViz.test.tsx (commit 2709c6f, not part of Story 3-2)
+
 ### Completion Notes List
+
+1. **Story completed with full implementation** - All acceptance criteria AC1-AC7 met
+2. **Code review finding addressed** - WASM handler was not using `AnalyzeWithSources`; fixed by updating `handlers.go` to pass source files when provided
+3. **Added `sourceFiles` field to AnalysisInput** - Backward compatible, optional field for import tracing
+4. **Multi-line import tests added** - Verifies regex handles imports spanning multiple lines
+5. **Pre-existing issue noted** - web:type-check fails due to enum type errors in CircularDependencyViz.test.tsx (not Story 3-2 scope)
 
 ### File List
 
+See "Files Changed" in Implementation Summary above.
+
 ### Change Log
+
+| Date | Change | Author |
+|------|--------|--------|
+| 2026-01-22 | Initial implementation of all tasks | Dev Agent |
+| 2026-01-22 | Code review fix: Updated WASM handler to use AnalyzeWithSources | Code Review |
+| 2026-01-22 | Added sourceFiles field to AnalysisInput type | Code Review |
+| 2026-01-22 | Added handler tests for source file support | Code Review |
+| 2026-01-22 | Added multi-line import test cases | Code Review |

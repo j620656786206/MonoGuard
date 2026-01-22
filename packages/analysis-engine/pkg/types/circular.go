@@ -1,5 +1,5 @@
 // Package types defines Go types that match TypeScript definitions in @monoguard/types.
-// This file contains circular dependency types for Story 2.3.
+// This file contains circular dependency types for Story 2.3 and Story 3.2.
 package types
 
 import "fmt"
@@ -11,13 +11,14 @@ import "fmt"
 // CircularDependencyInfo represents a detected circular dependency.
 // Matches @monoguard/types CircularDependencyInfo interface.
 type CircularDependencyInfo struct {
-	Cycle      []string            `json:"cycle"`               // Package names in order, ends with first
-	Type       CircularType        `json:"type"`                // direct or indirect
-	Severity   CircularSeverity    `json:"severity"`            // critical, warning, or info
-	Depth      int                 `json:"depth"`               // Number of unique packages in cycle
-	Impact     string              `json:"impact"`              // Human-readable impact description
-	Complexity int                 `json:"complexity"`          // Refactoring complexity (1-10)
-	RootCause  *RootCauseAnalysis  `json:"rootCause,omitempty"` // Story 3.1: Optional root cause analysis
+	Cycle        []string            `json:"cycle"`                 // Package names in order, ends with first
+	Type         CircularType        `json:"type"`                  // direct or indirect
+	Severity     CircularSeverity    `json:"severity"`              // critical, warning, or info
+	Depth        int                 `json:"depth"`                 // Number of unique packages in cycle
+	Impact       string              `json:"impact"`                // Human-readable impact description
+	Complexity   int                 `json:"complexity"`            // Refactoring complexity (1-10)
+	RootCause    *RootCauseAnalysis  `json:"rootCause,omitempty"`   // Story 3.1: Optional root cause analysis
+	ImportTraces []ImportTrace       `json:"importTraces,omitempty"` // Story 3.2: Import statements forming the cycle
 }
 
 // CircularType classifies the cycle length.

@@ -63,11 +63,13 @@ func Analyze(input string) string {
 	// Parse input: try AnalysisInput format first, fallback to legacy format
 	var analysisInput types.AnalysisInput
 	var filesInput map[string]string
+	var sourceFilesInput map[string]string
 	var config *types.AnalysisConfig
 
 	if err := json.Unmarshal([]byte(input), &analysisInput); err == nil && analysisInput.Files != nil {
-		// Format 2: AnalysisInput with "files" field (and optional "config")
+		// Format 2: AnalysisInput with "files" field (and optional "config" and "sourceFiles")
 		filesInput = analysisInput.Files
+		sourceFilesInput = analysisInput.SourceFiles // Story 3.2: Optional source files
 		config = analysisInput.Config
 	} else {
 		// Format 1: Legacy flat map (keys=paths, values=contents)
@@ -82,6 +84,15 @@ func Analyze(input string) string {
 	files := make(map[string][]byte)
 	for name, content := range filesInput {
 		files[name] = []byte(content)
+	}
+
+	// Story 3.2: Convert source files to []byte (if provided)
+	var sourceFiles map[string][]byte
+	if len(sourceFilesInput) > 0 {
+		sourceFiles = make(map[string][]byte)
+		for name, content := range sourceFilesInput {
+			sourceFiles[name] = []byte(content)
+		}
 	}
 
 	// Parse workspace using the real parser
@@ -99,7 +110,8 @@ func Analyze(input string) string {
 		return r.ToJSON()
 	}
 
-	analysisResult, err := a.Analyze(workspaceData)
+	// Story 3.2: Use AnalyzeWithSources to enable import tracing when source files provided
+	analysisResult, err := a.AnalyzeWithSources(workspaceData, sourceFiles)
 	if err != nil {
 		r := result.NewError(result.ErrAnalysisFailed, err.Error())
 		return r.ToJSON()

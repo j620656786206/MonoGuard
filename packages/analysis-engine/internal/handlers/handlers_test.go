@@ -736,3 +736,155 @@ func TestAnalyzeExcludedFromConflictDetection(t *testing.T) {
 		}
 	}
 }
+
+// ========================================
+// Story 3.2: Import Tracing Tests
+// ========================================
+
+// TestAnalyzeWithSourceFiles verifies import tracing when source files provided.
+func TestAnalyzeWithSourceFiles(t *testing.T) {
+	// Create workspace with cycle: ui → api → ui
+	input := `{
+		"files": {
+			"package.json": "{\"name\": \"monorepo-root\", \"workspaces\": [\"packages/*\"]}",
+			"package-lock.json": "{}",
+			"packages/ui/package.json": "{\"name\": \"@mono/ui\", \"version\": \"1.0.0\", \"dependencies\": {\"@mono/api\": \"^1.0.0\"}}",
+			"packages/api/package.json": "{\"name\": \"@mono/api\", \"version\": \"1.0.0\", \"dependencies\": {\"@mono/ui\": \"^1.0.0\"}}"
+		},
+		"sourceFiles": {
+			"packages/ui/src/index.ts": "import { api } from '@mono/api';",
+			"packages/api/src/index.ts": "import { ui } from '@mono/ui';"
+		}
+	}`
+
+	result := Analyze(input)
+
+	var parsed map[string]interface{}
+	if err := json.Unmarshal([]byte(result), &parsed); err != nil {
+		t.Fatalf("Failed to parse JSON result: %v", err)
+	}
+
+	// Verify no error
+	if parsed["error"] != nil {
+		t.Fatalf("Unexpected error: %v", parsed["error"])
+	}
+
+	data, ok := parsed["data"].(map[string]interface{})
+	if !ok {
+		t.Fatal("data is not a map")
+	}
+
+	// Verify circular dependency detected
+	circularDeps, ok := data["circularDependencies"].([]interface{})
+	if !ok || len(circularDeps) == 0 {
+		t.Fatal("circularDependencies not found or empty")
+	}
+
+	cycle := circularDeps[0].(map[string]interface{})
+
+	// Verify importTraces is populated (Story 3.2)
+	importTraces, ok := cycle["importTraces"].([]interface{})
+	if !ok {
+		t.Fatal("importTraces not found or not an array")
+	}
+	if len(importTraces) == 0 {
+		t.Error("importTraces should be populated when source files provided")
+	}
+
+	// Verify trace structure
+	for _, trace := range importTraces {
+		traceMap := trace.(map[string]interface{})
+		if traceMap["fromPackage"] == nil || traceMap["fromPackage"] == "" {
+			t.Error("importTrace.fromPackage should not be empty")
+		}
+		if traceMap["toPackage"] == nil || traceMap["toPackage"] == "" {
+			t.Error("importTrace.toPackage should not be empty")
+		}
+		if traceMap["filePath"] == nil || traceMap["filePath"] == "" {
+			t.Error("importTrace.filePath should not be empty")
+		}
+		if traceMap["lineNumber"] == nil {
+			t.Error("importTrace.lineNumber should not be nil")
+		}
+		if traceMap["statement"] == nil || traceMap["statement"] == "" {
+			t.Error("importTrace.statement should not be empty")
+		}
+		if traceMap["importType"] == nil || traceMap["importType"] == "" {
+			t.Error("importTrace.importType should not be empty")
+		}
+	}
+}
+
+// TestAnalyzeWithoutSourceFiles verifies graceful degradation without source files.
+func TestAnalyzeWithoutSourceFiles(t *testing.T) {
+	// Create workspace with cycle but NO source files
+	input := `{
+		"files": {
+			"package.json": "{\"name\": \"monorepo-root\", \"workspaces\": [\"packages/*\"]}",
+			"package-lock.json": "{}",
+			"packages/ui/package.json": "{\"name\": \"@mono/ui\", \"version\": \"1.0.0\", \"dependencies\": {\"@mono/api\": \"^1.0.0\"}}",
+			"packages/api/package.json": "{\"name\": \"@mono/api\", \"version\": \"1.0.0\", \"dependencies\": {\"@mono/ui\": \"^1.0.0\"}}"
+		}
+	}`
+
+	result := Analyze(input)
+
+	var parsed map[string]interface{}
+	if err := json.Unmarshal([]byte(result), &parsed); err != nil {
+		t.Fatalf("Failed to parse JSON result: %v", err)
+	}
+
+	// Verify no error
+	if parsed["error"] != nil {
+		t.Fatalf("Unexpected error: %v", parsed["error"])
+	}
+
+	data := parsed["data"].(map[string]interface{})
+
+	// Verify circular dependency detected
+	circularDeps, ok := data["circularDependencies"].([]interface{})
+	if !ok || len(circularDeps) == 0 {
+		t.Fatal("circularDependencies not found or empty")
+	}
+
+	cycle := circularDeps[0].(map[string]interface{})
+
+	// importTraces should be empty (graceful degradation) when no source files
+	importTraces := cycle["importTraces"]
+	if importTraces != nil {
+		traces := importTraces.([]interface{})
+		if len(traces) != 0 {
+			t.Errorf("importTraces should be empty without source files, got %d", len(traces))
+		}
+	}
+}
+
+// TestAnalyzeWithSourceFilesBackwardCompatible verifies legacy format still works.
+func TestAnalyzeWithSourceFilesBackwardCompatible(t *testing.T) {
+	// Legacy format (flat map) should still work without source files
+	input := `{
+		"package.json": "{\"name\": \"monorepo-root\", \"workspaces\": [\"packages/*\"]}",
+		"package-lock.json": "{}",
+		"packages/app/package.json": "{\"name\": \"@mono/app\", \"version\": \"1.0.0\"}"
+	}`
+
+	result := Analyze(input)
+
+	var parsed map[string]interface{}
+	if err := json.Unmarshal([]byte(result), &parsed); err != nil {
+		t.Fatalf("Failed to parse JSON result: %v", err)
+	}
+
+	// Verify no error
+	if parsed["error"] != nil {
+		t.Fatalf("Unexpected error: %v", parsed["error"])
+	}
+
+	data := parsed["data"].(map[string]interface{})
+
+	// Basic analysis should succeed
+	packages := data["packages"].(float64)
+	if packages != 1 {
+		t.Errorf("packages = %v, want 1", packages)
+	}
+}

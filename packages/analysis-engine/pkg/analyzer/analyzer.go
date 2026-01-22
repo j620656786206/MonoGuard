@@ -5,6 +5,8 @@
 //   - Calculating architecture health scores (Story 2.5)
 //   - Identifying duplicate dependencies with version conflicts (Story 2.4)
 //   - Package exclusion patterns (Story 2.6)
+//   - Root cause analysis for circular dependencies (Story 3.1)
+//   - Import statement tracing for circular dependencies (Story 3.2)
 package analyzer
 
 import (
@@ -78,6 +80,73 @@ func (a *Analyzer) Analyze(workspace *types.WorkspaceData) (*types.AnalysisResul
 	rootCauseAnalyzer := NewRootCauseAnalyzer(filteredGraph)
 	for _, cycle := range cycles {
 		cycle.RootCause = rootCauseAnalyzer.Analyze(cycle)
+	}
+
+	// Detect version conflicts (Story 2.4)
+	// Story 2.6: Use filtered graph to exclude excluded packages
+	conflictDetector := NewConflictDetector(filteredGraph)
+	conflicts := conflictDetector.DetectConflicts()
+
+	// Calculate health score (Story 2.5)
+	// Story 2.6: Use filtered graph to exclude excluded packages from metrics
+	healthCalc := NewHealthCalculator(filteredGraph, cycles, conflicts)
+	healthScore := healthCalc.Calculate()
+
+	return &types.AnalysisResult{
+		HealthScore:          healthScore.Overall,
+		HealthScoreDetails:   healthScore,
+		Packages:             packageCount,
+		ExcludedPackages:     excludedCount,
+		Graph:                graph, // Full graph with excluded flag for visualization
+		CircularDependencies: cycles,
+		VersionConflicts:     conflicts,
+		CreatedAt:            time.Now().UTC().Format(time.RFC3339),
+	}, nil
+}
+
+// AnalyzeWithSources performs complete workspace analysis with optional import tracing.
+// Story 3.2: When sourceFiles are provided, import statements forming circular dependencies
+// are traced and added to each CircularDependencyInfo.
+// sourceFiles is optional - if nil or empty, analysis proceeds without import tracing.
+func (a *Analyzer) AnalyzeWithSources(
+	workspace *types.WorkspaceData,
+	sourceFiles map[string][]byte,
+) (*types.AnalysisResult, error) {
+	// Build dependency graph (Story 2.2)
+	// Story 2.6: Excluded packages are marked with Excluded=true
+	graph, err := a.graphBuilder.Build(workspace)
+	if err != nil {
+		return nil, err
+	}
+
+	// Story 2.6: Count excluded and non-excluded packages
+	excludedCount := 0
+	for _, node := range graph.Nodes {
+		if node.Excluded {
+			excludedCount++
+		}
+	}
+	packageCount := len(graph.Nodes) - excludedCount
+
+	// Story 2.6: Create filtered graph for detectors (excludes excluded packages)
+	filteredGraph := filterExcludedPackages(graph)
+
+	// Detect circular dependencies (Story 2.3)
+	// Story 2.6: Use filtered graph to exclude excluded packages
+	cycleDetector := NewCycleDetector(filteredGraph)
+	cycles := cycleDetector.DetectCycles()
+
+	// Story 3.1: Enrich cycles with root cause analysis
+	rootCauseAnalyzer := NewRootCauseAnalyzer(filteredGraph)
+	for _, cycle := range cycles {
+		cycle.RootCause = rootCauseAnalyzer.Analyze(cycle)
+	}
+
+	// Story 3.2: Enrich cycles with import traces
+	// Always set ImportTraces (empty slice for graceful degradation per AC6)
+	importTracer := NewImportTracer(workspace, sourceFiles)
+	for _, cycle := range cycles {
+		cycle.ImportTraces = importTracer.Trace(cycle)
 	}
 
 	// Detect version conflicts (Story 2.4)

@@ -1129,3 +1129,218 @@ func TestAnalyzeCyclesNoCycleNoRootCause(t *testing.T) {
 		t.Errorf("CircularDependencies = %d, want 0", len(result.CircularDependencies))
 	}
 }
+
+// ========================================
+// Story 3.2: Import Tracing Integration Tests
+// ========================================
+
+// TestAnalyzeWithSources verifies import tracing when source files are provided.
+func TestAnalyzeWithSources(t *testing.T) {
+	a := NewAnalyzer()
+	// Create workspace with a cycle: ui → api → ui
+	workspace := &types.WorkspaceData{
+		RootPath:      "/workspace",
+		WorkspaceType: types.WorkspaceTypePnpm,
+		Packages: map[string]*types.PackageInfo{
+			"@mono/ui": {
+				Name:    "@mono/ui",
+				Version: "1.0.0",
+				Path:    "packages/ui",
+				Dependencies: map[string]string{
+					"@mono/api": "^1.0.0",
+				},
+				DevDependencies:  map[string]string{},
+				PeerDependencies: map[string]string{},
+			},
+			"@mono/api": {
+				Name:    "@mono/api",
+				Version: "1.0.0",
+				Path:    "packages/api",
+				Dependencies: map[string]string{
+					"@mono/ui": "^1.0.0", // Creates cycle
+				},
+				DevDependencies:  map[string]string{},
+				PeerDependencies: map[string]string{},
+			},
+		},
+	}
+
+	// Provide source files
+	sourceFiles := map[string][]byte{
+		"packages/ui/src/index.ts":  []byte(`import { api } from '@mono/api';`),
+		"packages/api/src/index.ts": []byte(`import { ui } from '@mono/ui';`),
+	}
+
+	result, err := a.AnalyzeWithSources(workspace, sourceFiles)
+	if err != nil {
+		t.Fatalf("AnalyzeWithSources failed: %v", err)
+	}
+
+	// Verify cycle detected
+	if len(result.CircularDependencies) != 1 {
+		t.Fatalf("CircularDependencies = %d, want 1", len(result.CircularDependencies))
+	}
+
+	cycle := result.CircularDependencies[0]
+
+	// Verify import traces are populated (Story 3.2)
+	if cycle.ImportTraces == nil {
+		t.Fatal("ImportTraces should not be nil when source files provided")
+	}
+	if len(cycle.ImportTraces) == 0 {
+		t.Fatal("ImportTraces should be populated when source files provided")
+	}
+
+	// Verify traces have expected structure
+	for _, trace := range cycle.ImportTraces {
+		if trace.FromPackage == "" {
+			t.Error("ImportTrace.FromPackage should not be empty")
+		}
+		if trace.ToPackage == "" {
+			t.Error("ImportTrace.ToPackage should not be empty")
+		}
+		if trace.FilePath == "" {
+			t.Error("ImportTrace.FilePath should not be empty")
+		}
+		if trace.LineNumber <= 0 {
+			t.Error("ImportTrace.LineNumber should be positive")
+		}
+		if trace.Statement == "" {
+			t.Error("ImportTrace.Statement should not be empty")
+		}
+	}
+}
+
+// TestAnalyzeWithSourcesEmptyFiles verifies graceful degradation with empty source files.
+func TestAnalyzeWithSourcesEmptyFiles(t *testing.T) {
+	a := NewAnalyzer()
+	workspace := &types.WorkspaceData{
+		RootPath:      "/workspace",
+		WorkspaceType: types.WorkspaceTypePnpm,
+		Packages: map[string]*types.PackageInfo{
+			"@mono/ui": {
+				Name:    "@mono/ui",
+				Version: "1.0.0",
+				Path:    "packages/ui",
+				Dependencies: map[string]string{
+					"@mono/api": "^1.0.0",
+				},
+				DevDependencies:  map[string]string{},
+				PeerDependencies: map[string]string{},
+			},
+			"@mono/api": {
+				Name:    "@mono/api",
+				Version: "1.0.0",
+				Path:    "packages/api",
+				Dependencies: map[string]string{
+					"@mono/ui": "^1.0.0",
+				},
+				DevDependencies:  map[string]string{},
+				PeerDependencies: map[string]string{},
+			},
+		},
+	}
+
+	// Empty source files - should still work
+	result, err := a.AnalyzeWithSources(workspace, map[string][]byte{})
+	if err != nil {
+		t.Fatalf("AnalyzeWithSources failed: %v", err)
+	}
+
+	// Cycle should still be detected
+	if len(result.CircularDependencies) != 1 {
+		t.Fatalf("CircularDependencies = %d, want 1", len(result.CircularDependencies))
+	}
+
+	cycle := result.CircularDependencies[0]
+
+	// Import traces should be empty (not nil) for graceful degradation
+	if cycle.ImportTraces == nil {
+		t.Error("ImportTraces should not be nil (graceful degradation)")
+	}
+}
+
+// TestAnalyzeWithSourcesNilFiles verifies behavior with nil source files.
+func TestAnalyzeWithSourcesNilFiles(t *testing.T) {
+	a := NewAnalyzer()
+	workspace := &types.WorkspaceData{
+		RootPath:      "/workspace",
+		WorkspaceType: types.WorkspaceTypePnpm,
+		Packages: map[string]*types.PackageInfo{
+			"@mono/app": {
+				Name:             "@mono/app",
+				Version:          "1.0.0",
+				Path:             "apps/web",
+				Dependencies:     map[string]string{},
+				DevDependencies:  map[string]string{},
+				PeerDependencies: map[string]string{},
+			},
+		},
+	}
+
+	// Nil source files - should still work
+	result, err := a.AnalyzeWithSources(workspace, nil)
+	if err != nil {
+		t.Fatalf("AnalyzeWithSources failed: %v", err)
+	}
+
+	// Basic analysis should succeed
+	if result.Packages != 1 {
+		t.Errorf("Packages = %d, want 1", result.Packages)
+	}
+}
+
+// TestAnalyzeWithSourcesBackwardCompatibility verifies Analyze still works without sources.
+func TestAnalyzeWithSourcesBackwardCompatibility(t *testing.T) {
+	a := NewAnalyzer()
+	workspace := &types.WorkspaceData{
+		RootPath:      "/workspace",
+		WorkspaceType: types.WorkspaceTypePnpm,
+		Packages: map[string]*types.PackageInfo{
+			"@mono/ui": {
+				Name:    "@mono/ui",
+				Version: "1.0.0",
+				Path:    "packages/ui",
+				Dependencies: map[string]string{
+					"@mono/api": "^1.0.0",
+				},
+				DevDependencies:  map[string]string{},
+				PeerDependencies: map[string]string{},
+			},
+			"@mono/api": {
+				Name:    "@mono/api",
+				Version: "1.0.0",
+				Path:    "packages/api",
+				Dependencies: map[string]string{
+					"@mono/ui": "^1.0.0",
+				},
+				DevDependencies:  map[string]string{},
+				PeerDependencies: map[string]string{},
+			},
+		},
+	}
+
+	// Use original Analyze method (backward compatible)
+	result, err := a.Analyze(workspace)
+	if err != nil {
+		t.Fatalf("Analyze failed: %v", err)
+	}
+
+	// Cycle should be detected
+	if len(result.CircularDependencies) != 1 {
+		t.Fatalf("CircularDependencies = %d, want 1", len(result.CircularDependencies))
+	}
+
+	cycle := result.CircularDependencies[0]
+
+	// ImportTraces should not be populated when using original Analyze
+	// (since no source files were provided)
+	if len(cycle.ImportTraces) != 0 {
+		t.Errorf("ImportTraces should be empty for Analyze() without sources")
+	}
+
+	// RootCause should still be populated (Story 3.1)
+	if cycle.RootCause == nil {
+		t.Error("RootCause should still be populated for backward compatibility")
+	}
+}

@@ -49,7 +49,44 @@ export interface CircularDependencyInfo {
   complexity: number
   /** Root cause analysis (Story 3.1) */
   rootCause?: RootCauseAnalysis
+  /** Import statements forming the cycle (Story 3.2) */
+  importTraces?: ImportTrace[]
 }
+
+/**
+ * ImportTrace - Single import statement that contributes to a cycle
+ *
+ * Matches Go: pkg/types/import_trace.go (Story 3.2)
+ */
+export interface ImportTrace {
+  /** Package containing the import */
+  fromPackage: string
+  /** Package being imported */
+  toPackage: string
+  /** Relative path to the file containing the import */
+  filePath: string
+  /** 1-based line number of the import statement */
+  lineNumber: number
+  /** Actual import/require statement text */
+  statement: string
+  /** Import style classification */
+  importType: ImportType
+  /** Specific imports (empty for namespace/side-effect imports) */
+  symbols?: string[]
+}
+
+/**
+ * ImportType - Classification of import style
+ *
+ * Matches Go: pkg/types/import_trace.go ImportType constants (Story 3.2)
+ */
+export type ImportType =
+  | 'esm-named' // import { foo } from 'bar'
+  | 'esm-default' // import foo from 'bar'
+  | 'esm-namespace' // import * as foo from 'bar'
+  | 'esm-side-effect' // import 'bar'
+  | 'esm-dynamic' // import('bar')
+  | 'cjs-require' // require('bar')
 
 /**
  * RootCauseAnalysis - Analysis of why a circular dependency exists

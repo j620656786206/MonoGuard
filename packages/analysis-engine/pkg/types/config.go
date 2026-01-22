@@ -15,8 +15,9 @@ type AnalysisConfig struct {
 // AnalysisInput represents the complete input to the analyze function.
 // This is the top-level structure for WASM input.
 type AnalysisInput struct {
-	Files  map[string]string `json:"files"`            // filename -> content
-	Config *AnalysisConfig   `json:"config,omitempty"` // Optional configuration
+	Files       map[string]string `json:"files"`                 // filename -> content (package.json files)
+	SourceFiles map[string]string `json:"sourceFiles,omitempty"` // Story 3.2: Optional source files for import tracing
+	Config      *AnalysisConfig   `json:"config,omitempty"`      // Optional configuration
 }
 
 // NewAnalysisConfig creates a new empty analysis config.
