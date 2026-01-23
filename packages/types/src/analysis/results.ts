@@ -150,6 +150,96 @@ export interface FixStrategy {
   targetPackages: string[]
   /** Suggested name for extracted module (if applicable) */
   newPackageName?: string
+  /** Step-by-step fix guide (Story 3.4) */
+  guide?: FixGuide
+}
+
+/**
+ * FixGuide - Step-by-step instructions for implementing a fix strategy
+ *
+ * Matches Go: pkg/types/fix_guide.go (Story 3.4)
+ */
+export interface FixGuide {
+  /** Links this guide to a specific strategy */
+  strategyType: FixStrategyType
+  /** Guide headline */
+  title: string
+  /** Brief overview of what this guide accomplishes */
+  summary: string
+  /** Ordered implementation instructions */
+  steps: FixStep[]
+  /** Steps to confirm the fix worked */
+  verification: FixStep[]
+  /** Instructions to undo the changes */
+  rollback?: RollbackInstructions
+  /** Approximate time to complete (e.g., "15-30 minutes") */
+  estimatedTime: string
+}
+
+/**
+ * FixStep - Single step in a fix guide
+ *
+ * Matches Go: pkg/types/fix_guide.go (Story 3.4)
+ */
+export interface FixStep {
+  /** Step number (1-based) */
+  number: number
+  /** Short description of this step */
+  title: string
+  /** Detailed instructions */
+  description: string
+  /** File to modify (if applicable) */
+  filePath?: string
+  /** Current code (if applicable) */
+  codeBefore?: CodeSnippet
+  /** Desired code (if applicable) */
+  codeAfter?: CodeSnippet
+  /** Terminal command to run (if applicable) */
+  command?: CommandStep
+  /** What should happen after this step */
+  expectedOutcome?: string
+}
+
+/**
+ * CodeSnippet - Code example in a fix step
+ *
+ * Matches Go: pkg/types/fix_guide.go (Story 3.4)
+ */
+export interface CodeSnippet {
+  /** Syntax highlighting hint (e.g., "typescript", "json") */
+  language: string
+  /** Actual code content */
+  code: string
+  /** Approximate line number (for context) */
+  startLine?: number
+}
+
+/**
+ * CommandStep - Terminal command in a fix step
+ *
+ * Matches Go: pkg/types/fix_guide.go (Story 3.4)
+ */
+export interface CommandStep {
+  /** Exact command to run */
+  command: string
+  /** Where to run the command (relative to workspace root) */
+  workingDirectory?: string
+  /** Explanation of what this command does */
+  description?: string
+}
+
+/**
+ * RollbackInstructions - Steps to undo fix changes
+ *
+ * Matches Go: pkg/types/fix_guide.go (Story 3.4)
+ */
+export interface RollbackInstructions {
+  /** Git commands to revert (if in a git repo) */
+  gitCommands?: string[]
+  /** Non-git rollback instructions */
+  manualSteps?: string[]
+  /** Caution message about rollback */
+  warning?: string
 }
 
 /**

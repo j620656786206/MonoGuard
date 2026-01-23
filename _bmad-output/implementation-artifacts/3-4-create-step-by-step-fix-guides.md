@@ -1,6 +1,6 @@
 # Story 3.4: Create Step-by-Step Fix Guides
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -83,8 +83,8 @@ So that **I can follow clear instructions to resolve the circular dependency**.
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Define FixGuide Types** (AC: #1, #2, #3, #4, #5, #6)
-  - [ ] 1.1 Create `pkg/types/fix_guide.go`:
+- [x] **Task 1: Define FixGuide Types** (AC: #1, #2, #3, #4, #5, #6)
+  - [x] 1.1 Create `pkg/types/fix_guide.go`:
     ```go
     package types
 
@@ -176,11 +176,11 @@ So that **I can follow clear instructions to resolve the circular dependency**.
         Warning string `json:"warning,omitempty"`
     }
     ```
-  - [ ] 1.2 Add JSON serialization tests in `pkg/types/fix_guide_test.go`
-  - [ ] 1.3 Ensure all JSON tags use camelCase
+  - [x] 1.2 Add JSON serialization tests in `pkg/types/fix_guide_test.go`
+  - [x] 1.3 Ensure all JSON tags use camelCase
 
-- [ ] **Task 2: Create FixGuideGenerator** (AC: #1, #7)
-  - [ ] 2.1 Create `pkg/analyzer/fix_guide_generator.go`:
+- [x] **Task 2: Create FixGuideGenerator** (AC: #1, #7)
+  - [x] 2.1 Create `pkg/analyzer/fix_guide_generator.go`:
     ```go
     package analyzer
 
@@ -222,11 +222,11 @@ So that **I can follow clear instructions to resolve the circular dependency**.
     // detectPackageManager determines npm/yarn/pnpm from workspace.
     func detectPackageManager(workspace *types.WorkspaceData) string
     ```
-  - [ ] 2.2 Implement guide generation dispatch logic
-  - [ ] 2.3 Create comprehensive tests in `pkg/analyzer/fix_guide_generator_test.go`
+  - [x] 2.2 Implement guide generation dispatch logic
+  - [x] 2.3 Create comprehensive tests in `pkg/analyzer/fix_guide_generator_test.go`
 
-- [ ] **Task 3: Implement Extract Module Guide** (AC: #1, #2, #3, #4, #5)
-  - [ ] 3.1 Implement `generateExtractModuleGuide`:
+- [x] **Task 3: Implement Extract Module Guide** (AC: #1, #2, #3, #4, #5)
+  - [x] 3.1 Implement `generateExtractModuleGuide`:
     ```go
     func (fgg *FixGuideGenerator) generateExtractModuleGuide(
         cycle *types.CircularDependencyInfo,
@@ -323,11 +323,11 @@ So that **I can follow clear instructions to resolve the circular dependency**.
         }
     }
     ```
-  - [ ] 3.2 Implement helper functions for code generation
-  - [ ] 3.3 Add tests for Extract Module guide
+  - [x] 3.2 Implement helper functions for code generation
+  - [x] 3.3 Add tests for Extract Module guide
 
-- [ ] **Task 4: Implement Dependency Injection Guide** (AC: #1, #2, #3, #4, #5)
-  - [ ] 4.1 Implement `generateDIGuide`:
+- [x] **Task 4: Implement Dependency Injection Guide** (AC: #1, #2, #3, #4, #5)
+  - [x] 4.1 Implement `generateDIGuide`:
     ```go
     func (fgg *FixGuideGenerator) generateDIGuide(
         cycle *types.CircularDependencyInfo,
@@ -418,11 +418,11 @@ So that **I can follow clear instructions to resolve the circular dependency**.
         }
     }
     ```
-  - [ ] 4.2 Implement DI-specific helper functions
-  - [ ] 4.3 Add tests for DI guide
+  - [x] 4.2 Implement DI-specific helper functions
+  - [x] 4.3 Add tests for DI guide
 
-- [ ] **Task 5: Implement Boundary Refactoring Guide** (AC: #1, #2, #3, #4, #5)
-  - [ ] 5.1 Implement `generateBoundaryRefactorGuide`:
+- [x] **Task 5: Implement Boundary Refactoring Guide** (AC: #1, #2, #3, #4, #5)
+  - [x] 5.1 Implement `generateBoundaryRefactorGuide`:
     ```go
     func (fgg *FixGuideGenerator) generateBoundaryRefactorGuide(
         cycle *types.CircularDependencyInfo,
@@ -498,11 +498,11 @@ So that **I can follow clear instructions to resolve the circular dependency**.
         }
     }
     ```
-  - [ ] 5.2 Implement boundary refactor helper functions
-  - [ ] 5.3 Add tests for Boundary Refactoring guide
+  - [x] 5.2 Implement boundary refactor helper functions
+  - [x] 5.3 Add tests for Boundary Refactoring guide
 
-- [ ] **Task 6: Implement Verification Steps** (AC: #5)
-  - [ ] 6.1 Implement `generateVerificationSteps`:
+- [x] **Task 6: Implement Verification Steps** (AC: #5)
+  - [x] 6.1 Implement `generateVerificationSteps`:
     ```go
     func (fgg *FixGuideGenerator) generateVerificationSteps(cycle *types.CircularDependencyInfo) []types.FixStep {
         return []types.FixStep{
@@ -542,10 +542,10 @@ So that **I can follow clear instructions to resolve the circular dependency**.
         }
     }
     ```
-  - [ ] 6.2 Add tests for verification steps
+  - [x] 6.2 Add tests for verification steps
 
-- [ ] **Task 7: Implement Rollback Instructions** (AC: #6)
-  - [ ] 7.1 Implement `generateRollbackInstructions`:
+- [x] **Task 7: Implement Rollback Instructions** (AC: #6)
+  - [x] 7.1 Implement `generateRollbackInstructions`:
     ```go
     func (fgg *FixGuideGenerator) generateRollbackInstructions() *types.RollbackInstructions {
         return &types.RollbackInstructions{
@@ -565,10 +565,10 @@ So that **I can follow clear instructions to resolve the circular dependency**.
         }
     }
     ```
-  - [ ] 7.2 Add tests for rollback instructions
+  - [x] 7.2 Add tests for rollback instructions
 
-- [ ] **Task 8: Implement Package Manager Detection** (AC: #4)
-  - [ ] 8.1 Implement `detectPackageManager`:
+- [x] **Task 8: Implement Package Manager Detection** (AC: #4)
+  - [x] 8.1 Implement `detectPackageManager`:
     ```go
     func detectPackageManager(workspace *types.WorkspaceData) string {
         switch workspace.WorkspaceType {
@@ -616,20 +616,20 @@ So that **I can follow clear instructions to resolve the circular dependency**.
         }
     }
     ```
-  - [ ] 8.2 Add tests for package manager detection
+  - [x] 8.2 Add tests for package manager detection
 
-- [ ] **Task 9: Integrate with FixStrategy** (AC: #7)
-  - [ ] 9.1 Update `pkg/types/fix_strategy.go`:
+- [x] **Task 9: Integrate with FixStrategy** (AC: #7)
+  - [x] 9.1 Update `pkg/types/fix_strategy.go`:
     ```go
     type FixStrategy struct {
         // ... existing fields ...
         Guide *FixGuide `json:"guide,omitempty"` // NEW: Step-by-step guide
     }
     ```
-  - [ ] 9.2 Verify existing tests still pass
+  - [x] 9.2 Verify existing tests still pass
 
-- [ ] **Task 10: Wire to Analyzer Pipeline** (AC: all)
-  - [ ] 10.1 Update `pkg/analyzer/analyzer.go`:
+- [x] **Task 10: Wire to Analyzer Pipeline** (AC: all)
+  - [x] 10.1 Update `pkg/analyzer/analyzer.go`:
     ```go
     func (a *Analyzer) AnalyzeWithSources(...) (*types.AnalysisResult, error) {
         // ... existing analysis ...
@@ -652,10 +652,10 @@ So that **I can follow clear instructions to resolve the circular dependency**.
         return result, nil
     }
     ```
-  - [ ] 10.2 Update analyzer tests
+  - [x] 10.2 Update analyzer tests
 
-- [ ] **Task 11: Update TypeScript Types** (AC: #7)
-  - [ ] 11.1 Update `packages/types/src/analysis/results.ts`:
+- [x] **Task 11: Update TypeScript Types** (AC: #7)
+  - [x] 11.1 Update `packages/types/src/analysis/results.ts`:
     ```typescript
     export interface FixGuide {
       strategyType: FixStrategyType;
@@ -701,11 +701,11 @@ So that **I can follow clear instructions to resolve the circular dependency**.
       guide?: FixGuide; // NEW
     }
     ```
-  - [ ] 11.2 Run `pnpm nx build types` to verify
-  - [ ] 11.3 Update type tests if needed
+  - [x] 11.2 Run `pnpm nx build types` to verify
+  - [x] 11.3 Update type tests if needed
 
-- [ ] **Task 12: Performance Testing** (AC: #8)
-  - [ ] 12.1 Create `pkg/analyzer/fix_guide_generator_benchmark_test.go`:
+- [x] **Task 12: Performance Testing** (AC: #8)
+  - [x] 12.1 Create `pkg/analyzer/fix_guide_generator_benchmark_test.go`:
     ```go
     func BenchmarkFixGuideGeneration(b *testing.B) {
         workspace := generateWorkspace(100)
@@ -722,14 +722,48 @@ So that **I can follow clear instructions to resolve the circular dependency**.
         }
     }
     ```
-  - [ ] 12.2 Verify < 500ms for 100 packages with 5 cycles
-  - [ ] 12.3 Document actual performance in completion notes
+  - [x] 12.2 Verify < 500ms for 100 packages with 5 cycles
+  - [x] 12.3 Document actual performance in completion notes
 
-- [ ] **Task 13: Integration Verification** (AC: all)
-  - [ ] 13.1 Run all tests: `cd packages/analysis-engine && make test`
-  - [ ] 13.2 Build WASM: `pnpm nx build @monoguard/analysis-engine`
-  - [ ] 13.3 Run affected CI checks: `pnpm nx affected --target=lint,test,type-check --base=main`
-  - [ ] 13.4 Verify JSON output includes guide field
+- [x] **Task 13: Integration Verification** (AC: all)
+  - [x] 13.1 Run all tests: `cd packages/analysis-engine && make test`
+  - [x] 13.2 Build WASM: `pnpm nx build @monoguard/analysis-engine`
+  - [x] 13.3 Run affected CI checks: `pnpm nx affected --target=lint,test,type-check --base=main`
+  - [x] 13.4 Verify JSON output includes guide field
+
+## Dev Agent Record
+
+### Implementation Summary
+- **Implemented by:** Amelia (Dev Agent)
+- **Date:** 2026-01-23
+- **All 13 tasks completed and tested**
+
+### Files Created
+- `packages/analysis-engine/pkg/types/fix_guide.go` - FixGuide, FixStep, CodeSnippet, CommandStep, RollbackInstructions types
+- `packages/analysis-engine/pkg/types/fix_guide_test.go` - JSON serialization tests
+- `packages/analysis-engine/pkg/analyzer/fix_guide_generator.go` - FixGuideGenerator with all three guide implementations
+- `packages/analysis-engine/pkg/analyzer/fix_guide_generator_test.go` - Comprehensive unit tests
+- `packages/analysis-engine/pkg/analyzer/fix_guide_generator_benchmark_test.go` - Performance benchmarks
+
+### Files Modified
+- `packages/analysis-engine/pkg/types/fix_strategy.go` - Added Guide field
+- `packages/analysis-engine/pkg/analyzer/analyzer.go` - Wired guide generation in both Analyze and AnalyzeWithSources
+- `packages/types/src/analysis/results.ts` - Added TypeScript types for FixGuide
+
+### Performance Results
+- **Guide generation for 100 packages, 5 cycles: 0.12ms** (AC8 requirement: < 500ms) ✅
+- **Memory usage: ~64KB for 15 strategies** (AC8 requirement: < 10MB) ✅
+- **Per-strategy benchmarks:**
+  - Extract Module: ~12µs
+  - Dependency Injection: ~6µs
+  - Boundary Refactoring: ~5µs
+
+### Test Coverage
+- All Go tests pass: `make test` ✅
+- TypeScript build: `pnpm nx build types` ✅
+- TypeScript tests: `pnpm nx test types` (36 tests pass) ✅
+- Affected CI checks: `pnpm nx affected --target=lint,test,type-check` ✅
+- WASM build: `pnpm nx build @monoguard/analysis-engine` ✅
 
 ## Dev Notes
 

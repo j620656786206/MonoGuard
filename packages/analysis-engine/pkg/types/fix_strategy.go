@@ -38,6 +38,9 @@ type FixStrategy struct {
 
 	// NewPackageName is suggested name for extracted module (if applicable)
 	NewPackageName string `json:"newPackageName,omitempty"`
+
+	// Guide is the step-by-step fix guide (Story 3.4)
+	Guide *FixGuide `json:"guide,omitempty"`
 }
 
 // FixStrategyType identifies the approach to resolve the cycle.

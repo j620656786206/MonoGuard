@@ -84,9 +84,15 @@ func (a *Analyzer) Analyze(workspace *types.WorkspaceData) (*types.AnalysisResul
 	}
 
 	// Story 3.3: Generate fix strategies for cycles
+	// Story 3.4: Generate step-by-step guides for each strategy
 	fixGenerator := NewFixStrategyGenerator(filteredGraph, workspace)
+	guideGenerator := NewFixGuideGenerator(workspace)
 	for _, cycle := range cycles {
-		cycle.FixStrategies = fixGenerator.Generate(cycle)
+		strategies := fixGenerator.Generate(cycle)
+		for i := range strategies {
+			strategies[i].Guide = guideGenerator.Generate(cycle, &strategies[i])
+		}
+		cycle.FixStrategies = strategies
 	}
 
 	// Detect version conflicts (Story 2.4)
@@ -157,9 +163,15 @@ func (a *Analyzer) AnalyzeWithSources(
 	}
 
 	// Story 3.3: Generate fix strategies for cycles
+	// Story 3.4: Generate step-by-step guides for each strategy
 	fixGenerator := NewFixStrategyGenerator(filteredGraph, workspace)
+	guideGenerator := NewFixGuideGenerator(workspace)
 	for _, cycle := range cycles {
-		cycle.FixStrategies = fixGenerator.Generate(cycle)
+		strategies := fixGenerator.Generate(cycle)
+		for i := range strategies {
+			strategies[i].Guide = guideGenerator.Generate(cycle, &strategies[i])
+		}
+		cycle.FixStrategies = strategies
 	}
 
 	// Detect version conflicts (Story 2.4)
