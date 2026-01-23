@@ -158,6 +158,9 @@ jobs:
       - name: Build CLI binary for E2E tests
         run: cd apps/cli && make build
 
+      - name: Build types package
+        run: pnpm nx build @monoguard/types
+
       - name: Run unit tests
         run: pnpm nx run-many --target=test --all --parallel=3
 
