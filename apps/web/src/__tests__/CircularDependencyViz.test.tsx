@@ -1,4 +1,5 @@
 import type { CircularDependency, VersionConflict } from '@monoguard/types'
+import { RiskLevel, Severity } from '@monoguard/types'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { CircularDependencyViz } from '@/components/analysis/CircularDependencyViz'
@@ -9,7 +10,7 @@ const createCircularDependency = (
 ): CircularDependency => ({
   cycle: ['package-a', 'package-b', 'package-c'],
   type: 'direct',
-  severity: 'medium',
+  severity: Severity.MEDIUM,
   impact: 'May cause build issues and increased bundle size',
   ...overrides,
 })
@@ -28,7 +29,7 @@ const createVersionConflict = (overrides: Partial<VersionConflict> = {}): Versio
       isBreaking: true,
     },
   ],
-  riskLevel: 'medium',
+  riskLevel: RiskLevel.MEDIUM,
   resolution: 'Upgrade all packages to use lodash 4.17.21',
   impact: 'Different lodash versions may cause inconsistent behavior',
   ...overrides,
@@ -108,7 +109,7 @@ describe('CircularDependencyViz', () => {
       const circularDeps = [
         createCircularDependency({
           type: 'direct',
-          severity: 'high',
+          severity: Severity.HIGH,
         }),
       ]
 
@@ -173,7 +174,7 @@ describe('CircularDependencyViz', () => {
       // GIVEN: Critical severity dependency
       const circularDeps = [
         createCircularDependency({
-          severity: 'critical',
+          severity: Severity.CRITICAL,
         }),
       ]
 
@@ -328,7 +329,7 @@ describe('CircularDependencyViz', () => {
   describe('Risk Levels', () => {
     it('[P2] should apply correct styling for low risk', () => {
       // GIVEN: Low risk conflict
-      const conflicts = [createVersionConflict({ riskLevel: 'low' })]
+      const conflicts = [createVersionConflict({ riskLevel: RiskLevel.LOW })]
 
       render(<CircularDependencyViz circularDependencies={[]} versionConflicts={conflicts} />)
 
@@ -341,7 +342,7 @@ describe('CircularDependencyViz', () => {
 
     it('[P2] should apply correct styling for high risk', () => {
       // GIVEN: High risk conflict
-      const conflicts = [createVersionConflict({ riskLevel: 'high' })]
+      const conflicts = [createVersionConflict({ riskLevel: RiskLevel.HIGH })]
 
       render(<CircularDependencyViz circularDependencies={[]} versionConflicts={conflicts} />)
 
@@ -354,7 +355,7 @@ describe('CircularDependencyViz', () => {
 
     it('[P2] should apply correct styling for critical risk', () => {
       // GIVEN: Critical risk conflict
-      const conflicts = [createVersionConflict({ riskLevel: 'critical' })]
+      const conflicts = [createVersionConflict({ riskLevel: RiskLevel.CRITICAL })]
 
       render(<CircularDependencyViz circularDependencies={[]} versionConflicts={conflicts} />)
 

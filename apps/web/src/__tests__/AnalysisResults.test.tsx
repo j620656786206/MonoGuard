@@ -1,3 +1,4 @@
+import { Severity } from '@monoguard/types'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { AnalysisResults } from '@/components/analysis/AnalysisResults'
@@ -279,7 +280,7 @@ describe('AnalysisResults', () => {
             violations: [
               {
                 ruleName: 'test1',
-                severity: 'high',
+                severity: Severity.HIGH,
                 description: 'test1',
                 violatingFile: 'test1.ts',
                 violatingImport: 'test1',
@@ -289,7 +290,7 @@ describe('AnalysisResults', () => {
               },
               {
                 ruleName: 'test2',
-                severity: 'medium',
+                severity: Severity.MEDIUM,
                 description: 'test2',
                 violatingFile: 'test2.ts',
                 violatingImport: 'test2',
@@ -299,7 +300,7 @@ describe('AnalysisResults', () => {
               },
               {
                 ruleName: 'test3',
-                severity: 'low',
+                severity: Severity.LOW,
                 description: 'test3',
                 violatingFile: 'test3.ts',
                 violatingImport: 'test3',
@@ -309,7 +310,7 @@ describe('AnalysisResults', () => {
               },
               {
                 ruleName: 'test4',
-                severity: 'low',
+                severity: Severity.LOW,
                 description: 'test4',
                 violatingFile: 'test4.ts',
                 violatingImport: 'test4',

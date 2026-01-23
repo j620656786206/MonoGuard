@@ -17,7 +17,7 @@ import type {
   HealthScore,
   VersionConflict,
 } from '@monoguard/types'
-import { Status } from '@monoguard/types'
+import { RiskLevel, Severity, Status } from '@monoguard/types'
 
 /**
  * Creates a mock AnalysisSummary
@@ -43,7 +43,7 @@ export function createCircularDependency(
   return {
     cycle: ['package-a', 'package-b', 'package-c'],
     type: 'direct',
-    severity: 'medium',
+    severity: Severity.MEDIUM,
     impact: 'May cause build issues and increased bundle size',
     ...overrides,
   }
@@ -59,7 +59,7 @@ export function createVersionConflict(overrides: Partial<VersionConflict> = {}):
       { version: '4.17.21', packages: ['package-a', 'package-b'], isBreaking: false },
       { version: '3.10.1', packages: ['package-c'], isBreaking: true },
     ],
-    riskLevel: 'medium',
+    riskLevel: RiskLevel.MEDIUM,
     resolution: 'Upgrade all packages to use lodash 4.17.21',
     impact: 'Different lodash versions may cause inconsistent behavior',
     ...overrides,
@@ -74,7 +74,7 @@ export function createArchitectureViolation(
 ): ArchitectureViolation {
   return {
     ruleName: 'no-direct-ui-import',
-    severity: 'high',
+    severity: Severity.HIGH,
     description: 'UI components should not be imported directly from domain layer',
     violatingFile: 'packages/domain/src/user.ts',
     violatingImport: '@/ui/components/Button',
@@ -128,7 +128,7 @@ export function createDuplicateGroup(overrides: Partial<DuplicateGroup> = {}): D
     ],
     totalSize: '200 KB',
     wastedSize: '100 KB',
-    riskLevel: 'medium',
+    riskLevel: RiskLevel.MEDIUM,
     affectedPackages: ['app-a', 'app-b', 'lib-c'],
     ...overrides,
   }
@@ -253,7 +253,7 @@ export function createInProgressAnalysis(
   return {
     id: 'analysis-123',
     uploadId: 'upload-123',
-    status: Status.PROCESSING,
+    status: Status.IN_PROGRESS,
     startedAt: new Date().toISOString(),
     progress: 45,
     currentStep: 'Analyzing dependencies...',
