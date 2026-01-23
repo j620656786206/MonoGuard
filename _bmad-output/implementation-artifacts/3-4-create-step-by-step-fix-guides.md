@@ -1,6 +1,6 @@
 # Story 3.4: Create Step-by-Step Fix Guides
 
-Status: review
+Status: done
 
 ## Story
 
@@ -988,12 +988,37 @@ Step 4: Remove the circular import
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.5 (claude-opus-4-5-20251101)
 
 ### Debug Log References
 
+- Code review performed on 2026-01-23
+- All issues identified and fixed in code review
+
 ### Completion Notes List
+
+- All 13 tasks completed
+- Performance: 0.12ms for 100 packages, 5 cycles (AC8: < 500ms)
+- All tests passing: Go tests, TypeScript tests, lint, type-check
+- Code review fixes applied: M1-M5, L1
 
 ### File List
 
+**Created:**
+- `packages/analysis-engine/pkg/types/fix_guide.go` - FixGuide, FixStep, CodeSnippet, CommandStep, RollbackInstructions types
+- `packages/analysis-engine/pkg/types/fix_guide_test.go` - JSON serialization tests
+- `packages/analysis-engine/pkg/analyzer/fix_guide_generator.go` - FixGuideGenerator with all three guide implementations
+- `packages/analysis-engine/pkg/analyzer/fix_guide_generator_test.go` - Comprehensive unit tests including nil workspace handling
+- `packages/analysis-engine/pkg/analyzer/fix_guide_generator_benchmark_test.go` - Performance benchmarks
+
+**Modified:**
+- `packages/analysis-engine/pkg/types/fix_strategy.go` - Added Guide field to FixStrategy
+- `packages/analysis-engine/pkg/analyzer/analyzer.go` - Wired guide generation in both Analyze and AnalyzeWithSources
+- `packages/types/src/analysis/results.ts` - Added TypeScript types for FixGuide, FixStep, CodeSnippet, CommandStep, RollbackInstructions
+
 ### Change Log
+
+| Date | Change | Author |
+|------|--------|--------|
+| 2026-01-23 | Initial implementation of Story 3.4 | Dev Agent |
+| 2026-01-23 | Code review fixes: M1-M5, L1 (import paths, composition root, interface code, nil workspace tests, fallback paths) | Amelia (Code Review) |

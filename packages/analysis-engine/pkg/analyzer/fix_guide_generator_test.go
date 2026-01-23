@@ -485,6 +485,79 @@ func TestRollbackInstructions(t *testing.T) {
 }
 
 // ========================================
+// Nil Workspace Handling Tests
+// ========================================
+
+// TestFixGuideGeneratorNilWorkspace verifies generator handles nil workspace gracefully.
+func TestFixGuideGeneratorNilWorkspace(t *testing.T) {
+	generator := NewFixGuideGenerator(nil)
+
+	if generator == nil {
+		t.Fatal("Expected generator to be created even with nil workspace")
+	}
+	if generator.packageManager != "npm" {
+		t.Errorf("Expected default packageManager 'npm' for nil workspace, got '%s'", generator.packageManager)
+	}
+
+	// Test that guide generation works with nil workspace
+	cycle := &types.CircularDependencyInfo{
+		Cycle: []string{"@mono/ui", "@mono/core", "@mono/ui"},
+		Depth: 2,
+	}
+	strategy := &types.FixStrategy{
+		Type:           types.FixStrategyExtractModule,
+		TargetPackages: []string{"@mono/ui", "@mono/core"},
+		NewPackageName: "@mono/shared",
+	}
+
+	// Should not panic and should return a valid guide
+	guide := generator.Generate(cycle, strategy)
+	if guide == nil {
+		t.Fatal("Expected guide to be generated even with nil workspace")
+	}
+	if len(guide.Steps) == 0 {
+		t.Error("Expected guide to have steps")
+	}
+}
+
+// TestFixGuideGeneratorEmptyWorkspacePackages verifies handling of workspace with nil Packages map.
+func TestFixGuideGeneratorEmptyWorkspacePackages(t *testing.T) {
+	workspace := &types.WorkspaceData{
+		WorkspaceType: types.WorkspaceTypePnpm,
+		Packages:      nil, // Explicitly nil
+	}
+
+	generator := NewFixGuideGenerator(workspace)
+
+	cycle := &types.CircularDependencyInfo{
+		Cycle: []string{"@mono/ui", "@mono/core", "@mono/ui"},
+		Depth: 2,
+	}
+	strategy := &types.FixStrategy{
+		Type:           types.FixStrategyDependencyInject,
+		TargetPackages: []string{"@mono/ui", "@mono/core"},
+	}
+
+	// Should not panic and should use fallback paths
+	guide := generator.Generate(cycle, strategy)
+	if guide == nil {
+		t.Fatal("Expected guide to be generated even with nil Packages")
+	}
+
+	// Verify fallback paths are used (packages/<dir-name>)
+	foundFallbackPath := false
+	for _, step := range guide.Steps {
+		if step.FilePath != "" && strings.Contains(step.FilePath, "packages/") {
+			foundFallbackPath = true
+			break
+		}
+	}
+	if !foundFallbackPath {
+		t.Error("Expected fallback paths to be used when Packages is nil")
+	}
+}
+
+// ========================================
 // Package Manager Detection Tests (Task 8)
 // ========================================
 

@@ -243,13 +243,13 @@ func (fgg *FixGuideGenerator) generateDIGuide(
 	steps = append(steps, types.FixStep{
 		Number:      stepNum,
 		Title:       "Wire up the dependency at the composition root",
-		Description: "Inject the concrete implementation where the components are assembled",
-		FilePath:    "apps/main/src/index.ts",
+		Description: "Inject the concrete implementation where the components are assembled. Update the path below to match your application's entry point.",
+		FilePath:    "<your-app>/src/index.ts",
 		CodeAfter: &types.CodeSnippet{
 			Language: "typescript",
 			Code:     fgg.generateCompositionCode(fromPkg, toPkg),
 		},
-		ExpectedOutcome: "Dependency is properly injected",
+		ExpectedOutcome: "Dependency is properly injected at the application entry point",
 	})
 	stepNum++
 
@@ -555,7 +555,13 @@ func (fgg *FixGuideGenerator) generateBeforeImport(pkg string, cycle *types.Circ
 			return fmt.Sprintf("import { sharedFunction } from '%s';", target)
 		}
 	}
-	return "import { sharedFunction } from './other-package';"
+	// Fallback: use first package in cycle that isn't the current one
+	for _, cyclePkg := range cycle.Cycle {
+		if cyclePkg != pkg {
+			return fmt.Sprintf("import { sharedFunction } from '%s';", cyclePkg)
+		}
+	}
+	return "import { sharedFunction } from '<package-in-cycle>';"
 }
 
 // generateAfterImport generates sample after import code.
@@ -579,11 +585,20 @@ func (fgg *FixGuideGenerator) getInterfaceFilePath(pkgName string) string {
 // generateInterfaceCode generates the interface code.
 func (fgg *FixGuideGenerator) generateInterfaceCode(pkgName string) string {
 	interfaceName := generateInterfaceName(pkgName)
-	return fmt.Sprintf(`export interface %s {
-  // Define the contract for the dependency
+	dirName := extractPkgDirName(pkgName)
+	return fmt.Sprintf(`/**
+ * %s - Interface for %s functionality
+ *
+ * This interface breaks the circular dependency by abstracting
+ * the concrete implementation. Implement this interface in %s
+ * and inject it where needed.
+ */
+export interface %s {
+  // Add methods that were previously imported directly from %s
+  // Example: getData(): Promise<SomeType>;
   execute(): void;
 }
-`, interfaceName)
+`, interfaceName, dirName, pkgName, interfaceName, pkgName)
 }
 
 // generateInterfaceName creates an interface name from package name.
@@ -608,7 +623,9 @@ export function doWork() {
 // generateDIAfterCode generates after code for DI.
 func (fgg *FixGuideGenerator) generateDIAfterCode(fromPkg, toPkg string) string {
 	interfaceName := generateInterfaceName(toPkg)
-	return fmt.Sprintf(`import type { %s } from '%s/types';
+	// Import from package root - assumes types are exported from index
+	// Users may need to adjust the import path based on their package structure
+	return fmt.Sprintf(`import type { %s } from '%s';
 
 let handler: %s | null = null;
 
