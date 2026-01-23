@@ -1344,3 +1344,237 @@ func TestAnalyzeWithSourcesBackwardCompatibility(t *testing.T) {
 		t.Error("RootCause should still be populated for backward compatibility")
 	}
 }
+
+// ========================================
+// Story 3.3: Fix Strategy Integration Tests
+// ========================================
+
+// TestAnalyzeCyclesHaveFixStrategies verifies cycles are enriched with fix strategies.
+func TestAnalyzeCyclesHaveFixStrategies(t *testing.T) {
+	a := NewAnalyzer()
+	// Create workspace with a simple cycle: A → B → A
+	workspace := &types.WorkspaceData{
+		RootPath:      "/workspace",
+		WorkspaceType: types.WorkspaceTypePnpm,
+		Packages: map[string]*types.PackageInfo{
+			"@mono/app": {
+				Name:    "@mono/app",
+				Version: "1.0.0",
+				Path:    "apps/web",
+				Dependencies: map[string]string{
+					"@mono/lib": "^1.0.0",
+				},
+				DevDependencies:  map[string]string{},
+				PeerDependencies: map[string]string{},
+			},
+			"@mono/lib": {
+				Name:    "@mono/lib",
+				Version: "1.0.0",
+				Path:    "packages/lib",
+				Dependencies: map[string]string{
+					"@mono/app": "^1.0.0", // Creates cycle
+				},
+				DevDependencies:  map[string]string{},
+				PeerDependencies: map[string]string{},
+			},
+		},
+	}
+
+	result, err := a.Analyze(workspace)
+	if err != nil {
+		t.Fatalf("Analyze failed: %v", err)
+	}
+
+	// Verify cycle detected
+	if len(result.CircularDependencies) != 1 {
+		t.Fatalf("CircularDependencies = %d, want 1", len(result.CircularDependencies))
+	}
+
+	cycle := result.CircularDependencies[0]
+
+	// Verify fix strategies are populated (Story 3.3)
+	if len(cycle.FixStrategies) == 0 {
+		t.Fatal("FixStrategies should be populated for detected cycles")
+	}
+
+	// Should have 3 strategies
+	if len(cycle.FixStrategies) != 3 {
+		t.Errorf("FixStrategies = %d, want 3", len(cycle.FixStrategies))
+	}
+
+	// Verify first strategy is marked recommended
+	if !cycle.FixStrategies[0].Recommended {
+		t.Error("First strategy should be marked as recommended")
+	}
+
+	// Verify strategies are sorted by suitability
+	for i := 1; i < len(cycle.FixStrategies); i++ {
+		if cycle.FixStrategies[i].Suitability > cycle.FixStrategies[i-1].Suitability {
+			t.Errorf("Strategies not sorted: index %d has higher suitability than %d", i, i-1)
+		}
+	}
+}
+
+// TestAnalyzeCyclesFixStrategiesForDirectCycle verifies DI is preferred for direct cycles.
+func TestAnalyzeCyclesFixStrategiesForDirectCycle(t *testing.T) {
+	a := NewAnalyzer()
+	// Create workspace with direct cycle: A ↔ B
+	workspace := &types.WorkspaceData{
+		RootPath:      "/workspace",
+		WorkspaceType: types.WorkspaceTypePnpm,
+		Packages: map[string]*types.PackageInfo{
+			"@mono/a": {
+				Name:    "@mono/a",
+				Version: "1.0.0",
+				Path:    "packages/a",
+				Dependencies: map[string]string{
+					"@mono/b": "^1.0.0",
+				},
+				DevDependencies:  map[string]string{},
+				PeerDependencies: map[string]string{},
+			},
+			"@mono/b": {
+				Name:    "@mono/b",
+				Version: "1.0.0",
+				Path:    "packages/b",
+				Dependencies: map[string]string{
+					"@mono/a": "^1.0.0", // Creates cycle
+				},
+				DevDependencies:  map[string]string{},
+				PeerDependencies: map[string]string{},
+			},
+		},
+	}
+
+	result, err := a.Analyze(workspace)
+	if err != nil {
+		t.Fatalf("Analyze failed: %v", err)
+	}
+
+	if len(result.CircularDependencies) != 1 {
+		t.Fatalf("CircularDependencies = %d, want 1", len(result.CircularDependencies))
+	}
+
+	cycle := result.CircularDependencies[0]
+
+	// Find DI strategy
+	var diStrategy *types.FixStrategy
+	for i := range cycle.FixStrategies {
+		if cycle.FixStrategies[i].Type == types.FixStrategyDependencyInject {
+			diStrategy = &cycle.FixStrategies[i]
+			break
+		}
+	}
+
+	if diStrategy == nil {
+		t.Fatal("Dependency Injection strategy not found")
+	}
+
+	// For direct cycles, DI should have high suitability
+	if diStrategy.Suitability < 8 {
+		t.Errorf("DI suitability for direct cycle = %d, want >= 8", diStrategy.Suitability)
+	}
+}
+
+// TestAnalyzeCyclesNoCycleNoFixStrategies verifies no strategies when no cycles.
+func TestAnalyzeCyclesNoCycleNoFixStrategies(t *testing.T) {
+	a := NewAnalyzer()
+	// Create workspace without cycles
+	workspace := &types.WorkspaceData{
+		RootPath:      "/workspace",
+		WorkspaceType: types.WorkspaceTypePnpm,
+		Packages: map[string]*types.PackageInfo{
+			"@mono/app": {
+				Name:    "@mono/app",
+				Version: "1.0.0",
+				Path:    "apps/web",
+				Dependencies: map[string]string{
+					"@mono/lib": "^1.0.0",
+				},
+				DevDependencies:  map[string]string{},
+				PeerDependencies: map[string]string{},
+			},
+			"@mono/lib": {
+				Name:             "@mono/lib",
+				Version:          "1.0.0",
+				Path:             "packages/lib",
+				Dependencies:     map[string]string{},
+				DevDependencies:  map[string]string{},
+				PeerDependencies: map[string]string{},
+			},
+		},
+	}
+
+	result, err := a.Analyze(workspace)
+	if err != nil {
+		t.Fatalf("Analyze failed: %v", err)
+	}
+
+	// Verify no cycles
+	if len(result.CircularDependencies) != 0 {
+		t.Errorf("CircularDependencies = %d, want 0", len(result.CircularDependencies))
+	}
+}
+
+// TestAnalyzeWithSourcesIncludesFixStrategies verifies AnalyzeWithSources also generates fix strategies.
+func TestAnalyzeWithSourcesIncludesFixStrategies(t *testing.T) {
+	a := NewAnalyzer()
+	workspace := &types.WorkspaceData{
+		RootPath:      "/workspace",
+		WorkspaceType: types.WorkspaceTypePnpm,
+		Packages: map[string]*types.PackageInfo{
+			"@mono/ui": {
+				Name:    "@mono/ui",
+				Version: "1.0.0",
+				Path:    "packages/ui",
+				Dependencies: map[string]string{
+					"@mono/api": "^1.0.0",
+				},
+				DevDependencies:  map[string]string{},
+				PeerDependencies: map[string]string{},
+			},
+			"@mono/api": {
+				Name:    "@mono/api",
+				Version: "1.0.0",
+				Path:    "packages/api",
+				Dependencies: map[string]string{
+					"@mono/ui": "^1.0.0", // Creates cycle
+				},
+				DevDependencies:  map[string]string{},
+				PeerDependencies: map[string]string{},
+			},
+		},
+	}
+
+	// Provide source files
+	sourceFiles := map[string][]byte{
+		"packages/ui/src/index.ts":  []byte(`import { api } from '@mono/api';`),
+		"packages/api/src/index.ts": []byte(`import { ui } from '@mono/ui';`),
+	}
+
+	result, err := a.AnalyzeWithSources(workspace, sourceFiles)
+	if err != nil {
+		t.Fatalf("AnalyzeWithSources failed: %v", err)
+	}
+
+	if len(result.CircularDependencies) != 1 {
+		t.Fatalf("CircularDependencies = %d, want 1", len(result.CircularDependencies))
+	}
+
+	cycle := result.CircularDependencies[0]
+
+	// FixStrategies should be populated (Story 3.3)
+	if len(cycle.FixStrategies) == 0 {
+		t.Error("FixStrategies should be populated for AnalyzeWithSources")
+	}
+
+	// ImportTraces should also be populated (Story 3.2)
+	if len(cycle.ImportTraces) == 0 {
+		t.Error("ImportTraces should be populated when source files provided")
+	}
+
+	// RootCause should also be populated (Story 3.1)
+	if cycle.RootCause == nil {
+		t.Error("RootCause should be populated")
+	}
+}

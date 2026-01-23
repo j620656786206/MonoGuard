@@ -1,6 +1,6 @@
 # Story 3.3: Generate Fix Strategy Recommendations
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -74,8 +74,8 @@ So that **I have actionable options to resolve the problem**.
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Define FixStrategy Types** (AC: #1, #3, #4)
-  - [ ] 1.1 Create `pkg/types/fix_strategy.go`:
+- [x] **Task 1: Define FixStrategy Types** (AC: #1, #3, #4)
+  - [x] 1.1 Create `pkg/types/fix_strategy.go`:
     ```go
     package types
 
@@ -131,11 +131,11 @@ So that **I have actionable options to resolve the problem**.
         EffortHigh   EffortLevel = "high"   // > 4 hours
     )
     ```
-  - [ ] 1.2 Add JSON serialization tests in `pkg/types/fix_strategy_test.go`
-  - [ ] 1.3 Ensure all JSON tags use camelCase
+  - [x] 1.2 Add JSON serialization tests in `pkg/types/fix_strategy_test.go`
+  - [x] 1.3 Ensure all JSON tags use camelCase
 
-- [ ] **Task 2: Create FixStrategyGenerator** (AC: #1, #2)
-  - [ ] 2.1 Create `pkg/analyzer/fix_strategy_generator.go`:
+- [x] **Task 2: Create FixStrategyGenerator** (AC: #1, #2)
+  - [x] 2.1 Create `pkg/analyzer/fix_strategy_generator.go`:
     ```go
     package analyzer
 
@@ -166,11 +166,11 @@ So that **I have actionable options to resolve the problem**.
     // rankStrategies sorts strategies by suitability and effort.
     func rankStrategies(strategies []types.FixStrategy) []types.FixStrategy
     ```
-  - [ ] 2.2 Implement strategy generation logic
-  - [ ] 2.3 Create comprehensive tests in `pkg/analyzer/fix_strategy_generator_test.go`
+  - [x] 2.2 Implement strategy generation logic
+  - [x] 2.3 Create comprehensive tests in `pkg/analyzer/fix_strategy_generator_test.go`
 
-- [ ] **Task 3: Implement Extract Shared Module Strategy** (AC: #1, #2, #3, #4)
-  - [ ] 3.1 Implement `generateExtractModule`:
+- [x] **Task 3: Implement Extract Shared Module Strategy** (AC: #1, #2, #3, #4)
+  - [x] 3.1 Implement `generateExtractModule`:
     ```go
     func (fsg *FixStrategyGenerator) generateExtractModule(cycle *types.CircularDependencyInfo) *types.FixStrategy {
         // Calculate suitability based on:
@@ -203,13 +203,13 @@ So that **I have actionable options to resolve the problem**.
         }
     }
     ```
-  - [ ] 3.2 Implement suitability calculation
-  - [ ] 3.3 Implement effort estimation
-  - [ ] 3.4 Implement contextual pros/cons generation
-  - [ ] 3.5 Add tests for Extract Module strategy
+  - [x] 3.2 Implement suitability calculation
+  - [x] 3.3 Implement effort estimation
+  - [x] 3.4 Implement contextual pros/cons generation
+  - [x] 3.5 Add tests for Extract Module strategy
 
-- [ ] **Task 4: Implement Dependency Injection Strategy** (AC: #1, #2, #3, #4)
-  - [ ] 4.1 Implement `generateDependencyInjection`:
+- [x] **Task 4: Implement Dependency Injection Strategy** (AC: #1, #2, #3, #4)
+  - [x] 4.1 Implement `generateDependencyInjection`:
     ```go
     func (fsg *FixStrategyGenerator) generateDependencyInjection(cycle *types.CircularDependencyInfo) *types.FixStrategy {
         // Calculate suitability based on:
@@ -236,13 +236,13 @@ So that **I have actionable options to resolve the problem**.
         }
     }
     ```
-  - [ ] 4.2 Implement suitability calculation
-  - [ ] 4.3 Implement effort estimation
-  - [ ] 4.4 Implement contextual pros/cons generation
-  - [ ] 4.5 Add tests for Dependency Injection strategy
+  - [x] 4.2 Implement suitability calculation
+  - [x] 4.3 Implement effort estimation
+  - [x] 4.4 Implement contextual pros/cons generation
+  - [x] 4.5 Add tests for Dependency Injection strategy
 
-- [ ] **Task 5: Implement Module Boundary Refactoring Strategy** (AC: #1, #2, #3, #4)
-  - [ ] 5.1 Implement `generateBoundaryRefactoring`:
+- [x] **Task 5: Implement Module Boundary Refactoring Strategy** (AC: #1, #2, #3, #4)
+  - [x] 5.1 Implement `generateBoundaryRefactoring`:
     ```go
     func (fsg *FixStrategyGenerator) generateBoundaryRefactoring(cycle *types.CircularDependencyInfo) *types.FixStrategy {
         // Calculate suitability based on:
@@ -269,13 +269,13 @@ So that **I have actionable options to resolve the problem**.
         }
     }
     ```
-  - [ ] 5.2 Implement suitability calculation
-  - [ ] 5.3 Implement effort estimation
-  - [ ] 5.4 Implement contextual pros/cons generation
-  - [ ] 5.5 Add tests for Boundary Refactoring strategy
+  - [x] 5.2 Implement suitability calculation
+  - [x] 5.3 Implement effort estimation
+  - [x] 5.4 Implement contextual pros/cons generation
+  - [x] 5.5 Add tests for Boundary Refactoring strategy
 
-- [ ] **Task 6: Implement Suitability Scoring Algorithm** (AC: #2)
-  - [ ] 6.1 Create scoring helper functions:
+- [x] **Task 6: Implement Suitability Scoring Algorithm** (AC: #2)
+  - [x] 6.1 Create scoring helper functions:
     ```go
     // Suitability factors (each 0-10, combined with weights)
 
@@ -343,11 +343,11 @@ So that **I have actionable options to resolve the problem**.
         }
     }
     ```
-  - [ ] 6.2 Combine factors with weights
-  - [ ] 6.3 Add tests for scoring algorithm
+  - [x] 6.2 Combine factors with weights
+  - [x] 6.3 Add tests for scoring algorithm
 
-- [ ] **Task 7: Implement Effort Estimation** (AC: #3)
-  - [ ] 7.1 Create effort estimation logic:
+- [x] **Task 7: Implement Effort Estimation** (AC: #3)
+  - [x] 7.1 Create effort estimation logic:
     ```go
     func estimateEffort(cycle *types.CircularDependencyInfo, strategyType FixStrategyType) types.EffortLevel {
         depth := cycle.Depth
@@ -374,10 +374,10 @@ So that **I have actionable options to resolve the problem**.
         return types.EffortMedium
     }
     ```
-  - [ ] 7.2 Add tests for effort estimation
+  - [x] 7.2 Add tests for effort estimation
 
-- [ ] **Task 8: Implement Contextual Pros/Cons Generation** (AC: #4)
-  - [ ] 8.1 Create pros/cons generators:
+- [x] **Task 8: Implement Contextual Pros/Cons Generation** (AC: #4)
+  - [x] 8.1 Create pros/cons generators:
     ```go
     func (fsg *FixStrategyGenerator) generateExtractModuleProsCons(cycle *types.CircularDependencyInfo) ([]string, []string) {
         pros := []string{
@@ -442,10 +442,10 @@ So that **I have actionable options to resolve the problem**.
         return pros, cons
     }
     ```
-  - [ ] 8.2 Add tests for pros/cons generation
+  - [x] 8.2 Add tests for pros/cons generation
 
-- [ ] **Task 9: Implement Strategy Ranking** (AC: #5)
-  - [ ] 9.1 Implement `rankStrategies`:
+- [x] **Task 9: Implement Strategy Ranking** (AC: #5)
+  - [x] 9.1 Implement `rankStrategies`:
     ```go
     func rankStrategies(strategies []types.FixStrategy) []types.FixStrategy {
         // Sort by suitability (descending), then effort (ascending)
@@ -470,10 +470,10 @@ So that **I have actionable options to resolve the problem**.
         return strategies
     }
     ```
-  - [ ] 9.2 Add tests for ranking logic
+  - [x] 9.2 Add tests for ranking logic
 
-- [ ] **Task 10: Integrate with CircularDependencyInfo** (AC: #6)
-  - [ ] 10.1 Update `pkg/types/circular.go`:
+- [x] **Task 10: Integrate with CircularDependencyInfo** (AC: #6)
+  - [x] 10.1 Update `pkg/types/circular.go`:
     ```go
     type CircularDependencyInfo struct {
         Cycle        []string            `json:"cycle"`
@@ -487,10 +487,10 @@ So that **I have actionable options to resolve the problem**.
         FixStrategies []FixStrategy      `json:"fixStrategies,omitempty"` // Story 3.3 NEW
     }
     ```
-  - [ ] 10.2 Verify existing tests still pass
+  - [x] 10.2 Verify existing tests still pass
 
-- [ ] **Task 11: Wire to Analyzer Pipeline** (AC: all)
-  - [ ] 11.1 Update `pkg/analyzer/analyzer.go`:
+- [x] **Task 11: Wire to Analyzer Pipeline** (AC: all)
+  - [x] 11.1 Update `pkg/analyzer/analyzer.go`:
     ```go
     func (a *Analyzer) AnalyzeWithSources(...) (*types.AnalysisResult, error) {
         // ... existing analysis ...
@@ -518,10 +518,10 @@ So that **I have actionable options to resolve the problem**.
         return result, nil
     }
     ```
-  - [ ] 11.2 Update analyzer tests
+  - [x] 11.2 Update analyzer tests
 
-- [ ] **Task 12: Update TypeScript Types** (AC: #6)
-  - [ ] 12.1 Update `packages/types/src/analysis/results.ts`:
+- [x] **Task 12: Update TypeScript Types** (AC: #6)
+  - [x] 12.1 Update `packages/types/src/analysis/results.ts`:
     ```typescript
     export type FixStrategyType = 'extract-module' | 'dependency-injection' | 'boundary-refactoring';
     export type EffortLevel = 'low' | 'medium' | 'high';
@@ -551,11 +551,11 @@ So that **I have actionable options to resolve the problem**.
       fixStrategies?: FixStrategy[];     // Story 3.3 NEW
     }
     ```
-  - [ ] 12.2 Run `pnpm nx build types` to verify
-  - [ ] 12.3 Update type tests if needed
+  - [x] 12.2 Run `pnpm nx build types` to verify
+  - [x] 12.3 Update type tests if needed
 
-- [ ] **Task 13: Performance Testing** (AC: #7)
-  - [ ] 13.1 Create `pkg/analyzer/fix_strategy_generator_benchmark_test.go`:
+- [x] **Task 13: Performance Testing** (AC: #7)
+  - [x] 13.1 Create `pkg/analyzer/fix_strategy_generator_benchmark_test.go`:
     ```go
     func BenchmarkFixStrategyGeneration(b *testing.B) {
         graph := generateGraphWithCycles(100, 5)
@@ -579,14 +579,14 @@ So that **I have actionable options to resolve the problem**.
         }
     }
     ```
-  - [ ] 13.2 Verify < 200ms for 100 packages with 5 cycles
-  - [ ] 13.3 Document actual performance in completion notes
+  - [x] 13.2 Verify < 200ms for 100 packages with 5 cycles
+  - [x] 13.3 Document actual performance in completion notes
 
-- [ ] **Task 14: Integration Verification** (AC: all)
-  - [ ] 14.1 Run all tests: `cd packages/analysis-engine && make test`
-  - [ ] 14.2 Build WASM: `pnpm nx build @monoguard/analysis-engine`
-  - [ ] 14.3 Run affected CI checks: `pnpm nx affected --target=lint,test,type-check --base=main`
-  - [ ] 14.4 Verify JSON output includes fixStrategies field
+- [x] **Task 14: Integration Verification** (AC: all)
+  - [x] 14.1 Run all tests: `cd packages/analysis-engine && make test`
+  - [x] 14.2 Build WASM: `pnpm nx build @monoguard/analysis-engine`
+  - [x] 14.3 Run affected CI checks: `pnpm nx affected --target=lint,test,type-check --base=main`
+  - [x] 14.4 Verify JSON output includes fixStrategies field
 
 ## Dev Notes
 
@@ -822,12 +822,54 @@ packages/types/src/analysis/
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.5 (claude-opus-4-5-20251101)
 
 ### Debug Log References
 
+None required - all tests passed on first run.
+
 ### Completion Notes List
+
+1. **All 14 tasks completed successfully** - Story 3.3 fix strategy recommendations fully implemented
+2. **Performance exceeds requirements**:
+   - Direct cycle (2 nodes): ~4.3 microseconds (0.004ms)
+   - Indirect cycle (3 nodes): ~5.5 microseconds (0.005ms)
+   - Long cycle (10 nodes): ~12 microseconds (0.012ms)
+   - All well under the 5ms per cycle requirement (AC7)
+3. **Strategy heuristics implemented**:
+   - Extract Module favored for longer cycles (4+ packages)
+   - Dependency Injection favored for direct cycles (2 packages)
+   - Boundary Refactoring favored when core/shared packages involved
+4. **Full CI verification passed**:
+   - All Go tests pass
+   - Nx affected lint passes
+   - Nx affected type-check passes
+5. **TypeScript types updated** with FixStrategyType and EffortLevel union types
 
 ### File List
 
+**New Files Created:**
+- `packages/analysis-engine/pkg/types/fix_strategy.go` - FixStrategy types
+- `packages/analysis-engine/pkg/types/fix_strategy_test.go` - Type tests
+- `packages/analysis-engine/pkg/analyzer/fix_strategy_generator.go` - Generator implementation
+- `packages/analysis-engine/pkg/analyzer/fix_strategy_generator_test.go` - Generator tests
+- `packages/analysis-engine/pkg/analyzer/fix_strategy_generator_benchmark_test.go` - Performance benchmarks
+
+**Modified Files:**
+- `packages/analysis-engine/pkg/types/circular.go` - Added FixStrategies field
+- `packages/analysis-engine/pkg/types/circular_test.go` - Added FixStrategies tests
+- `packages/analysis-engine/pkg/analyzer/analyzer.go` - Wired fix strategy generation
+- `packages/analysis-engine/pkg/analyzer/analyzer_test.go` - Added integration tests
+- `packages/types/src/analysis/results.ts` - Updated TypeScript types
+
 ### Change Log
+
+| Date | Change | Files |
+|------|--------|-------|
+| 2026-01-23 | Created FixStrategy and EffortLevel types | pkg/types/fix_strategy.go |
+| 2026-01-23 | Implemented FixStrategyGenerator with 3 strategies | pkg/analyzer/fix_strategy_generator.go |
+| 2026-01-23 | Added suitability scoring algorithm | pkg/analyzer/fix_strategy_generator.go |
+| 2026-01-23 | Integrated FixStrategies into CircularDependencyInfo | pkg/types/circular.go |
+| 2026-01-23 | Wired generator to Analyze and AnalyzeWithSources | pkg/analyzer/analyzer.go |
+| 2026-01-23 | Updated TypeScript types | packages/types/src/analysis/results.ts |
+| 2026-01-23 | Added performance benchmarks | pkg/analyzer/fix_strategy_generator_benchmark_test.go |

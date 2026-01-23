@@ -43,14 +43,14 @@ export interface CircularDependencyInfo {
   depth: number
   /** Impact description */
   impact: string
-  /** Suggested fix strategy (Epic 3) */
-  fixStrategy?: FixStrategy
   /** Refactoring complexity (1-10) */
   complexity: number
   /** Root cause analysis (Story 3.1) */
   rootCause?: RootCauseAnalysis
   /** Import statements forming the cycle (Story 3.2) */
   importTraces?: ImportTrace[]
+  /** Recommended fix strategies, sorted by suitability (Story 3.3) */
+  fixStrategies?: FixStrategy[]
 }
 
 /**
@@ -127,18 +127,50 @@ export interface RootCauseEdge {
 /**
  * FixStrategy - Suggested fix for circular dependency
  *
- * Matches Go: pkg/types/fix_strategy.go
+ * Matches Go: pkg/types/fix_strategy.go (Story 3.3)
  */
 export interface FixStrategy {
-  /** Strategy type */
-  type: 'extract_module' | 'dependency_injection' | 'boundary_refactor'
-  /** Human-readable description */
+  /** Strategy type identifier */
+  type: FixStrategyType
+  /** Human-readable strategy name */
+  name: string
+  /** Detailed description of what this strategy does */
   description: string
-  /** Step-by-step instructions */
-  steps: string[]
-  /** Files that need modification */
-  affectedFiles: string[]
+  /** Suitability score (1-10) indicating how well this strategy fits */
+  suitability: number
+  /** Estimated implementation effort */
+  effort: EffortLevel
+  /** Advantages of this strategy for this specific cycle */
+  pros: string[]
+  /** Disadvantages of this strategy for this specific cycle */
+  cons: string[]
+  /** True if this is the top recommendation */
+  recommended: boolean
+  /** Packages that would need modification */
+  targetPackages: string[]
+  /** Suggested name for extracted module (if applicable) */
+  newPackageName?: string
 }
+
+/**
+ * FixStrategyType - Identifies the approach to resolve the cycle
+ *
+ * Matches Go: pkg/types/fix_strategy.go FixStrategyType constants
+ */
+export type FixStrategyType =
+  | 'extract-module' // Move shared code to new package
+  | 'dependency-injection' // Invert the dependency relationship
+  | 'boundary-refactoring' // Restructure module boundaries
+
+/**
+ * EffortLevel - Estimates implementation difficulty
+ *
+ * Matches Go: pkg/types/fix_strategy.go EffortLevel constants
+ */
+export type EffortLevel =
+  | 'low' // Simple changes, < 1 hour
+  | 'medium' // Moderate changes, 1-4 hours
+  | 'high' // Significant refactoring, > 4 hours
 
 /**
  * CheckResult - Validation-only output for CI/CD

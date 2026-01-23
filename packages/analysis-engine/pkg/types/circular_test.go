@@ -470,3 +470,115 @@ func TestCircularDependencyInfo_BackwardCompatibility(t *testing.T) {
 		t.Errorf("Severity = %q, want %q", decoded.Severity, CircularSeverityWarning)
 	}
 }
+
+// ========================================
+// FixStrategies Integration Tests (Story 3.3)
+// ========================================
+
+func TestCircularDependencyInfo_WithFixStrategies(t *testing.T) {
+	// Test that FixStrategies field is optional and omitted when nil/empty
+	info := &CircularDependencyInfo{
+		Cycle:         []string{"A", "B", "A"},
+		Type:          CircularTypeDirect,
+		Severity:      CircularSeverityWarning,
+		Depth:         2,
+		Impact:        "Direct circular dependency between A and B",
+		Complexity:    3,
+		FixStrategies: nil, // Should be omitted in JSON
+	}
+
+	data, err := json.Marshal(info)
+	if err != nil {
+		t.Fatalf("Failed to marshal: %v", err)
+	}
+
+	jsonStr := string(data)
+
+	// FixStrategies should NOT be in JSON when nil (omitempty)
+	if strings.Contains(jsonStr, "fixStrategies") {
+		t.Errorf("Expected fixStrategies to be omitted when nil, got: %s", jsonStr)
+	}
+}
+
+func TestCircularDependencyInfo_WithFixStrategiesPresent(t *testing.T) {
+	// Test that FixStrategies field is included when present
+	info := &CircularDependencyInfo{
+		Cycle:      []string{"@mono/ui", "@mono/api", "@mono/core", "@mono/ui"},
+		Type:       CircularTypeIndirect,
+		Severity:   CircularSeverityInfo,
+		Depth:      3,
+		Impact:     "Indirect circular dependency involving 3 packages",
+		Complexity: 5,
+		FixStrategies: []FixStrategy{
+			{
+				Type:           FixStrategyExtractModule,
+				Name:           "Extract Shared Module",
+				Description:    "Create a new shared package.",
+				Suitability:    8,
+				Effort:         EffortMedium,
+				Pros:           []string{"Clean separation"},
+				Cons:           []string{"New package"},
+				Recommended:    true,
+				TargetPackages: []string{"@mono/ui", "@mono/api", "@mono/core"},
+				NewPackageName: "@mono/shared",
+			},
+			{
+				Type:           FixStrategyDependencyInject,
+				Name:           "Dependency Injection",
+				Description:    "Invert the dependency.",
+				Suitability:    6,
+				Effort:         EffortLow,
+				Pros:           []string{"Minimal changes"},
+				Cons:           []string{"Adds indirection"},
+				Recommended:    false,
+				TargetPackages: []string{"@mono/core", "@mono/ui"},
+			},
+		},
+	}
+
+	data, err := json.Marshal(info)
+	if err != nil {
+		t.Fatalf("Failed to marshal: %v", err)
+	}
+
+	jsonStr := string(data)
+
+	// FixStrategies should be in JSON when present
+	expectedFields := []string{
+		`"fixStrategies"`,
+		`"extract-module"`,
+		`"dependency-injection"`,
+		`"suitability"`,
+		`"effort"`,
+		`"pros"`,
+		`"cons"`,
+		`"recommended"`,
+		`"targetPackages"`,
+		`"newPackageName"`,
+	}
+
+	for _, field := range expectedFields {
+		if !strings.Contains(jsonStr, field) {
+			t.Errorf("Expected JSON to contain %s, got: %s", field, jsonStr)
+		}
+	}
+
+	// Verify round-trip
+	var decoded CircularDependencyInfo
+	if err := json.Unmarshal(data, &decoded); err != nil {
+		t.Fatalf("Failed to unmarshal: %v", err)
+	}
+
+	if len(decoded.FixStrategies) != 2 {
+		t.Fatalf("FixStrategies length = %d, want 2", len(decoded.FixStrategies))
+	}
+	if decoded.FixStrategies[0].Type != FixStrategyExtractModule {
+		t.Errorf("First strategy type = %s, want extract-module", decoded.FixStrategies[0].Type)
+	}
+	if !decoded.FixStrategies[0].Recommended {
+		t.Error("First strategy should be recommended")
+	}
+	if decoded.FixStrategies[0].NewPackageName != "@mono/shared" {
+		t.Errorf("NewPackageName = %s, want @mono/shared", decoded.FixStrategies[0].NewPackageName)
+	}
+}

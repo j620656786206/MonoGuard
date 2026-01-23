@@ -7,6 +7,7 @@
 //   - Package exclusion patterns (Story 2.6)
 //   - Root cause analysis for circular dependencies (Story 3.1)
 //   - Import statement tracing for circular dependencies (Story 3.2)
+//   - Fix strategy recommendations for circular dependencies (Story 3.3)
 package analyzer
 
 import (
@@ -82,6 +83,12 @@ func (a *Analyzer) Analyze(workspace *types.WorkspaceData) (*types.AnalysisResul
 		cycle.RootCause = rootCauseAnalyzer.Analyze(cycle)
 	}
 
+	// Story 3.3: Generate fix strategies for cycles
+	fixGenerator := NewFixStrategyGenerator(filteredGraph, workspace)
+	for _, cycle := range cycles {
+		cycle.FixStrategies = fixGenerator.Generate(cycle)
+	}
+
 	// Detect version conflicts (Story 2.4)
 	// Story 2.6: Use filtered graph to exclude excluded packages
 	conflictDetector := NewConflictDetector(filteredGraph)
@@ -147,6 +154,12 @@ func (a *Analyzer) AnalyzeWithSources(
 	importTracer := NewImportTracer(workspace, sourceFiles)
 	for _, cycle := range cycles {
 		cycle.ImportTraces = importTracer.Trace(cycle)
+	}
+
+	// Story 3.3: Generate fix strategies for cycles
+	fixGenerator := NewFixStrategyGenerator(filteredGraph, workspace)
+	for _, cycle := range cycles {
+		cycle.FixStrategies = fixGenerator.Generate(cycle)
 	}
 
 	// Detect version conflicts (Story 2.4)
