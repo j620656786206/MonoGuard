@@ -5,6 +5,11 @@ import type {
   CircularDependencyInfo,
   DependencyEdge,
   DependencyGraph,
+  EffortLevel,
+  FixStrategy,
+  FixStrategyType,
+  ImportTrace,
+  ImportType,
   PackageNode,
   RootCauseAnalysis,
   RootCauseEdge,
@@ -102,7 +107,7 @@ describe('Analysis types', () => {
       expect(circular.severity).toBe('critical')
     })
 
-    it('can include fix strategy', () => {
+    it('can include fix strategies array (Story 3.3)', () => {
       const circular: CircularDependencyInfo = {
         cycle: ['package-a', 'package-b', 'package-c', 'package-a'],
         type: 'indirect',
@@ -110,20 +115,53 @@ describe('Analysis types', () => {
         depth: 3,
         impact: 'Potential build issues',
         complexity: 7,
-        fixStrategy: {
-          type: 'extract_module',
-          description: 'Extract shared code into a new package',
-          steps: [
-            'Create packages/shared',
-            'Move common code to shared',
-            'Update imports in package-a and package-c',
-          ],
-          affectedFiles: ['packages/a/src/index.ts', 'packages/c/src/index.ts'],
-        },
+        fixStrategies: [
+          {
+            type: 'extract-module',
+            name: 'Extract Shared Module',
+            description: 'Create a new shared package to hold common dependencies.',
+            suitability: 8,
+            effort: 'medium',
+            pros: [
+              'Creates clear separation of concerns',
+              'Isolates shared code between package-a, package-b, package-c',
+            ],
+            cons: ['Introduces a new package to maintain'],
+            recommended: true,
+            targetPackages: ['package-a', 'package-b', 'package-c'],
+            newPackageName: '@mono/shared',
+          },
+          {
+            type: 'dependency-injection',
+            name: 'Dependency Injection',
+            description: 'Invert the problematic dependency by introducing an interface.',
+            suitability: 6,
+            effort: 'medium',
+            pros: ['Minimal code changes required', 'Preserves existing structure'],
+            cons: ['Adds indirection to the codebase'],
+            recommended: false,
+            targetPackages: ['package-b', 'package-c'],
+          },
+          {
+            type: 'boundary-refactoring',
+            name: 'Module Boundary Refactoring',
+            description: 'Restructure package boundaries to eliminate the cycle.',
+            suitability: 5,
+            effort: 'high',
+            pros: ['Addresses root architectural issue', 'Cleaner long-term design'],
+            cons: ['Requires significant refactoring effort', 'May affect external consumers'],
+            recommended: false,
+            targetPackages: ['package-a', 'package-b', 'package-c'],
+          },
+        ],
       }
 
-      expect(circular.fixStrategy?.type).toBe('extract_module')
-      expect(circular.fixStrategy?.steps).toHaveLength(3)
+      expect(circular.fixStrategies).toHaveLength(3)
+      expect(circular.fixStrategies?.[0].type).toBe('extract-module')
+      expect(circular.fixStrategies?.[0].recommended).toBe(true)
+      expect(circular.fixStrategies?.[0].suitability).toBe(8)
+      expect(circular.fixStrategies?.[0].effort).toBe('medium')
+      expect(circular.fixStrategies?.[0].newPackageName).toBe('@mono/shared')
     })
   })
 
@@ -372,5 +410,293 @@ describe('CircularDependencyInfo with RootCause', () => {
     }
 
     expect(circular.rootCause).toBeUndefined()
+  })
+})
+
+// Story 3.2: Import Trace Types
+describe('ImportTrace', () => {
+  it('can represent a named ESM import', () => {
+    const trace: ImportTrace = {
+      fromPackage: 'pkg-ui',
+      toPackage: 'pkg-api',
+      filePath: 'src/components/UserList.tsx',
+      lineNumber: 5,
+      statement: "import { fetchUsers } from '@mono/api'",
+      importType: 'esm-named',
+      symbols: ['fetchUsers'],
+    }
+
+    expect(trace.importType).toBe('esm-named')
+    expect(trace.symbols).toContain('fetchUsers')
+    expect(trace.lineNumber).toBe(5)
+  })
+
+  it('supports all import types', () => {
+    const importTypes: ImportType[] = [
+      'esm-named',
+      'esm-default',
+      'esm-namespace',
+      'esm-side-effect',
+      'esm-dynamic',
+      'cjs-require',
+    ]
+
+    const traces: ImportTrace[] = importTypes.map((type, i) => ({
+      fromPackage: 'pkg-a',
+      toPackage: 'pkg-b',
+      filePath: `src/file${i}.ts`,
+      lineNumber: i + 1,
+      statement: `import statement ${i}`,
+      importType: type,
+    }))
+
+    expect(traces.map((t) => t.importType)).toEqual(importTypes)
+  })
+
+  it('symbols is optional for side-effect imports', () => {
+    const trace: ImportTrace = {
+      fromPackage: 'pkg-ui',
+      toPackage: 'pkg-styles',
+      filePath: 'src/index.ts',
+      lineNumber: 1,
+      statement: "import './styles.css'",
+      importType: 'esm-side-effect',
+    }
+
+    expect(trace.symbols).toBeUndefined()
+  })
+})
+
+// Story 3.3: Fix Strategy Types
+describe('FixStrategy', () => {
+  it('can represent extract-module strategy', () => {
+    const strategy: FixStrategy = {
+      type: 'extract-module',
+      name: 'Extract Shared Module',
+      description: 'Create a new shared package to hold common dependencies.',
+      suitability: 9,
+      effort: 'medium',
+      pros: [
+        'Creates clear separation of concerns',
+        'Effectively breaks complex multi-package cycle',
+      ],
+      cons: ['Introduces a new package to maintain'],
+      recommended: true,
+      targetPackages: ['pkg-ui', 'pkg-api', 'pkg-core'],
+      newPackageName: '@mono/shared',
+    }
+
+    expect(strategy.type).toBe('extract-module')
+    expect(strategy.suitability).toBe(9)
+    expect(strategy.newPackageName).toBe('@mono/shared')
+    expect(strategy.recommended).toBe(true)
+  })
+
+  it('can represent dependency-injection strategy', () => {
+    const strategy: FixStrategy = {
+      type: 'dependency-injection',
+      name: 'Dependency Injection',
+      description: 'Invert the problematic dependency.',
+      suitability: 8,
+      effort: 'low',
+      pros: ['Minimal code changes required', 'Clear injection point: pkg-b → pkg-a'],
+      cons: ['Adds indirection to the codebase'],
+      recommended: false,
+      targetPackages: ['pkg-a', 'pkg-b'],
+    }
+
+    expect(strategy.type).toBe('dependency-injection')
+    expect(strategy.effort).toBe('low')
+    expect(strategy.newPackageName).toBeUndefined()
+  })
+
+  it('can represent boundary-refactoring strategy', () => {
+    const strategy: FixStrategy = {
+      type: 'boundary-refactoring',
+      name: 'Module Boundary Refactoring',
+      description: 'Restructure package boundaries.',
+      suitability: 7,
+      effort: 'high',
+      pros: [
+        'Addresses root architectural issue',
+        'Opportunity to properly define core package boundaries',
+      ],
+      cons: ['Requires significant refactoring effort', 'May affect external consumers'],
+      recommended: false,
+      targetPackages: ['pkg-ui', 'pkg-core'],
+    }
+
+    expect(strategy.type).toBe('boundary-refactoring')
+    expect(strategy.effort).toBe('high')
+  })
+})
+
+describe('FixStrategyType', () => {
+  it('supports all strategy types', () => {
+    const types: FixStrategyType[] = [
+      'extract-module',
+      'dependency-injection',
+      'boundary-refactoring',
+    ]
+
+    expect(types).toHaveLength(3)
+    expect(types).toContain('extract-module')
+    expect(types).toContain('dependency-injection')
+    expect(types).toContain('boundary-refactoring')
+  })
+})
+
+describe('EffortLevel', () => {
+  it('supports all effort levels', () => {
+    const levels: EffortLevel[] = ['low', 'medium', 'high']
+
+    expect(levels).toHaveLength(3)
+    expect(levels).toContain('low')
+    expect(levels).toContain('medium')
+    expect(levels).toContain('high')
+  })
+
+  it('effort levels correspond to time ranges', () => {
+    // Documentation validation: low < 1 hour, medium 1-4 hours, high > 4 hours
+    const effortMapping: Record<EffortLevel, string> = {
+      low: '< 1 hour',
+      medium: '1-4 hours',
+      high: '> 4 hours',
+    }
+
+    expect(Object.keys(effortMapping)).toHaveLength(3)
+  })
+})
+
+describe('CircularDependencyInfo with FixStrategies', () => {
+  it('can include complete fix strategies from Story 3.3', () => {
+    const circular: CircularDependencyInfo = {
+      cycle: ['pkg-ui', 'pkg-api', 'pkg-core', 'pkg-ui'],
+      type: 'indirect',
+      severity: 'warning',
+      depth: 3,
+      impact: 'Indirect circular dependency involving 3 packages',
+      complexity: 5,
+      rootCause: {
+        originatingPackage: 'pkg-ui',
+        problematicDependency: {
+          from: 'pkg-ui',
+          to: 'pkg-api',
+          type: 'production',
+          critical: false,
+        },
+        confidence: 82,
+        explanation: "Package 'pkg-ui' is the root cause.",
+        chain: [
+          { from: 'pkg-ui', to: 'pkg-api', type: 'production', critical: false },
+          { from: 'pkg-api', to: 'pkg-core', type: 'production', critical: false },
+          { from: 'pkg-core', to: 'pkg-ui', type: 'production', critical: true },
+        ],
+        criticalEdge: {
+          from: 'pkg-core',
+          to: 'pkg-ui',
+          type: 'production',
+          critical: true,
+        },
+      },
+      importTraces: [
+        {
+          fromPackage: 'pkg-ui',
+          toPackage: 'pkg-api',
+          filePath: 'src/hooks/useUser.ts',
+          lineNumber: 3,
+          statement: "import { fetchUser } from '@mono/api'",
+          importType: 'esm-named',
+          symbols: ['fetchUser'],
+        },
+      ],
+      fixStrategies: [
+        {
+          type: 'extract-module',
+          name: 'Extract Shared Module',
+          description: 'Create a new shared package.',
+          suitability: 8,
+          effort: 'medium',
+          pros: ['Clear separation', 'Isolates shared code'],
+          cons: ['New package to maintain'],
+          recommended: true,
+          targetPackages: ['pkg-ui', 'pkg-api', 'pkg-core'],
+          newPackageName: '@mono/shared',
+        },
+      ],
+    }
+
+    expect(circular.rootCause).toBeDefined()
+    expect(circular.importTraces).toHaveLength(1)
+    expect(circular.fixStrategies).toHaveLength(1)
+    expect(circular.fixStrategies?.[0].recommended).toBe(true)
+  })
+
+  it('fixStrategies is optional for backward compatibility', () => {
+    const circular: CircularDependencyInfo = {
+      cycle: ['pkg-a', 'pkg-b', 'pkg-a'],
+      type: 'direct',
+      severity: 'critical',
+      depth: 2,
+      impact: 'Direct circular dependency',
+      complexity: 3,
+    }
+
+    expect(circular.fixStrategies).toBeUndefined()
+  })
+
+  it('strategies are sorted by suitability (highest first)', () => {
+    const circular: CircularDependencyInfo = {
+      cycle: ['pkg-a', 'pkg-b', 'pkg-a'],
+      type: 'direct',
+      severity: 'warning',
+      depth: 2,
+      impact: 'Direct cycle',
+      complexity: 4,
+      fixStrategies: [
+        {
+          type: 'dependency-injection',
+          name: 'DI',
+          description: 'Invert dependency',
+          suitability: 10,
+          effort: 'low',
+          pros: ['Best for direct cycles'],
+          cons: ['Adds indirection'],
+          recommended: true,
+          targetPackages: ['pkg-a', 'pkg-b'],
+        },
+        {
+          type: 'extract-module',
+          name: 'Extract',
+          description: 'Extract shared',
+          suitability: 5,
+          effort: 'medium',
+          pros: ['Separation'],
+          cons: ['New package'],
+          recommended: false,
+          targetPackages: ['pkg-a', 'pkg-b'],
+        },
+        {
+          type: 'boundary-refactoring',
+          name: 'Boundary',
+          description: 'Restructure',
+          suitability: 3,
+          effort: 'high',
+          pros: ['Architectural fix'],
+          cons: ['High effort'],
+          recommended: false,
+          targetPackages: ['pkg-a', 'pkg-b'],
+        },
+      ],
+    }
+
+    // Verify sorted by suitability descending
+    expect(circular.fixStrategies?.[0].suitability).toBe(10)
+    expect(circular.fixStrategies?.[1].suitability).toBe(5)
+    expect(circular.fixStrategies?.[2].suitability).toBe(3)
+
+    // First should be recommended
+    expect(circular.fixStrategies?.[0].recommended).toBe(true)
+    expect(circular.fixStrategies?.[1].recommended).toBe(false)
   })
 })
