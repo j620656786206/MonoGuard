@@ -723,10 +723,6 @@ export interface SideEffectWarning {
  */
 export type WarningSeverity = 'info' | 'warning' | 'critical'
 
-// Re-export RiskLevel from common for analysis module convenience
-// Note: The RiskLevel in common.ts uses uppercase enum values (LOW, MEDIUM, etc.)
-// but the JSON serialization uses lowercase ('low', 'medium', etc.)
-// Import from common.ts or use the literal type values directly
-
+export { RiskLevel, Severity } from '../common'
 // Re-export for convenience
 export type { WorkspaceType } from './graph'

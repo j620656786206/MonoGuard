@@ -189,21 +189,30 @@ func (bag *BeforeAfterGenerator) generateProposedStateDI(
 		})
 	}
 
-	// In DI, the dependency is inverted - edges change direction
-	// The problematic direct import is removed
-	// Show remaining edges (dependencies that don't form cycle)
+	// In DI, one edge that completes the cycle is removed (inverted via interface)
+	// Other edges in the chain remain but are now one-directional
 	if len(targetPkgs) >= 2 {
-		// First package no longer directly imports second
-		// Second may still be used but through injection
-		// Add edge showing interface dependency
+		// Show the removed edge (the one that would complete the cycle)
 		edges = append(edges, types.DiagramEdge{
-			From:      targetPkgs[0],
-			To:        targetPkgs[1],
+			From:      targetPkgs[len(targetPkgs)-1],
+			To:        targetPkgs[0],
 			IsInCycle: false,
-			IsRemoved: true, // Direct import removed
+			IsRemoved: true, // This edge is replaced by interface injection
 			IsNew:     false,
 			EdgeType:  types.EdgeTypeRemoved,
 		})
+
+		// Show remaining edges that form a chain (not a cycle)
+		for i := 0; i < len(targetPkgs)-1; i++ {
+			edges = append(edges, types.DiagramEdge{
+				From:      targetPkgs[i],
+				To:        targetPkgs[i+1],
+				IsInCycle: false,
+				IsRemoved: false,
+				IsNew:     false,
+				EdgeType:  types.EdgeTypeUnchanged,
+			})
+		}
 	}
 
 	return &types.StateDiagram{
@@ -238,18 +247,20 @@ func (bag *BeforeAfterGenerator) generateProposedStateBoundary(
 		})
 	}
 
-	// In boundary refactoring, dependencies become one-directional
-	// Only show edges that don't create a cycle
+	// In boundary refactoring, code is moved so dependencies become one-directional
+	// The edge that completes the cycle is removed, others form a chain
 	if len(targetPkgs) >= 2 {
-		// After refactoring, only one direction of dependency remains
-		edges = append(edges, types.DiagramEdge{
-			From:      targetPkgs[0],
-			To:        targetPkgs[1],
-			IsInCycle: false,
-			IsRemoved: false,
-			IsNew:     false,
-			EdgeType:  types.EdgeTypeUnchanged,
-		})
+		// Show a linear chain of dependencies (no cycle)
+		for i := 0; i < len(targetPkgs)-1; i++ {
+			edges = append(edges, types.DiagramEdge{
+				From:      targetPkgs[i],
+				To:        targetPkgs[i+1],
+				IsInCycle: false,
+				IsRemoved: false,
+				IsNew:     false,
+				EdgeType:  types.EdgeTypeUnchanged,
+			})
+		}
 	}
 
 	return &types.StateDiagram{
@@ -266,6 +277,11 @@ func (bag *BeforeAfterGenerator) generateProposedStateBoundary(
 // generatePackageJsonDiffs creates package.json change descriptions.
 func (bag *BeforeAfterGenerator) generatePackageJsonDiffs(strategy *types.FixStrategy) []types.PackageJsonDiff {
 	diffs := []types.PackageJsonDiff{}
+
+	// Guard against empty TargetPackages
+	if len(strategy.TargetPackages) == 0 {
+		return diffs
+	}
 
 	switch strategy.Type {
 	case types.FixStrategyExtractModule:
@@ -452,6 +468,15 @@ func (bag *BeforeAfterGenerator) generateEstimatedImportAdd(strategy *types.FixS
 				Statement:     fmt.Sprintf("import type { %s } from '%s'", interfaceName, toPkg),
 				FromPackage:   toPkg,
 				ImportedNames: []string{interfaceName},
+			},
+		}
+	case types.FixStrategyBoundaryRefactor:
+		// Boundary refactoring may involve reorganizing imports after moving code
+		// The exact imports depend on what code is moved, so we provide a general pattern
+		return []types.ImportChange{
+			{
+				Statement:   fmt.Sprintf("import { /* relocated exports */ } from '%s'", toPkg),
+				FromPackage: toPkg,
 			},
 		}
 	}

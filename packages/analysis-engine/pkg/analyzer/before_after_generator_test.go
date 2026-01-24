@@ -178,12 +178,27 @@ func TestGenerateProposedState_DependencyInjection(t *testing.T) {
 		}
 	}
 
-	// Verify removed edge
-	if len(state.Edges) != 1 {
-		t.Errorf("Expected 1 edge, got %d", len(state.Edges))
+	// Verify edges: 1 removed (cycle-breaking) + 1 unchanged (remaining chain)
+	if len(state.Edges) != 2 {
+		t.Errorf("Expected 2 edges, got %d", len(state.Edges))
 	}
-	if !state.Edges[0].IsRemoved {
-		t.Error("Expected edge to be marked as removed")
+
+	// Find and verify the removed edge
+	hasRemovedEdge := false
+	hasUnchangedEdge := false
+	for _, edge := range state.Edges {
+		if edge.IsRemoved && edge.EdgeType == types.EdgeTypeRemoved {
+			hasRemovedEdge = true
+		}
+		if !edge.IsRemoved && edge.EdgeType == types.EdgeTypeUnchanged {
+			hasUnchangedEdge = true
+		}
+	}
+	if !hasRemovedEdge {
+		t.Error("Expected one edge to be marked as removed")
+	}
+	if !hasUnchangedEdge {
+		t.Error("Expected one edge to remain unchanged")
 	}
 
 	// Verify cycle resolved
