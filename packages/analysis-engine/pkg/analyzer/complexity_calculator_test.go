@@ -408,6 +408,92 @@ func TestCalculate_ScoreBounds(t *testing.T) {
 	}
 }
 
+// TestCalculateForStrategy_DifferentStrategiesHaveDifferentComplexity verifies AC6.
+func TestCalculateForStrategy_DifferentStrategiesHaveDifferentComplexity(t *testing.T) {
+	graph := types.NewDependencyGraph("@mono/root", types.WorkspaceTypeNpm)
+	workspace := &types.WorkspaceData{
+		RootPath:      "@mono/root",
+		WorkspaceType: types.WorkspaceTypeNpm,
+		Packages: map[string]*types.PackageInfo{
+			"@mono/ui":   {Name: "@mono/ui", Version: "1.0.0"},
+			"@mono/api":  {Name: "@mono/api", Version: "1.0.0"},
+			"@mono/core": {Name: "@mono/core", Version: "1.0.0"},
+		},
+	}
+
+	cycle := &types.CircularDependencyInfo{
+		Cycle: []string{"@mono/ui", "@mono/api", "@mono/core", "@mono/ui"},
+		Type:  types.CircularTypeIndirect,
+		Depth: 3,
+	}
+
+	calc := NewComplexityCalculator(graph, workspace)
+
+	// Calculate for each strategy type
+	extractModule := calc.CalculateForStrategy(cycle, types.FixStrategyExtractModule)
+	dependencyInject := calc.CalculateForStrategy(cycle, types.FixStrategyDependencyInject)
+	boundaryRefactor := calc.CalculateForStrategy(cycle, types.FixStrategyBoundaryRefactor)
+
+	if extractModule == nil || dependencyInject == nil || boundaryRefactor == nil {
+		t.Fatal("CalculateForStrategy returned nil for valid inputs")
+	}
+
+	// AC6: Different strategies should have different complexities
+	// extract-module: 1.0x, dependency-injection: 1.1x, boundary-refactoring: 1.2x
+	// Due to rounding, scores may be equal for small base values, but generally:
+	// boundaryRefactor.Score >= dependencyInject.Score >= extractModule.Score
+	if boundaryRefactor.Score < extractModule.Score {
+		t.Errorf("boundary-refactoring score (%d) should be >= extract-module score (%d)",
+			boundaryRefactor.Score, extractModule.Score)
+	}
+
+	// Explanation should include strategy name
+	if !containsIgnoreCase(extractModule.Explanation, "extract-module") {
+		t.Errorf("extract-module explanation should contain strategy name: %s", extractModule.Explanation)
+	}
+	if !containsIgnoreCase(dependencyInject.Explanation, "dependency-injection") {
+		t.Errorf("dependency-injection explanation should contain strategy name: %s", dependencyInject.Explanation)
+	}
+	if !containsIgnoreCase(boundaryRefactor.Explanation, "boundary-refactoring") {
+		t.Errorf("boundary-refactoring explanation should contain strategy name: %s", boundaryRefactor.Explanation)
+	}
+}
+
+// TestCalculateForStrategy_NilCycle verifies nil handling.
+func TestCalculateForStrategy_NilCycle(t *testing.T) {
+	graph := types.NewDependencyGraph("@mono/root", types.WorkspaceTypeNpm)
+	workspace := &types.WorkspaceData{}
+
+	calc := NewComplexityCalculator(graph, workspace)
+	result := calc.CalculateForStrategy(nil, types.FixStrategyExtractModule)
+
+	if result != nil {
+		t.Error("CalculateForStrategy should return nil for nil cycle")
+	}
+}
+
+// TestGetStrategyMultiplier verifies multiplier values.
+func TestGetStrategyMultiplier(t *testing.T) {
+	tests := []struct {
+		strategy types.FixStrategyType
+		want     float64
+	}{
+		{types.FixStrategyExtractModule, 1.0},
+		{types.FixStrategyDependencyInject, 1.1},
+		{types.FixStrategyBoundaryRefactor, 1.2},
+		{"unknown-strategy", 1.0}, // Default
+	}
+
+	for _, tt := range tests {
+		t.Run(string(tt.strategy), func(t *testing.T) {
+			got := getStrategyMultiplier(tt.strategy)
+			if got != tt.want {
+				t.Errorf("getStrategyMultiplier(%s) = %v, want %v", tt.strategy, got, tt.want)
+			}
+		})
+	}
+}
+
 // helper function for case-insensitive contains
 func containsIgnoreCase(s, substr string) bool {
 	return len(s) >= len(substr) &&

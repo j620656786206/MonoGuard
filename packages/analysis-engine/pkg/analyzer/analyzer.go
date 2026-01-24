@@ -98,8 +98,8 @@ func (a *Analyzer) Analyze(workspace *types.WorkspaceData) (*types.AnalysisResul
 		strategies := fixGenerator.Generate(cycle)
 		for i := range strategies {
 			strategies[i].Guide = guideGenerator.Generate(cycle, &strategies[i])
-			// Calculate per-strategy complexity (reuse cycle complexity as base)
-			strategies[i].Complexity = complexityCalc.Calculate(cycle)
+			// Calculate per-strategy complexity with strategy-specific adjustments (AC6)
+			strategies[i].Complexity = complexityCalc.CalculateForStrategy(cycle, strategies[i].Type)
 		}
 		cycle.FixStrategies = strategies
 	}
@@ -185,8 +185,8 @@ func (a *Analyzer) AnalyzeWithSources(
 		strategies := fixGenerator.Generate(cycle)
 		for i := range strategies {
 			strategies[i].Guide = guideGenerator.Generate(cycle, &strategies[i])
-			// Calculate per-strategy complexity (reuse cycle complexity as base)
-			strategies[i].Complexity = complexityCalc.Calculate(cycle)
+			// Calculate per-strategy complexity with strategy-specific adjustments (AC6)
+			strategies[i].Complexity = complexityCalc.CalculateForStrategy(cycle, strategies[i].Type)
 		}
 		cycle.FixStrategies = strategies
 	}

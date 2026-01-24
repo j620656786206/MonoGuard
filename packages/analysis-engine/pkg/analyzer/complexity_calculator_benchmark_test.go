@@ -133,7 +133,7 @@ func BenchmarkComplexityCalculator_ExternalDeps(b *testing.B) {
 }
 
 // BenchmarkComplexityCalculator_200Packages benchmarks 200 package scenario.
-// Target: < 100ms as per AC4.
+// Target: < 100ms as per AC7.
 func BenchmarkComplexityCalculator_200Packages(b *testing.B) {
 	graph := types.NewDependencyGraph("@mono/root", types.WorkspaceTypeNpm)
 	workspace := &types.WorkspaceData{
@@ -166,5 +166,43 @@ func BenchmarkComplexityCalculator_200Packages(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_ = calc.Calculate(cycleInfo)
+	}
+}
+
+// BenchmarkComplexityCalculator_AC7Scenario benchmarks exact AC7 requirement:
+// "Given a workspace with 100 packages and 5 cycles, calculation completes in < 100ms"
+func BenchmarkComplexityCalculator_AC7Scenario(b *testing.B) {
+	graph := types.NewDependencyGraph("@mono/root", types.WorkspaceTypeNpm)
+	workspace := &types.WorkspaceData{
+		RootPath:      "@mono/root",
+		WorkspaceType: types.WorkspaceTypeNpm,
+		Packages:      make(map[string]*types.PackageInfo),
+	}
+
+	// Create exactly 100 packages
+	for i := 0; i < 100; i++ {
+		pkgName := fmt.Sprintf("@mono/pkg%d", i)
+		workspace.Packages[pkgName] = &types.PackageInfo{
+			Name:    pkgName,
+			Version: "1.0.0",
+		}
+	}
+
+	// Create 5 cycles of varying sizes (as per AC7)
+	cycles := []*types.CircularDependencyInfo{
+		{Cycle: []string{"@mono/pkg0", "@mono/pkg1", "@mono/pkg0"}, Depth: 2},
+		{Cycle: []string{"@mono/pkg10", "@mono/pkg11", "@mono/pkg12", "@mono/pkg10"}, Depth: 3},
+		{Cycle: []string{"@mono/pkg20", "@mono/pkg21", "@mono/pkg22", "@mono/pkg23", "@mono/pkg20"}, Depth: 4},
+		{Cycle: []string{"@mono/pkg30", "@mono/pkg31", "@mono/pkg32", "@mono/pkg30"}, Depth: 3},
+		{Cycle: []string{"@mono/pkg40", "@mono/pkg41", "@mono/pkg40"}, Depth: 2},
+	}
+
+	calc := NewComplexityCalculator(graph, workspace)
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for _, cycle := range cycles {
+			_ = calc.Calculate(cycle)
+		}
 	}
 }

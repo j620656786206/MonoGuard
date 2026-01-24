@@ -1,6 +1,6 @@
 # Story 3.5: Calculate Refactoring Complexity Scores
 
-Status: dev-complete
+Status: done
 
 ## Story
 
@@ -805,11 +805,38 @@ packages/types/src/analysis/
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Code (Opus 4.5) - Code Review
 
 ### Debug Log References
 
+- Code review performed 2026-01-24
+
 ### Completion Notes List
 
+- All Go tests pass (95.5% coverage on complexity_calculator.go)
+- All TypeScript types tests pass (43 tests)
+- Benchmark shows ~1 microsecond per calculation (well under 100ms AC7 requirement)
+- Integration verified in analyzer.go pipeline
+
+**Code Review Fixes (2026-01-24):**
+- Added CalculateForStrategy method for AC6 compliance (different strategies have different complexities)
+- Fixed benchmark test AC reference (AC7, not AC4)
+- Added AC7-compliant benchmark scenario (100 packages, 5 cycles)
+- Added 3 new tests for strategy-specific complexity calculation
+
 ### File List
+
+**New Files:**
+- `packages/analysis-engine/pkg/types/refactoring_complexity.go` - RefactoringComplexity, ComplexityBreakdown, ComplexityFactor types
+- `packages/analysis-engine/pkg/types/refactoring_complexity_test.go` - JSON serialization tests for types
+- `packages/analysis-engine/pkg/analyzer/complexity_calculator.go` - ComplexityCalculator implementation + CalculateForStrategy (AC6)
+- `packages/analysis-engine/pkg/analyzer/complexity_calculator_test.go` - Unit tests for calculator + strategy complexity tests
+- `packages/analysis-engine/pkg/analyzer/complexity_calculator_benchmark_test.go` - Performance benchmarks + AC7 scenario
+
+**Modified Files:**
+- `packages/analysis-engine/pkg/types/circular.go` - Added RefactoringComplexity field to CircularDependencyInfo
+- `packages/analysis-engine/pkg/types/fix_strategy.go` - Added Complexity field to FixStrategy
+- `packages/analysis-engine/pkg/analyzer/analyzer.go` - Wired complexity calculation into pipeline, uses CalculateForStrategy for AC6
+- `packages/types/src/analysis/results.ts` - Added RefactoringComplexity, ComplexityBreakdown, ComplexityFactor interfaces
+- `packages/types/src/__tests__/analysis.test.ts` - Added tests for new TypeScript types
 

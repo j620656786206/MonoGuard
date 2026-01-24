@@ -291,3 +291,78 @@ func generateComplexityExplanation(score int, breakdown *types.ComplexityBreakdo
 		breakdown.ChainDepth.Value,
 	)
 }
+
+// ========================================
+// Strategy-Specific Complexity (AC6)
+// ========================================
+
+// CalculateForStrategy computes complexity adjusted for a specific fix strategy.
+// Different strategies have different inherent complexity multipliers:
+// - extract-module: 1.0x (baseline - cleanest approach)
+// - dependency-injection: 1.1x (requires interface design)
+// - boundary-refactoring: 1.2x (most invasive, architectural changes)
+func (cc *ComplexityCalculator) CalculateForStrategy(cycle *types.CircularDependencyInfo, strategyType types.FixStrategyType) *types.RefactoringComplexity {
+	base := cc.Calculate(cycle)
+	if base == nil {
+		return nil
+	}
+
+	// Apply strategy-specific multiplier
+	multiplier := getStrategyMultiplier(strategyType)
+
+	// Adjust score with multiplier (keep within 1-10 bounds)
+	adjustedScore := int(math.Round(float64(base.Score) * multiplier))
+	if adjustedScore < 1 {
+		adjustedScore = 1
+	}
+	if adjustedScore > 10 {
+		adjustedScore = 10
+	}
+
+	// Return new complexity with adjusted score
+	return &types.RefactoringComplexity{
+		Score:         adjustedScore,
+		EstimatedTime: estimateTime(adjustedScore),
+		Breakdown:     base.Breakdown,
+		Explanation:   generateStrategyExplanation(adjustedScore, &base.Breakdown, strategyType),
+	}
+}
+
+// getStrategyMultiplier returns the complexity multiplier for a strategy type.
+func getStrategyMultiplier(strategyType types.FixStrategyType) float64 {
+	switch strategyType {
+	case types.FixStrategyExtractModule:
+		return 1.0 // Baseline - cleanest refactoring approach
+	case types.FixStrategyDependencyInject:
+		return 1.1 // Requires interface design and abstraction
+	case types.FixStrategyBoundaryRefactor:
+		return 1.2 // Most invasive, affects module boundaries
+	default:
+		return 1.0
+	}
+}
+
+// generateStrategyExplanation creates explanation including strategy context.
+func generateStrategyExplanation(score int, breakdown *types.ComplexityBreakdown, strategyType types.FixStrategyType) string {
+	var level string
+	switch {
+	case score <= 3:
+		level = "Straightforward"
+	case score <= 6:
+		level = "Moderate"
+	case score <= 8:
+		level = "Significant"
+	default:
+		level = "Complex"
+	}
+
+	strategyName := string(strategyType)
+	return fmt.Sprintf(
+		"%s refactoring via %s: %d files, %d imports, %d-level chain",
+		level,
+		strategyName,
+		breakdown.FilesAffected.Value,
+		breakdown.ImportsToChange.Value,
+		breakdown.ChainDepth.Value,
+	)
+}
