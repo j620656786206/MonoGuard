@@ -1,6 +1,6 @@
 # Story 3.7: Provide Before/After Fix Explanations
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -87,8 +87,8 @@ So that **I understand exactly what will change and can build confidence in the 
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Define BeforeAfterExplanation Types** (AC: #1, #2, #3, #4, #5, #6)
-  - [ ] 1.1 Create `pkg/types/before_after_explanation.go`:
+- [x] **Task 1: Define BeforeAfterExplanation Types** (AC: #1, #2, #3, #4, #5, #6)
+  - [x] 1.1 Create `pkg/types/before_after_explanation.go`:
     ```go
     package types
 
@@ -287,11 +287,11 @@ So that **I understand exactly what will change and can build confidence in the 
         WarningSeverityCritical WarningSeverity = "critical"
     )
     ```
-  - [ ] 1.2 Add JSON serialization tests in `pkg/types/before_after_explanation_test.go`
-  - [ ] 1.3 Ensure all JSON tags use camelCase
+  - [x] 1.2 Add JSON serialization tests in `pkg/types/before_after_explanation_test.go`
+  - [x] 1.3 Ensure all JSON tags use camelCase
 
-- [ ] **Task 2: Create BeforeAfterGenerator** (AC: #1, #2, #7)
-  - [ ] 2.1 Create `pkg/analyzer/before_after_generator.go`:
+- [x] **Task 2: Create BeforeAfterGenerator** (AC: #1, #2, #7)
+  - [x] 2.1 Create `pkg/analyzer/before_after_generator.go`:
     ```go
     package analyzer
 
@@ -342,11 +342,11 @@ So that **I understand exactly what will change and can build confidence in the 
         strategy *types.FixStrategy,
     ) []types.SideEffectWarning
     ```
-  - [ ] 2.2 Implement generator dispatch logic
-  - [ ] 2.3 Create comprehensive tests in `pkg/analyzer/before_after_generator_test.go`
+  - [x] 2.2 Implement generator dispatch logic
+  - [x] 2.3 Create comprehensive tests in `pkg/analyzer/before_after_generator_test.go`
 
-- [ ] **Task 3: Implement Current State Diagram Generation** (AC: #1)
-  - [ ] 3.1 Implement `generateCurrentState`:
+- [x] **Task 3: Implement Current State Diagram Generation** (AC: #1)
+  - [x] 3.1 Implement `generateCurrentState`:
     ```go
     func (bag *BeforeAfterGenerator) generateCurrentState(cycle *types.CircularDependencyInfo) *types.StateDiagram {
         nodes := []types.DiagramNode{}
@@ -391,10 +391,10 @@ So that **I understand exactly what will change and can build confidence in the 
         }
     }
     ```
-  - [ ] 3.2 Add tests for current state generation
+  - [x] 3.2 Add tests for current state generation
 
-- [ ] **Task 4: Implement Proposed State Diagram Generation** (AC: #2)
-  - [ ] 4.1 Implement `generateProposedState` for Extract Module strategy:
+- [x] **Task 4: Implement Proposed State Diagram Generation** (AC: #2)
+  - [x] 4.1 Implement `generateProposedState` for Extract Module strategy:
     ```go
     func (bag *BeforeAfterGenerator) generateProposedStateExtractModule(
         cycle *types.CircularDependencyInfo,
@@ -444,12 +444,12 @@ So that **I understand exactly what will change and can build confidence in the 
         }
     }
     ```
-  - [ ] 4.2 Implement `generateProposedState` for Dependency Injection strategy
-  - [ ] 4.3 Implement `generateProposedState` for Boundary Refactoring strategy
-  - [ ] 4.4 Add tests for proposed state generation
+  - [x] 4.2 Implement `generateProposedState` for Dependency Injection strategy
+  - [x] 4.3 Implement `generateProposedState` for Boundary Refactoring strategy
+  - [x] 4.4 Add tests for proposed state generation
 
-- [ ] **Task 5: Implement Package.json Diff Generation** (AC: #3)
-  - [ ] 5.1 Implement `generatePackageJsonDiffs`:
+- [x] **Task 5: Implement Package.json Diff Generation** (AC: #3)
+  - [x] 5.1 Implement `generatePackageJsonDiffs`:
     ```go
     func (bag *BeforeAfterGenerator) generatePackageJsonDiffs(strategy *types.FixStrategy) []types.PackageJsonDiff {
         diffs := []types.PackageJsonDiff{}
@@ -498,10 +498,10 @@ So that **I understand exactly what will change and can build confidence in the 
         return diffs
     }
     ```
-  - [ ] 5.2 Add tests for package.json diff generation
+  - [x] 5.2 Add tests for package.json diff generation
 
-- [ ] **Task 6: Implement Import Diff Generation** (AC: #4)
-  - [ ] 6.1 Implement `generateImportDiffs`:
+- [x] **Task 6: Implement Import Diff Generation** (AC: #4)
+  - [x] 6.1 Implement `generateImportDiffs`:
     ```go
     func (bag *BeforeAfterGenerator) generateImportDiffs(
         cycle *types.CircularDependencyInfo,
@@ -563,10 +563,10 @@ So that **I understand exactly what will change and can build confidence in the 
         return diffs
     }
     ```
-  - [ ] 6.2 Add tests for import diff generation
+  - [x] 6.2 Add tests for import diff generation
 
-- [ ] **Task 7: Implement Plain Language Explanation** (AC: #5)
-  - [ ] 7.1 Implement `generateExplanation`:
+- [x] **Task 7: Implement Plain Language Explanation** (AC: #5)
+  - [x] 7.1 Implement `generateExplanation`:
     ```go
     func (bag *BeforeAfterGenerator) generateExplanation(
         cycle *types.CircularDependencyInfo,
@@ -633,10 +633,10 @@ So that **I understand exactly what will change and can build confidence in the 
         }
     }
     ```
-  - [ ] 7.2 Add tests for explanation generation
+  - [x] 7.2 Add tests for explanation generation
 
-- [ ] **Task 8: Implement Side Effect Warnings** (AC: #6)
-  - [ ] 8.1 Implement `generateWarnings`:
+- [x] **Task 8: Implement Side Effect Warnings** (AC: #6)
+  - [x] 8.1 Implement `generateWarnings`:
     ```go
     func (bag *BeforeAfterGenerator) generateWarnings(
         cycle *types.CircularDependencyInfo,
@@ -719,10 +719,10 @@ So that **I understand exactly what will change and can build confidence in the 
         return warnings
     }
     ```
-  - [ ] 8.2 Add tests for warning generation
+  - [x] 8.2 Add tests for warning generation
 
-- [ ] **Task 9: Implement Main Generate Function** (AC: #1, #2, #3, #4, #5, #6)
-  - [ ] 9.1 Implement `Generate`:
+- [x] **Task 9: Implement Main Generate Function** (AC: #1, #2, #3, #4, #5, #6)
+  - [x] 9.1 Implement `Generate`:
     ```go
     func (bag *BeforeAfterGenerator) Generate(
         cycle *types.CircularDependencyInfo,
@@ -738,10 +738,10 @@ So that **I understand exactly what will change and can build confidence in the 
         }
     }
     ```
-  - [ ] 9.2 Add comprehensive integration tests
+  - [x] 9.2 Add comprehensive integration tests
 
-- [ ] **Task 10: Integrate with FixStrategy** (AC: #7)
-  - [ ] 10.1 Update `pkg/types/fix_strategy.go`:
+- [x] **Task 10: Integrate with FixStrategy** (AC: #7)
+  - [x] 10.1 Update `pkg/types/fix_strategy.go`:
     ```go
     type FixStrategy struct {
         Type                   FixStrategyType         `json:"type"`
@@ -758,10 +758,10 @@ So that **I understand exactly what will change and can build confidence in the 
         BeforeAfterExplanation *BeforeAfterExplanation `json:"beforeAfterExplanation,omitempty"` // NEW Story 3.7
     }
     ```
-  - [ ] 10.2 Verify existing tests still pass
+  - [x] 10.2 Verify existing tests still pass
 
-- [ ] **Task 11: Wire to Analyzer Pipeline** (AC: all)
-  - [ ] 11.1 Update `pkg/analyzer/analyzer.go`:
+- [x] **Task 11: Wire to Analyzer Pipeline** (AC: all)
+  - [x] 11.1 Update `pkg/analyzer/analyzer.go`:
     ```go
     func (a *Analyzer) AnalyzeWithSources(...) (*types.AnalysisResult, error) {
         // ... existing analysis ...
@@ -788,10 +788,10 @@ So that **I understand exactly what will change and can build confidence in the 
         return result, nil
     }
     ```
-  - [ ] 11.2 Update analyzer tests
+  - [x] 11.2 Update analyzer tests
 
-- [ ] **Task 12: Update TypeScript Types** (AC: #7)
-  - [ ] 12.1 Update `packages/types/src/analysis/results.ts`:
+- [x] **Task 12: Update TypeScript Types** (AC: #7)
+  - [x] 12.1 Update `packages/types/src/analysis/results.ts`:
     ```typescript
     export interface BeforeAfterExplanation {
       /** Dependency graph before the fix */
@@ -925,11 +925,11 @@ So that **I understand exactly what will change and can build confidence in the 
       beforeAfterExplanation?: BeforeAfterExplanation;
     }
     ```
-  - [ ] 12.2 Run `pnpm nx build types` to verify
-  - [ ] 12.3 Add type tests for BeforeAfterExplanation
+  - [x] 12.2 Run `pnpm nx build types` to verify
+  - [x] 12.3 Add type tests for BeforeAfterExplanation
 
-- [ ] **Task 13: Performance Testing** (AC: #8)
-  - [ ] 13.1 Create `pkg/analyzer/before_after_generator_benchmark_test.go`:
+- [x] **Task 13: Performance Testing** (AC: #8)
+  - [x] 13.1 Create `pkg/analyzer/before_after_generator_benchmark_test.go`:
     ```go
     func BenchmarkBeforeAfterGeneration(b *testing.B) {
         graph := generateGraph(100)
@@ -947,14 +947,14 @@ So that **I understand exactly what will change and can build confidence in the 
         }
     }
     ```
-  - [ ] 13.2 Verify < 300ms for 100 packages with 5 cycles
-  - [ ] 13.3 Document actual performance in completion notes
+  - [x] 13.2 Verify < 300ms for 100 packages with 5 cycles
+  - [x] 13.3 Document actual performance in completion notes
 
-- [ ] **Task 14: Integration Verification** (AC: all)
-  - [ ] 14.1 Run all tests: `cd packages/analysis-engine && make test`
-  - [ ] 14.2 Build WASM: `pnpm nx build @monoguard/analysis-engine`
-  - [ ] 14.3 Run affected CI checks: `pnpm nx affected --target=lint,test,type-check --base=main`
-  - [ ] 14.4 Verify JSON output includes beforeAfterExplanation field
+- [x] **Task 14: Integration Verification** (AC: all)
+  - [x] 14.1 Run all tests: `cd packages/analysis-engine && make test`
+  - [x] 14.2 Build WASM: `pnpm nx build @monoguard/analysis-engine`
+  - [x] 14.3 Run affected CI checks: `pnpm nx affected --target=lint,test,type-check --base=main`
+  - [x] 14.4 Verify JSON output includes beforeAfterExplanation field
 
 ## Dev Notes
 
@@ -1219,10 +1219,45 @@ const edges = stateDiagram.edges.map(e => ({
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.5 (claude-opus-4-5-20251101)
 
 ### Debug Log References
 
+N/A
+
 ### Completion Notes List
 
+1. **All ACs Implemented:**
+   - AC1: Current state diagram generation with cycle highlighting
+   - AC2: Proposed state diagram generation for all 3 strategy types
+   - AC3: Package.json diff generation with structured format
+   - AC4: Import diff generation using ImportTraces (when available) with line numbers
+   - AC5: Plain language explanations with confidence scores
+   - AC6: Side effect warnings with severity levels (info/warning/critical)
+   - AC7: BeforeAfterExplanation integrated into FixStrategy
+   - AC8: Performance verified at ~0.07ms (well under 300ms requirement)
+
+2. **Key Implementation Details:**
+   - BeforeAfterGenerator follows the same pattern as FixGuideGenerator and ComplexityCalculator
+   - Impact assessment is now calculated before fix strategies to enable warnings to use ImpactAssessment data
+   - D3.js-compatible StateDiagram with nodes (id, label, nodeType) and edges (from, to, edgeType)
+   - TypeScript types added to @monoguard/types for full cross-language compatibility
+
+3. **Performance Results:**
+   - Standard benchmark (5 cycles × 3 strategies): ~70,887 ns/op (~0.07ms)
+   - Large cycles benchmark (10 packages per cycle): ~163,298 ns/op (~0.16ms)
+   - Both well under the 300ms AC#8 requirement
+
 ### File List
+
+**New Files:**
+- `packages/analysis-engine/pkg/types/before_after_explanation.go` - Type definitions
+- `packages/analysis-engine/pkg/types/before_after_explanation_test.go` - Type tests
+- `packages/analysis-engine/pkg/analyzer/before_after_generator.go` - Generator implementation
+- `packages/analysis-engine/pkg/analyzer/before_after_generator_test.go` - Generator tests
+- `packages/analysis-engine/pkg/analyzer/before_after_generator_benchmark_test.go` - Performance benchmarks
+
+**Modified Files:**
+- `packages/analysis-engine/pkg/types/fix_strategy.go` - Added BeforeAfterExplanation field
+- `packages/analysis-engine/pkg/analyzer/analyzer.go` - Wired generator into pipeline
+- `packages/types/src/analysis/results.ts` - Added TypeScript types for Story 3.7

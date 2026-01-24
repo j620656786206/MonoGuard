@@ -158,6 +158,8 @@ export interface FixStrategy {
   guide?: FixGuide
   /** Detailed refactoring complexity for this strategy (Story 3.5) */
   complexity?: RefactoringComplexity
+  /** Before/after comparison data for visualization (Story 3.7) */
+  beforeAfterExplanation?: BeforeAfterExplanation
 }
 
 /**
@@ -529,6 +531,197 @@ export interface RippleLayer {
   /** Count of packages */
   count: number
 }
+
+/**
+ * BeforeAfterExplanation - Visual comparison data for fix strategies
+ *
+ * Matches Go: pkg/types/before_after_explanation.go (Story 3.7)
+ */
+export interface BeforeAfterExplanation {
+  /** Dependency graph before the fix */
+  currentState: StateDiagram
+  /** Dependency graph after the fix */
+  proposedState: StateDiagram
+  /** Changes required to package.json files */
+  packageJsonDiffs: PackageJsonDiff[]
+  /** Changes required to import statements */
+  importDiffs: ImportDiff[]
+  /** Human-readable explanation */
+  explanation: FixExplanation
+  /** Potential side effects */
+  warnings: SideEffectWarning[]
+}
+
+/**
+ * StateDiagram - D3.js-compatible visualization data
+ *
+ * Matches Go: pkg/types/before_after_explanation.go (Story 3.7)
+ */
+export interface StateDiagram {
+  /** Packages in the diagram */
+  nodes: DiagramNode[]
+  /** Dependency relationships */
+  edges: DiagramEdge[]
+  /** The cycle path (only in currentState) */
+  highlightedPath?: string[]
+  /** Whether this state has no cycle */
+  cycleResolved: boolean
+}
+
+/**
+ * DiagramNode - Package in the visualization
+ *
+ * Matches Go: pkg/types/before_after_explanation.go (Story 3.7)
+ */
+export interface DiagramNode {
+  /** Package name (used for edge references) */
+  id: string
+  /** Display name */
+  label: string
+  /** Whether this package is part of the cycle */
+  isInCycle: boolean
+  /** Whether this package is newly created by the fix */
+  isNew: boolean
+  /** Node category for visualization styling */
+  nodeType: DiagramNodeType
+}
+
+/**
+ * DiagramNodeType - Categorizes nodes for visualization styling
+ *
+ * Matches Go: pkg/types/before_after_explanation.go (Story 3.7)
+ */
+export type DiagramNodeType = 'cycle' | 'affected' | 'new' | 'unchanged'
+
+/**
+ * DiagramEdge - Dependency relationship
+ *
+ * Matches Go: pkg/types/before_after_explanation.go (Story 3.7)
+ */
+export interface DiagramEdge {
+  /** Dependent package */
+  from: string
+  /** Dependency */
+  to: string
+  /** Whether this edge is part of the cycle */
+  isInCycle: boolean
+  /** Whether this edge will be removed by the fix */
+  isRemoved: boolean
+  /** Whether this edge is added by the fix */
+  isNew: boolean
+  /** Edge category for visualization styling */
+  edgeType: DiagramEdgeType
+}
+
+/**
+ * DiagramEdgeType - Categorizes edges for visualization styling
+ *
+ * Matches Go: pkg/types/before_after_explanation.go (Story 3.7)
+ */
+export type DiagramEdgeType = 'cycle' | 'removed' | 'new' | 'unchanged'
+
+/**
+ * PackageJsonDiff - Changes to a package.json file
+ *
+ * Matches Go: pkg/types/before_after_explanation.go (Story 3.7)
+ */
+export interface PackageJsonDiff {
+  /** Package being modified */
+  packageName: string
+  /** Relative path to package.json */
+  filePath: string
+  /** Dependencies to add */
+  dependenciesToAdd: DependencyChange[]
+  /** Dependencies to remove */
+  dependenciesToRemove: DependencyChange[]
+  /** Human-readable change description */
+  summary: string
+}
+
+/**
+ * DependencyChange - Dependency addition or removal
+ *
+ * Matches Go: pkg/types/before_after_explanation.go (Story 3.7)
+ */
+export interface DependencyChange {
+  /** Dependency package name */
+  name: string
+  /** Version specifier (e.g., "workspace:*", "^1.0.0") */
+  version?: string
+  /** dependencies vs devDependencies */
+  dependencyType: string
+}
+
+/**
+ * ImportDiff - Changes to import statements in a file
+ *
+ * Matches Go: pkg/types/before_after_explanation.go (Story 3.7)
+ */
+export interface ImportDiff {
+  /** File containing imports */
+  filePath: string
+  /** Package containing this file */
+  packageName: string
+  /** Import statements to remove */
+  importsToRemove: ImportChange[]
+  /** Import statements to add */
+  importsToAdd: ImportChange[]
+  /** Location hint (if available from ImportTraces) */
+  lineNumber?: number
+}
+
+/**
+ * ImportChange - Import statement change
+ *
+ * Matches Go: pkg/types/before_after_explanation.go (Story 3.7)
+ */
+export interface ImportChange {
+  /** Full import statement */
+  statement: string
+  /** Package being imported from */
+  fromPackage: string
+  /** What is being imported */
+  importedNames?: string[]
+}
+
+/**
+ * FixExplanation - Human-readable explanation of the fix
+ *
+ * Matches Go: pkg/types/before_after_explanation.go (Story 3.7)
+ */
+export interface FixExplanation {
+  /** 1-2 sentence overview */
+  summary: string
+  /** How this resolves the cycle */
+  whyItWorks: string
+  /** What code changes are required */
+  highLevelChanges: string[]
+  /** Confidence in the fix (0.0-1.0) */
+  confidence: number
+}
+
+/**
+ * SideEffectWarning - Potential side effect of the fix
+ *
+ * Matches Go: pkg/types/before_after_explanation.go (Story 3.7)
+ */
+export interface SideEffectWarning {
+  /** Importance level: info, warning, critical */
+  severity: WarningSeverity
+  /** Short description */
+  title: string
+  /** Detailed description */
+  description: string
+  /** Packages that may be affected */
+  affectedPackages?: string[]
+}
+
+/**
+ * WarningSeverity - Importance of a warning
+ *
+ * Matches Go: pkg/types/before_after_explanation.go (Story 3.7)
+ */
+export type WarningSeverity = 'info' | 'warning' | 'critical'
 
 // Re-export RiskLevel from common for analysis module convenience
 // Note: The RiskLevel in common.ts uses uppercase enum values (LOW, MEDIUM, etc.)

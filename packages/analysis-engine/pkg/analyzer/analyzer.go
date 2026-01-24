@@ -10,6 +10,7 @@
 //   - Fix strategy recommendations for circular dependencies (Story 3.3)
 //   - Refactoring complexity calculation (Story 3.5)
 //   - Impact assessment for circular dependencies (Story 3.6)
+//   - Before/after fix explanations for circular dependencies (Story 3.7)
 package analyzer
 
 import (
@@ -85,12 +86,21 @@ func (a *Analyzer) Analyze(workspace *types.WorkspaceData) (*types.AnalysisResul
 		cycle.RootCause = rootCauseAnalyzer.Analyze(cycle)
 	}
 
+	// Story 3.6: Calculate impact assessment for each cycle
+	// (Computed before fix strategies so BeforeAfterExplanation can use ImpactAssessment)
+	impactAnalyzer := NewImpactAnalyzer(filteredGraph, workspace)
+	for _, cycle := range cycles {
+		cycle.ImpactAssessment = impactAnalyzer.Analyze(cycle)
+	}
+
 	// Story 3.3: Generate fix strategies for cycles
 	// Story 3.4: Generate step-by-step guides for each strategy
 	// Story 3.5: Calculate refactoring complexity for cycles and strategies
+	// Story 3.7: Generate before/after explanations for each strategy
 	fixGenerator := NewFixStrategyGenerator(filteredGraph, workspace)
 	guideGenerator := NewFixGuideGenerator(workspace)
 	complexityCalc := NewComplexityCalculator(filteredGraph, workspace)
+	beforeAfterGenerator := NewBeforeAfterGenerator(filteredGraph, workspace)
 	for _, cycle := range cycles {
 		// Calculate cycle-level complexity
 		cycle.RefactoringComplexity = complexityCalc.Calculate(cycle)
@@ -101,14 +111,10 @@ func (a *Analyzer) Analyze(workspace *types.WorkspaceData) (*types.AnalysisResul
 			strategies[i].Guide = guideGenerator.Generate(cycle, &strategies[i])
 			// Calculate per-strategy complexity with strategy-specific adjustments (AC6)
 			strategies[i].Complexity = complexityCalc.CalculateForStrategy(cycle, strategies[i].Type)
+			// Story 3.7: Generate before/after explanation for each strategy
+			strategies[i].BeforeAfterExplanation = beforeAfterGenerator.Generate(cycle, &strategies[i])
 		}
 		cycle.FixStrategies = strategies
-	}
-
-	// Story 3.6: Calculate impact assessment for each cycle
-	impactAnalyzer := NewImpactAnalyzer(filteredGraph, workspace)
-	for _, cycle := range cycles {
-		cycle.ImpactAssessment = impactAnalyzer.Analyze(cycle)
 	}
 
 	// Detect version conflicts (Story 2.4)
@@ -178,12 +184,21 @@ func (a *Analyzer) AnalyzeWithSources(
 		cycle.ImportTraces = importTracer.Trace(cycle)
 	}
 
+	// Story 3.6: Calculate impact assessment for each cycle
+	// (Computed before fix strategies so BeforeAfterExplanation can use ImpactAssessment)
+	impactAnalyzer := NewImpactAnalyzer(filteredGraph, workspace)
+	for _, cycle := range cycles {
+		cycle.ImpactAssessment = impactAnalyzer.Analyze(cycle)
+	}
+
 	// Story 3.3: Generate fix strategies for cycles
 	// Story 3.4: Generate step-by-step guides for each strategy
 	// Story 3.5: Calculate refactoring complexity for cycles and strategies
+	// Story 3.7: Generate before/after explanations for each strategy
 	fixGenerator := NewFixStrategyGenerator(filteredGraph, workspace)
 	guideGenerator := NewFixGuideGenerator(workspace)
 	complexityCalc := NewComplexityCalculator(filteredGraph, workspace)
+	beforeAfterGenerator := NewBeforeAfterGenerator(filteredGraph, workspace)
 	for _, cycle := range cycles {
 		// Calculate cycle-level complexity
 		cycle.RefactoringComplexity = complexityCalc.Calculate(cycle)
@@ -194,14 +209,10 @@ func (a *Analyzer) AnalyzeWithSources(
 			strategies[i].Guide = guideGenerator.Generate(cycle, &strategies[i])
 			// Calculate per-strategy complexity with strategy-specific adjustments (AC6)
 			strategies[i].Complexity = complexityCalc.CalculateForStrategy(cycle, strategies[i].Type)
+			// Story 3.7: Generate before/after explanation for each strategy
+			strategies[i].BeforeAfterExplanation = beforeAfterGenerator.Generate(cycle, &strategies[i])
 		}
 		cycle.FixStrategies = strategies
-	}
-
-	// Story 3.6: Calculate impact assessment for each cycle
-	impactAnalyzer := NewImpactAnalyzer(filteredGraph, workspace)
-	for _, cycle := range cycles {
-		cycle.ImpactAssessment = impactAnalyzer.Analyze(cycle)
 	}
 
 	// Detect version conflicts (Story 2.4)

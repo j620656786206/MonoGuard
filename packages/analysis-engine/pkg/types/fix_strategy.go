@@ -44,6 +44,9 @@ type FixStrategy struct {
 
 	// Complexity is the detailed refactoring complexity for this strategy (Story 3.5)
 	Complexity *RefactoringComplexity `json:"complexity,omitempty"`
+
+	// BeforeAfterExplanation provides visual comparison data (Story 3.7)
+	BeforeAfterExplanation *BeforeAfterExplanation `json:"beforeAfterExplanation,omitempty"`
 }
 
 // FixStrategyType identifies the approach to resolve the cycle.
