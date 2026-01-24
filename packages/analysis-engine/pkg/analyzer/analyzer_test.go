@@ -1578,3 +1578,153 @@ func TestAnalyzeWithSourcesIncludesFixStrategies(t *testing.T) {
 		t.Error("RootCause should be populated")
 	}
 }
+
+// TestAnalyzeCyclesHaveImpactAssessment verifies that circular dependencies have impact assessment (Story 3.6).
+func TestAnalyzeCyclesHaveImpactAssessment(t *testing.T) {
+	a := NewAnalyzer()
+	// Create workspace with a cycle: A → B → A, and C depending on A
+	workspace := &types.WorkspaceData{
+		RootPath:      "/workspace",
+		WorkspaceType: types.WorkspaceTypePnpm,
+		Packages: map[string]*types.PackageInfo{
+			"@mono/app": {
+				Name:    "@mono/app",
+				Version: "1.0.0",
+				Path:    "apps/web",
+				Dependencies: map[string]string{
+					"@mono/lib": "^1.0.0",
+				},
+				DevDependencies:  map[string]string{},
+				PeerDependencies: map[string]string{},
+			},
+			"@mono/lib": {
+				Name:    "@mono/lib",
+				Version: "1.0.0",
+				Path:    "packages/lib",
+				Dependencies: map[string]string{
+					"@mono/app": "^1.0.0", // Creates cycle
+				},
+				DevDependencies:  map[string]string{},
+				PeerDependencies: map[string]string{},
+			},
+			"@mono/dashboard": {
+				Name:    "@mono/dashboard",
+				Version: "1.0.0",
+				Path:    "apps/dashboard",
+				Dependencies: map[string]string{
+					"@mono/app": "^1.0.0", // Depends on cycle
+				},
+				DevDependencies:  map[string]string{},
+				PeerDependencies: map[string]string{},
+			},
+		},
+	}
+
+	result, err := a.Analyze(workspace)
+	if err != nil {
+		t.Fatalf("Analyze failed: %v", err)
+	}
+
+	if len(result.CircularDependencies) != 1 {
+		t.Fatalf("CircularDependencies = %d, want 1", len(result.CircularDependencies))
+	}
+
+	cycle := result.CircularDependencies[0]
+
+	// ImpactAssessment should be populated (Story 3.6)
+	if cycle.ImpactAssessment == nil {
+		t.Fatal("ImpactAssessment should be populated")
+	}
+
+	// Verify ImpactAssessment fields
+	if len(cycle.ImpactAssessment.DirectParticipants) != 2 {
+		t.Errorf("DirectParticipants = %d, want 2", len(cycle.ImpactAssessment.DirectParticipants))
+	}
+
+	// Dashboard depends on app which is in the cycle
+	if len(cycle.ImpactAssessment.IndirectDependents) != 1 {
+		t.Errorf("IndirectDependents = %d, want 1", len(cycle.ImpactAssessment.IndirectDependents))
+	}
+
+	// Total affected should be 3 (2 direct + 1 indirect)
+	if cycle.ImpactAssessment.TotalAffected != 3 {
+		t.Errorf("TotalAffected = %d, want 3", cycle.ImpactAssessment.TotalAffected)
+	}
+
+	// 3/3 = 100% affected
+	if cycle.ImpactAssessment.AffectedPercentageDisplay != "100%" {
+		t.Errorf("AffectedPercentageDisplay = %s, want 100%%", cycle.ImpactAssessment.AffectedPercentageDisplay)
+	}
+
+	// Should be critical (>50% affected)
+	if cycle.ImpactAssessment.RiskLevel != types.RiskLevelCritical {
+		t.Errorf("RiskLevel = %s, want critical", cycle.ImpactAssessment.RiskLevel)
+	}
+
+	// Ripple effect should be populated
+	if cycle.ImpactAssessment.RippleEffect == nil {
+		t.Error("RippleEffect should be populated")
+	}
+
+	if cycle.ImpactAssessment.RippleEffect.TotalLayers < 1 {
+		t.Errorf("TotalLayers = %d, want >= 1", cycle.ImpactAssessment.RippleEffect.TotalLayers)
+	}
+}
+
+// TestAnalyzeWithSourcesIncludesImpactAssessment verifies impact assessment with source files (Story 3.6).
+func TestAnalyzeWithSourcesIncludesImpactAssessment(t *testing.T) {
+	a := NewAnalyzer()
+	workspace := &types.WorkspaceData{
+		RootPath:      "/workspace",
+		WorkspaceType: types.WorkspaceTypePnpm,
+		Packages: map[string]*types.PackageInfo{
+			"@mono/ui": {
+				Name:    "@mono/ui",
+				Version: "1.0.0",
+				Path:    "packages/ui",
+				Dependencies: map[string]string{
+					"@mono/api": "^1.0.0",
+				},
+				DevDependencies:  map[string]string{},
+				PeerDependencies: map[string]string{},
+			},
+			"@mono/api": {
+				Name:    "@mono/api",
+				Version: "1.0.0",
+				Path:    "packages/api",
+				Dependencies: map[string]string{
+					"@mono/ui": "^1.0.0", // Creates cycle
+				},
+				DevDependencies:  map[string]string{},
+				PeerDependencies: map[string]string{},
+			},
+		},
+	}
+
+	sourceFiles := map[string][]byte{
+		"packages/ui/src/index.ts":  []byte(`import { api } from '@mono/api';`),
+		"packages/api/src/index.ts": []byte(`import { ui } from '@mono/ui';`),
+	}
+
+	result, err := a.AnalyzeWithSources(workspace, sourceFiles)
+	if err != nil {
+		t.Fatalf("AnalyzeWithSources failed: %v", err)
+	}
+
+	if len(result.CircularDependencies) != 1 {
+		t.Fatalf("CircularDependencies = %d, want 1", len(result.CircularDependencies))
+	}
+
+	cycle := result.CircularDependencies[0]
+
+	// ImpactAssessment should be populated for AnalyzeWithSources (Story 3.6)
+	if cycle.ImpactAssessment == nil {
+		t.Error("ImpactAssessment should be populated for AnalyzeWithSources")
+	}
+
+	// All fields should work together
+	if cycle.ImpactAssessment != nil && cycle.FixStrategies != nil && cycle.RootCause != nil {
+		// Verify all Story 3.x enrichments work together
+		t.Log("All Story 3.x enrichments (RootCause, FixStrategies, ImpactAssessment) are populated")
+	}
+}

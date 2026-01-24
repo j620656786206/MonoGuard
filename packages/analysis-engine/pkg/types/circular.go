@@ -21,6 +21,7 @@ type CircularDependencyInfo struct {
 	RootCause             *RootCauseAnalysis     `json:"rootCause,omitempty"`              // Story 3.1: Optional root cause analysis
 	ImportTraces          []ImportTrace          `json:"importTraces,omitempty"`           // Story 3.2: Import statements forming the cycle
 	FixStrategies         []FixStrategy          `json:"fixStrategies,omitempty"`          // Story 3.3: Recommended fix strategies
+	ImpactAssessment      *ImpactAssessment      `json:"impactAssessment,omitempty"`       // Story 3.6: Impact assessment
 }
 
 // CircularType classifies the cycle length.

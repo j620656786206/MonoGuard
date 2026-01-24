@@ -9,6 +9,7 @@
 //   - Import statement tracing for circular dependencies (Story 3.2)
 //   - Fix strategy recommendations for circular dependencies (Story 3.3)
 //   - Refactoring complexity calculation (Story 3.5)
+//   - Impact assessment for circular dependencies (Story 3.6)
 package analyzer
 
 import (
@@ -104,6 +105,12 @@ func (a *Analyzer) Analyze(workspace *types.WorkspaceData) (*types.AnalysisResul
 		cycle.FixStrategies = strategies
 	}
 
+	// Story 3.6: Calculate impact assessment for each cycle
+	impactAnalyzer := NewImpactAnalyzer(filteredGraph, workspace)
+	for _, cycle := range cycles {
+		cycle.ImpactAssessment = impactAnalyzer.Analyze(cycle)
+	}
+
 	// Detect version conflicts (Story 2.4)
 	// Story 2.6: Use filtered graph to exclude excluded packages
 	conflictDetector := NewConflictDetector(filteredGraph)
@@ -189,6 +196,12 @@ func (a *Analyzer) AnalyzeWithSources(
 			strategies[i].Complexity = complexityCalc.CalculateForStrategy(cycle, strategies[i].Type)
 		}
 		cycle.FixStrategies = strategies
+	}
+
+	// Story 3.6: Calculate impact assessment for each cycle
+	impactAnalyzer := NewImpactAnalyzer(filteredGraph, workspace)
+	for _, cycle := range cycles {
+		cycle.ImpactAssessment = impactAnalyzer.Analyze(cycle)
 	}
 
 	// Detect version conflicts (Story 2.4)

@@ -53,6 +53,8 @@ export interface CircularDependencyInfo {
   importTraces?: ImportTrace[]
   /** Recommended fix strategies, sorted by suitability (Story 3.3) */
   fixStrategies?: FixStrategy[]
+  /** Impact assessment with blast radius analysis (Story 3.6) */
+  impactAssessment?: ImpactAssessment
 }
 
 /**
@@ -461,6 +463,77 @@ export interface ComplexityFactor {
   /** What this factor measures */
   description: string
 }
+
+/**
+ * ImpactAssessment - Blast radius analysis for a circular dependency
+ *
+ * Matches Go: pkg/types/impact_assessment.go (Story 3.6)
+ */
+export interface ImpactAssessment {
+  /** Packages directly in the cycle */
+  directParticipants: string[]
+  /** Packages that depend on cycle participants */
+  indirectDependents: IndirectDependent[]
+  /** Count of all affected packages (direct + indirect) */
+  totalAffected: number
+  /** Proportion of workspace affected (0.0-1.0) */
+  affectedPercentage: number
+  /** Human-readable percentage (e.g., "25%") */
+  affectedPercentageDisplay: string
+  /** Impact severity classification: critical, high, medium, low */
+  riskLevel: 'critical' | 'high' | 'medium' | 'low'
+  /** Explanation of risk classification */
+  riskExplanation: string
+  /** Visualization-ready data */
+  rippleEffect?: RippleEffect
+}
+
+/**
+ * IndirectDependent - Package that depends on a cycle participant
+ *
+ * Matches Go: pkg/types/impact_assessment.go (Story 3.6)
+ */
+export interface IndirectDependent {
+  /** The affected package */
+  packageName: string
+  /** Which cycle participant this package depends on */
+  dependsOn: string
+  /** Hops from the cycle (1 = direct dependent) */
+  distance: number
+  /** Full path from cycle to this package */
+  dependencyPath: string[]
+}
+
+/**
+ * RippleEffect - Data for visualization
+ *
+ * Matches Go: pkg/types/impact_assessment.go (Story 3.6)
+ */
+export interface RippleEffect {
+  /** Packages grouped by distance from cycle */
+  layers: RippleLayer[]
+  /** Maximum distance from cycle */
+  totalLayers: number
+}
+
+/**
+ * RippleLayer - Packages at a specific distance from the cycle
+ *
+ * Matches Go: pkg/types/impact_assessment.go (Story 3.6)
+ */
+export interface RippleLayer {
+  /** Distance from cycle (0 = direct participants) */
+  distance: number
+  /** Packages at this distance */
+  packages: string[]
+  /** Count of packages */
+  count: number
+}
+
+// Re-export RiskLevel from common for analysis module convenience
+// Note: The RiskLevel in common.ts uses uppercase enum values (LOW, MEDIUM, etc.)
+// but the JSON serialization uses lowercase ('low', 'medium', etc.)
+// Import from common.ts or use the literal type values directly
 
 // Re-export for convenience
 export type { WorkspaceType } from './graph'

@@ -10,10 +10,14 @@ import type {
   EffortLevel,
   FixStrategy,
   FixStrategyType,
+  ImpactAssessment,
   ImportTrace,
   ImportType,
+  IndirectDependent,
   PackageNode,
   RefactoringComplexity,
+  RippleEffect,
+  RippleLayer,
   RootCauseAnalysis,
   RootCauseEdge,
 } from '../analysis'
@@ -897,5 +901,160 @@ describe('FixStrategy with Complexity', () => {
     }
 
     expect(strategy.complexity).toBeUndefined()
+  })
+})
+
+describe('ImpactAssessment (Story 3.6)', () => {
+  it('can represent full impact assessment', () => {
+    const impact: ImpactAssessment = {
+      directParticipants: ['@mono/ui', '@mono/api', '@mono/core'],
+      indirectDependents: [
+        {
+          packageName: '@mono/app',
+          dependsOn: '@mono/ui',
+          distance: 1,
+          dependencyPath: ['@mono/ui', '@mono/app'],
+        },
+        {
+          packageName: '@mono/dashboard',
+          dependsOn: '@mono/ui',
+          distance: 2,
+          dependencyPath: ['@mono/ui', '@mono/app', '@mono/dashboard'],
+        },
+      ],
+      totalAffected: 5,
+      affectedPercentage: 0.5,
+      affectedPercentageDisplay: '50%',
+      riskLevel: 'high',
+      riskExplanation: 'High impact: 50% of packages affected',
+      rippleEffect: {
+        layers: [
+          { distance: 0, packages: ['@mono/ui', '@mono/api', '@mono/core'], count: 3 },
+          { distance: 1, packages: ['@mono/app'], count: 1 },
+          { distance: 2, packages: ['@mono/dashboard'], count: 1 },
+        ],
+        totalLayers: 3,
+      },
+    }
+
+    expect(impact.directParticipants).toHaveLength(3)
+    expect(impact.indirectDependents).toHaveLength(2)
+    expect(impact.totalAffected).toBe(5)
+    expect(impact.affectedPercentage).toBe(0.5)
+    expect(impact.riskLevel).toBe('high')
+    expect(impact.rippleEffect?.totalLayers).toBe(3)
+  })
+
+  it('rippleEffect is optional', () => {
+    const impact: ImpactAssessment = {
+      directParticipants: ['@mono/a', '@mono/b'],
+      indirectDependents: [],
+      totalAffected: 2,
+      affectedPercentage: 0.1,
+      affectedPercentageDisplay: '10%',
+      riskLevel: 'low',
+      riskExplanation: 'Low impact: 10% of packages affected',
+    }
+
+    expect(impact.rippleEffect).toBeUndefined()
+    expect(impact.directParticipants).toHaveLength(2)
+  })
+})
+
+describe('IndirectDependent (Story 3.6)', () => {
+  it('can represent indirect dependent', () => {
+    const dependent: IndirectDependent = {
+      packageName: '@mono/dashboard',
+      dependsOn: '@mono/ui',
+      distance: 2,
+      dependencyPath: ['@mono/ui', '@mono/app', '@mono/dashboard'],
+    }
+
+    expect(dependent.packageName).toBe('@mono/dashboard')
+    expect(dependent.dependsOn).toBe('@mono/ui')
+    expect(dependent.distance).toBe(2)
+    expect(dependent.dependencyPath).toHaveLength(3)
+  })
+})
+
+describe('RippleEffect (Story 3.6)', () => {
+  it('can represent ripple effect visualization data', () => {
+    const ripple: RippleEffect = {
+      layers: [
+        { distance: 0, packages: ['@mono/a', '@mono/b'], count: 2 },
+        { distance: 1, packages: ['@mono/c'], count: 1 },
+      ],
+      totalLayers: 2,
+    }
+
+    expect(ripple.layers).toHaveLength(2)
+    expect(ripple.totalLayers).toBe(2)
+    expect(ripple.layers[0].distance).toBe(0)
+    expect(ripple.layers[0].count).toBe(2)
+  })
+})
+
+describe('RippleLayer (Story 3.6)', () => {
+  it('can represent a single ripple layer', () => {
+    const layer: RippleLayer = {
+      distance: 1,
+      packages: ['@mono/app', '@mono/web'],
+      count: 2,
+    }
+
+    expect(layer.distance).toBe(1)
+    expect(layer.packages).toHaveLength(2)
+    expect(layer.count).toBe(2)
+  })
+})
+
+describe('RiskLevel values (Story 3.6)', () => {
+  it('supports all risk level values', () => {
+    type RiskLevel = 'critical' | 'high' | 'medium' | 'low'
+    const levels: RiskLevel[] = ['critical', 'high', 'medium', 'low']
+
+    expect(levels).toContain('critical')
+    expect(levels).toContain('high')
+    expect(levels).toContain('medium')
+    expect(levels).toContain('low')
+  })
+})
+
+describe('CircularDependencyInfo with ImpactAssessment (Story 3.6)', () => {
+  it('can include impactAssessment field', () => {
+    const circular: CircularDependencyInfo = {
+      cycle: ['@mono/ui', '@mono/api', '@mono/ui'],
+      type: 'direct',
+      severity: 'warning',
+      depth: 2,
+      impact: 'Direct circular dependency between @mono/ui and @mono/api',
+      complexity: 3,
+      impactAssessment: {
+        directParticipants: ['@mono/ui', '@mono/api'],
+        indirectDependents: [],
+        totalAffected: 2,
+        affectedPercentage: 1.0,
+        affectedPercentageDisplay: '100%',
+        riskLevel: 'critical',
+        riskExplanation: 'Critical impact: 100% of packages affected',
+      },
+    }
+
+    expect(circular.impactAssessment).toBeDefined()
+    expect(circular.impactAssessment?.directParticipants).toHaveLength(2)
+    expect(circular.impactAssessment?.riskLevel).toBe('critical')
+  })
+
+  it('impactAssessment is optional', () => {
+    const circular: CircularDependencyInfo = {
+      cycle: ['@mono/a', '@mono/b', '@mono/a'],
+      type: 'direct',
+      severity: 'warning',
+      depth: 2,
+      impact: 'Direct circular dependency',
+      complexity: 3,
+    }
+
+    expect(circular.impactAssessment).toBeUndefined()
   })
 })
