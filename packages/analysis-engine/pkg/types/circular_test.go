@@ -582,3 +582,154 @@ func TestCircularDependencyInfo_WithFixStrategiesPresent(t *testing.T) {
 		t.Errorf("NewPackageName = %s, want @mono/shared", decoded.FixStrategies[0].NewPackageName)
 	}
 }
+
+// ========================================
+// RefactoringComplexity Integration Tests (Story 3.5)
+// ========================================
+
+func TestCircularDependencyInfo_WithRefactoringComplexity(t *testing.T) {
+	// Test that RefactoringComplexity field is optional and omitted when nil
+	info := &CircularDependencyInfo{
+		Cycle:                 []string{"A", "B", "A"},
+		Type:                  CircularTypeDirect,
+		Severity:              CircularSeverityWarning,
+		Depth:                 2,
+		Impact:                "Direct circular dependency between A and B",
+		Complexity:            3,
+		RefactoringComplexity: nil, // Should be omitted in JSON
+	}
+
+	data, err := json.Marshal(info)
+	if err != nil {
+		t.Fatalf("Failed to marshal: %v", err)
+	}
+
+	jsonStr := string(data)
+
+	// RefactoringComplexity should NOT be in JSON when nil (omitempty)
+	if strings.Contains(jsonStr, "refactoringComplexity") {
+		t.Errorf("Expected refactoringComplexity to be omitted when nil, got: %s", jsonStr)
+	}
+}
+
+func TestCircularDependencyInfo_WithRefactoringComplexityPresent(t *testing.T) {
+	// Test that RefactoringComplexity field is included when present
+	info := &CircularDependencyInfo{
+		Cycle:      []string{"@mono/ui", "@mono/api", "@mono/core", "@mono/ui"},
+		Type:       CircularTypeIndirect,
+		Severity:   CircularSeverityInfo,
+		Depth:      3,
+		Impact:     "Indirect circular dependency involving 3 packages",
+		Complexity: 5,
+		RefactoringComplexity: &RefactoringComplexity{
+			Score:         5,
+			EstimatedTime: "30-60 minutes",
+			Breakdown: ComplexityBreakdown{
+				FilesAffected: ComplexityFactor{
+					Value:        3,
+					Weight:       0.25,
+					Contribution: 1.5,
+					Description:  "3 source files need modification",
+				},
+				ImportsToChange: ComplexityFactor{
+					Value:        3,
+					Weight:       0.20,
+					Contribution: 1.2,
+					Description:  "3 import statements need updating",
+				},
+				ChainDepth: ComplexityFactor{
+					Value:        3,
+					Weight:       0.25,
+					Contribution: 1.5,
+					Description:  "Dependency chain has 3 levels",
+				},
+				PackagesInvolved: ComplexityFactor{
+					Value:        3,
+					Weight:       0.15,
+					Contribution: 0.9,
+					Description:  "3 packages involved in cycle",
+				},
+				ExternalDependencies: ComplexityFactor{
+					Value:        0,
+					Weight:       0.15,
+					Contribution: 0.15,
+					Description:  "No external dependencies in cycle",
+				},
+			},
+			Explanation: "Moderate refactoring: 3 files, 3 imports, 3-level chain",
+		},
+	}
+
+	data, err := json.Marshal(info)
+	if err != nil {
+		t.Fatalf("Failed to marshal: %v", err)
+	}
+
+	jsonStr := string(data)
+
+	// RefactoringComplexity should be in JSON when present
+	expectedFields := []string{
+		`"refactoringComplexity"`,
+		`"score"`,
+		`"estimatedTime"`,
+		`"breakdown"`,
+		`"filesAffected"`,
+		`"importsToChange"`,
+		`"chainDepth"`,
+		`"packagesInvolved"`,
+		`"externalDependencies"`,
+		`"explanation"`,
+	}
+
+	for _, field := range expectedFields {
+		if !strings.Contains(jsonStr, field) {
+			t.Errorf("Expected JSON to contain %s, got: %s", field, jsonStr)
+		}
+	}
+
+	// Verify round-trip
+	var decoded CircularDependencyInfo
+	if err := json.Unmarshal(data, &decoded); err != nil {
+		t.Fatalf("Failed to unmarshal: %v", err)
+	}
+
+	if decoded.RefactoringComplexity == nil {
+		t.Fatal("RefactoringComplexity should not be nil after round-trip")
+	}
+	if decoded.RefactoringComplexity.Score != 5 {
+		t.Errorf("Score = %d, want 5", decoded.RefactoringComplexity.Score)
+	}
+	if decoded.RefactoringComplexity.EstimatedTime != "30-60 minutes" {
+		t.Errorf("EstimatedTime = %s, want 30-60 minutes", decoded.RefactoringComplexity.EstimatedTime)
+	}
+	if decoded.RefactoringComplexity.Breakdown.FilesAffected.Value != 3 {
+		t.Errorf("FilesAffected.Value = %d, want 3", decoded.RefactoringComplexity.Breakdown.FilesAffected.Value)
+	}
+}
+
+func TestCircularDependencyInfo_RefactoringComplexityBackwardCompatibility(t *testing.T) {
+	// Test that existing JSON without refactoringComplexity still deserializes correctly
+	jsonStr := `{
+		"cycle": ["A", "B", "A"],
+		"type": "direct",
+		"severity": "warning",
+		"depth": 2,
+		"impact": "Direct circular dependency between A and B",
+		"complexity": 3
+	}`
+
+	var decoded CircularDependencyInfo
+	if err := json.Unmarshal([]byte(jsonStr), &decoded); err != nil {
+		t.Fatalf("Failed to unmarshal legacy JSON: %v", err)
+	}
+
+	// RefactoringComplexity should be nil for legacy JSON
+	if decoded.RefactoringComplexity != nil {
+		t.Error("RefactoringComplexity should be nil for legacy JSON without refactoringComplexity field")
+	}
+
+	// Legacy complexity field should still work
+	if decoded.Complexity != 3 {
+		t.Errorf("Complexity = %d, want 3", decoded.Complexity)
+	}
+}

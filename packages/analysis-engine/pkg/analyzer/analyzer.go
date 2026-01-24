@@ -8,6 +8,7 @@
 //   - Root cause analysis for circular dependencies (Story 3.1)
 //   - Import statement tracing for circular dependencies (Story 3.2)
 //   - Fix strategy recommendations for circular dependencies (Story 3.3)
+//   - Refactoring complexity calculation (Story 3.5)
 package analyzer
 
 import (
@@ -85,12 +86,20 @@ func (a *Analyzer) Analyze(workspace *types.WorkspaceData) (*types.AnalysisResul
 
 	// Story 3.3: Generate fix strategies for cycles
 	// Story 3.4: Generate step-by-step guides for each strategy
+	// Story 3.5: Calculate refactoring complexity for cycles and strategies
 	fixGenerator := NewFixStrategyGenerator(filteredGraph, workspace)
 	guideGenerator := NewFixGuideGenerator(workspace)
+	complexityCalc := NewComplexityCalculator(filteredGraph, workspace)
 	for _, cycle := range cycles {
+		// Calculate cycle-level complexity
+		cycle.RefactoringComplexity = complexityCalc.Calculate(cycle)
+
+		// Generate fix strategies
 		strategies := fixGenerator.Generate(cycle)
 		for i := range strategies {
 			strategies[i].Guide = guideGenerator.Generate(cycle, &strategies[i])
+			// Calculate per-strategy complexity (reuse cycle complexity as base)
+			strategies[i].Complexity = complexityCalc.Calculate(cycle)
 		}
 		cycle.FixStrategies = strategies
 	}
@@ -164,12 +173,20 @@ func (a *Analyzer) AnalyzeWithSources(
 
 	// Story 3.3: Generate fix strategies for cycles
 	// Story 3.4: Generate step-by-step guides for each strategy
+	// Story 3.5: Calculate refactoring complexity for cycles and strategies
 	fixGenerator := NewFixStrategyGenerator(filteredGraph, workspace)
 	guideGenerator := NewFixGuideGenerator(workspace)
+	complexityCalc := NewComplexityCalculator(filteredGraph, workspace)
 	for _, cycle := range cycles {
+		// Calculate cycle-level complexity
+		cycle.RefactoringComplexity = complexityCalc.Calculate(cycle)
+
+		// Generate fix strategies
 		strategies := fixGenerator.Generate(cycle)
 		for i := range strategies {
 			strategies[i].Guide = guideGenerator.Generate(cycle, &strategies[i])
+			// Calculate per-strategy complexity (reuse cycle complexity as base)
+			strategies[i].Complexity = complexityCalc.Calculate(cycle)
 		}
 		cycle.FixStrategies = strategies
 	}

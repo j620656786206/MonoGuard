@@ -67,7 +67,7 @@ development_status:
   3-2-trace-import-statement-paths: done
   3-3-generate-fix-strategy-recommendations: done
   3-4-create-step-by-step-fix-guides: done
-  3-5-calculate-refactoring-complexity-scores: ready-for-dev
+  3-5-calculate-refactoring-complexity-scores: dev-complete
   3-6-generate-impact-assessment: ready-for-dev
   3-7-provide-before-after-fix-explanations: ready-for-dev
   3-8-integrate-fix-suggestions-with-analysis-results: ready-for-dev

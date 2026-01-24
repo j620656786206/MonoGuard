@@ -238,3 +238,97 @@ func TestFixStrategy_EmptySlicesSerialize(t *testing.T) {
 		t.Error("targetPackages should serialize as empty array, not null")
 	}
 }
+
+// ========================================
+// FixStrategy Complexity Integration Tests (Story 3.5)
+// ========================================
+
+func TestFixStrategy_WithComplexity(t *testing.T) {
+	// Test that Complexity field is optional and omitted when nil
+	strategy := FixStrategy{
+		Type:           FixStrategyExtractModule,
+		Name:           "Extract Shared Module",
+		Description:    "Create a new shared package.",
+		Suitability:    8,
+		Effort:         EffortMedium,
+		Pros:           []string{"Clean separation"},
+		Cons:           []string{"New package"},
+		Recommended:    true,
+		TargetPackages: []string{"@mono/ui", "@mono/api"},
+		Complexity:     nil, // Should be omitted in JSON
+	}
+
+	got, err := json.Marshal(strategy)
+	if err != nil {
+		t.Fatalf("json.Marshal() error = %v", err)
+	}
+
+	jsonStr := string(got)
+
+	// Complexity should NOT be in JSON when nil (omitempty)
+	if jsonContainsKey(jsonStr, "complexity") {
+		t.Errorf("Expected complexity to be omitted when nil, got: %s", jsonStr)
+	}
+}
+
+func TestFixStrategy_WithComplexityPresent(t *testing.T) {
+	strategy := FixStrategy{
+		Type:           FixStrategyExtractModule,
+		Name:           "Extract Shared Module",
+		Description:    "Create a new shared package.",
+		Suitability:    8,
+		Effort:         EffortMedium,
+		Pros:           []string{"Clean separation"},
+		Cons:           []string{"New package"},
+		Recommended:    true,
+		TargetPackages: []string{"@mono/ui", "@mono/api"},
+		NewPackageName: "@mono/shared",
+		Complexity: &RefactoringComplexity{
+			Score:         5,
+			EstimatedTime: "30-60 minutes",
+			Breakdown: ComplexityBreakdown{
+				FilesAffected:        ComplexityFactor{Value: 3, Weight: 0.25, Contribution: 1.5},
+				ImportsToChange:      ComplexityFactor{Value: 3, Weight: 0.20, Contribution: 1.2},
+				ChainDepth:           ComplexityFactor{Value: 3, Weight: 0.25, Contribution: 1.5},
+				PackagesInvolved:     ComplexityFactor{Value: 3, Weight: 0.15, Contribution: 0.9},
+				ExternalDependencies: ComplexityFactor{Value: 0, Weight: 0.15, Contribution: 0.15},
+			},
+			Explanation: "Moderate refactoring",
+		},
+	}
+
+	got, err := json.Marshal(strategy)
+	if err != nil {
+		t.Fatalf("json.Marshal() error = %v", err)
+	}
+
+	// Verify round-trip
+	var decoded FixStrategy
+	if err := json.Unmarshal(got, &decoded); err != nil {
+		t.Fatalf("json.Unmarshal() error = %v", err)
+	}
+
+	if decoded.Complexity == nil {
+		t.Fatal("Complexity should not be nil after round-trip")
+	}
+	if decoded.Complexity.Score != 5 {
+		t.Errorf("Score = %d, want 5", decoded.Complexity.Score)
+	}
+	if decoded.Complexity.EstimatedTime != "30-60 minutes" {
+		t.Errorf("EstimatedTime = %s, want 30-60 minutes", decoded.Complexity.EstimatedTime)
+	}
+}
+
+// Helper to check if JSON string contains a specific key
+func jsonContainsKey(jsonStr, key string) bool {
+	return containsSubstring(jsonStr, `"`+key+`"`)
+}
+
+func containsSubstring(s, substr string) bool {
+	for i := 0; i <= len(s)-len(substr); i++ {
+		if s[i:i+len(substr)] == substr {
+			return true
+		}
+	}
+	return false
+}

@@ -41,6 +41,9 @@ type FixStrategy struct {
 
 	// Guide is the step-by-step fix guide (Story 3.4)
 	Guide *FixGuide `json:"guide,omitempty"`
+
+	// Complexity is the detailed refactoring complexity for this strategy (Story 3.5)
+	Complexity *RefactoringComplexity `json:"complexity,omitempty"`
 }
 
 // FixStrategyType identifies the approach to resolve the cycle.

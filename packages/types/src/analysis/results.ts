@@ -43,8 +43,10 @@ export interface CircularDependencyInfo {
   depth: number
   /** Impact description */
   impact: string
-  /** Refactoring complexity (1-10) */
+  /** Legacy: Basic refactoring complexity (1-10) */
   complexity: number
+  /** Detailed refactoring complexity (Story 3.5) */
+  refactoringComplexity?: RefactoringComplexity
   /** Root cause analysis (Story 3.1) */
   rootCause?: RootCauseAnalysis
   /** Import statements forming the cycle (Story 3.2) */
@@ -152,6 +154,8 @@ export interface FixStrategy {
   newPackageName?: string
   /** Step-by-step fix guide (Story 3.4) */
   guide?: FixGuide
+  /** Detailed refactoring complexity for this strategy (Story 3.5) */
+  complexity?: RefactoringComplexity
 }
 
 /**
@@ -406,6 +410,56 @@ export interface HealthScoreFactor {
   description: string
   /** Suggested improvements */
   recommendations: string[]
+}
+
+/**
+ * RefactoringComplexity - Detailed breakdown of fix complexity
+ *
+ * Matches Go: pkg/types/refactoring_complexity.go (Story 3.5)
+ */
+export interface RefactoringComplexity {
+  /** Overall complexity score (1-10) */
+  score: number
+  /** Human-readable time range (e.g., "30-60 minutes") */
+  estimatedTime: string
+  /** Individual factor contributions */
+  breakdown: ComplexityBreakdown
+  /** Human-readable complexity summary */
+  explanation: string
+}
+
+/**
+ * ComplexityBreakdown - How each factor contributes to the score
+ *
+ * Matches Go: pkg/types/refactoring_complexity.go (Story 3.5)
+ */
+export interface ComplexityBreakdown {
+  /** Number of source files that need changes */
+  filesAffected: ComplexityFactor
+  /** Number of import statements to modify */
+  importsToChange: ComplexityFactor
+  /** Dependency chain depth */
+  chainDepth: ComplexityFactor
+  /** Number of packages in the cycle */
+  packagesInvolved: ComplexityFactor
+  /** Whether external dependencies are involved */
+  externalDependencies: ComplexityFactor
+}
+
+/**
+ * ComplexityFactor - Single factor in complexity calculation
+ *
+ * Matches Go: pkg/types/refactoring_complexity.go (Story 3.5)
+ */
+export interface ComplexityFactor {
+  /** Raw value for this factor */
+  value: number
+  /** Factor weight (0.0-1.0) */
+  weight: number
+  /** Weighted score contribution */
+  contribution: number
+  /** What this factor measures */
+  description: string
 }
 
 // Re-export for convenience

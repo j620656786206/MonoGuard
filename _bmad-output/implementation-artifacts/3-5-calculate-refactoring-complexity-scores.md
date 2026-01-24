@@ -1,6 +1,6 @@
 # Story 3.5: Calculate Refactoring Complexity Scores
 
-Status: ready-for-dev
+Status: dev-complete
 
 ## Story
 
@@ -81,8 +81,8 @@ So that **I can prioritize which cycles to fix based on effort required**.
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Define RefactoringComplexity Types** (AC: #1, #2, #3)
-  - [ ] 1.1 Create `pkg/types/refactoring_complexity.go`:
+- [x] **Task 1: Define RefactoringComplexity Types** (AC: #1, #2, #3)
+  - [x] 1.1 Create `pkg/types/refactoring_complexity.go`:
     ```go
     package types
 
@@ -135,11 +135,11 @@ So that **I can prioritize which cycles to fix based on effort required**.
         Description string `json:"description"`
     }
     ```
-  - [ ] 1.2 Add JSON serialization tests in `pkg/types/refactoring_complexity_test.go`
-  - [ ] 1.3 Ensure all JSON tags use camelCase
+  - [x] 1.2 Add JSON serialization tests in `pkg/types/refactoring_complexity_test.go`
+  - [x] 1.3 Ensure all JSON tags use camelCase
 
-- [ ] **Task 2: Create ComplexityCalculator** (AC: #1, #5)
-  - [ ] 2.1 Create `pkg/analyzer/complexity_calculator.go`:
+- [x] **Task 2: Create ComplexityCalculator** (AC: #1, #5)
+  - [x] 2.1 Create `pkg/analyzer/complexity_calculator.go`:
     ```go
     package analyzer
 
@@ -178,11 +178,11 @@ So that **I can prioritize which cycles to fix based on effort required**.
     // generateExplanation creates human-readable complexity summary.
     func generateExplanation(score int, breakdown *types.ComplexityBreakdown) string
     ```
-  - [ ] 2.2 Implement complexity calculation logic
-  - [ ] 2.3 Create comprehensive tests in `pkg/analyzer/complexity_calculator_test.go`
+  - [x] 2.2 Implement complexity calculation logic
+  - [x] 2.3 Create comprehensive tests in `pkg/analyzer/complexity_calculator_test.go`
 
-- [ ] **Task 3: Implement Files Affected Calculation** (AC: #1, #5)
-  - [ ] 3.1 Implement `calculateFilesAffected`:
+- [x] **Task 3: Implement Files Affected Calculation** (AC: #1, #5)
+  - [x] 3.1 Implement `calculateFilesAffected`:
     ```go
     func (cc *ComplexityCalculator) calculateFilesAffected(cycle *types.CircularDependencyInfo) types.ComplexityFactor {
         var fileCount int
@@ -221,10 +221,10 @@ So that **I can prioritize which cycles to fix based on effort required**.
         }
     }
     ```
-  - [ ] 3.2 Add tests for files affected calculation
+  - [x] 3.2 Add tests for files affected calculation
 
-- [ ] **Task 4: Implement Imports To Change Calculation** (AC: #1, #5)
-  - [ ] 4.1 Implement `calculateImportsToChange`:
+- [x] **Task 4: Implement Imports To Change Calculation** (AC: #1, #5)
+  - [x] 4.1 Implement `calculateImportsToChange`:
     ```go
     func (cc *ComplexityCalculator) calculateImportsToChange(cycle *types.CircularDependencyInfo) types.ComplexityFactor {
         var importCount int
@@ -259,10 +259,10 @@ So that **I can prioritize which cycles to fix based on effort required**.
         }
     }
     ```
-  - [ ] 4.2 Add tests for imports calculation
+  - [x] 4.2 Add tests for imports calculation
 
-- [ ] **Task 5: Implement Chain Depth Calculation** (AC: #1)
-  - [ ] 5.1 Implement `calculateChainDepth`:
+- [x] **Task 5: Implement Chain Depth Calculation** (AC: #1)
+  - [x] 5.1 Implement `calculateChainDepth`:
     ```go
     func (cc *ComplexityCalculator) calculateChainDepth(cycle *types.CircularDependencyInfo) types.ComplexityFactor {
         depth := cycle.Depth
@@ -289,10 +289,10 @@ So that **I can prioritize which cycles to fix based on effort required**.
         }
     }
     ```
-  - [ ] 5.2 Add tests for chain depth calculation
+  - [x] 5.2 Add tests for chain depth calculation
 
-- [ ] **Task 6: Implement Packages Involved Calculation** (AC: #1)
-  - [ ] 6.1 Implement `calculatePackagesInvolved`:
+- [x] **Task 6: Implement Packages Involved Calculation** (AC: #1)
+  - [x] 6.1 Implement `calculatePackagesInvolved`:
     ```go
     func (cc *ComplexityCalculator) calculatePackagesInvolved(cycle *types.CircularDependencyInfo) types.ComplexityFactor {
         // Unique packages (cycle array ends with first, so -1)
@@ -323,10 +323,10 @@ So that **I can prioritize which cycles to fix based on effort required**.
         }
     }
     ```
-  - [ ] 6.2 Add tests for packages calculation
+  - [x] 6.2 Add tests for packages calculation
 
-- [ ] **Task 7: Implement External Dependencies Check** (AC: #1)
-  - [ ] 7.1 Implement `calculateExternalDependencies`:
+- [x] **Task 7: Implement External Dependencies Check** (AC: #1)
+  - [x] 7.1 Implement `calculateExternalDependencies`:
     ```go
     func (cc *ComplexityCalculator) calculateExternalDependencies(cycle *types.CircularDependencyInfo) types.ComplexityFactor {
         hasExternal := false
@@ -375,10 +375,10 @@ So that **I can prioritize which cycles to fix based on effort required**.
         return !exists
     }
     ```
-  - [ ] 7.2 Add tests for external dependencies check
+  - [x] 7.2 Add tests for external dependencies check
 
-- [ ] **Task 8: Implement Score Aggregation and Time Estimation** (AC: #1, #3)
-  - [ ] 8.1 Implement main `Calculate` function:
+- [x] **Task 8: Implement Score Aggregation and Time Estimation** (AC: #1, #3)
+  - [x] 8.1 Implement main `Calculate` function:
     ```go
     func (cc *ComplexityCalculator) Calculate(cycle *types.CircularDependencyInfo) *types.RefactoringComplexity {
         breakdown := types.ComplexityBreakdown{
@@ -413,7 +413,7 @@ So that **I can prioritize which cycles to fix based on effort required**.
         }
     }
     ```
-  - [ ] 8.2 Implement `estimateTime`:
+  - [x] 8.2 Implement `estimateTime`:
     ```go
     func estimateTime(score int) string {
         switch {
@@ -430,7 +430,7 @@ So that **I can prioritize which cycles to fix based on effort required**.
         }
     }
     ```
-  - [ ] 8.3 Implement `generateExplanation`:
+  - [x] 8.3 Implement `generateExplanation`:
     ```go
     func generateExplanation(score int, breakdown *types.ComplexityBreakdown) string {
         var level string
@@ -454,10 +454,10 @@ So that **I can prioritize which cycles to fix based on effort required**.
         )
     }
     ```
-  - [ ] 8.4 Add tests for score aggregation
+  - [x] 8.4 Add tests for score aggregation
 
-- [ ] **Task 9: Integrate with CircularDependencyInfo** (AC: #4)
-  - [ ] 9.1 Update `pkg/types/circular.go`:
+- [x] **Task 9: Integrate with CircularDependencyInfo** (AC: #4)
+  - [x] 9.1 Update `pkg/types/circular.go`:
     ```go
     type CircularDependencyInfo struct {
         Cycle                 []string               `json:"cycle"`
@@ -472,17 +472,17 @@ So that **I can prioritize which cycles to fix based on effort required**.
         FixStrategies         []FixStrategy          `json:"fixStrategies,omitempty"`
     }
     ```
-  - [ ] 9.2 Verify existing tests still pass
+  - [x] 9.2 Verify existing tests still pass
 
-- [ ] **Task 10: Integrate with FixStrategy** (AC: #6)
-  - [ ] 10.1 Update `pkg/types/fix_strategy.go`:
+- [x] **Task 10: Integrate with FixStrategy** (AC: #6)
+  - [x] 10.1 Update `pkg/types/fix_strategy.go`:
     ```go
     type FixStrategy struct {
         // ... existing fields ...
         Complexity *RefactoringComplexity `json:"complexity,omitempty"` // NEW Story 3.5
     }
     ```
-  - [ ] 10.2 Update FixStrategyGenerator to include complexity:
+  - [x] 10.2 Update FixStrategyGenerator to include complexity:
     ```go
     // In fix_strategy_generator.go
     func (fsg *FixStrategyGenerator) Generate(cycle *types.CircularDependencyInfo) []types.FixStrategy {
@@ -498,10 +498,10 @@ So that **I can prioritize which cycles to fix based on effort required**.
         // ... similar for other strategies
     }
     ```
-  - [ ] 10.3 Add tests for strategy complexity integration
+  - [x] 10.3 Add tests for strategy complexity integration
 
-- [ ] **Task 11: Wire to Analyzer Pipeline** (AC: all)
-  - [ ] 11.1 Update `pkg/analyzer/analyzer.go`:
+- [x] **Task 11: Wire to Analyzer Pipeline** (AC: all)
+  - [x] 11.1 Update `pkg/analyzer/analyzer.go`:
     ```go
     func (a *Analyzer) AnalyzeWithSources(...) (*types.AnalysisResult, error) {
         // ... existing analysis ...
@@ -515,10 +515,10 @@ So that **I can prioritize which cycles to fix based on effort required**.
         return result, nil
     }
     ```
-  - [ ] 11.2 Update analyzer tests
+  - [x] 11.2 Update analyzer tests
 
-- [ ] **Task 12: Update TypeScript Types** (AC: #4)
-  - [ ] 12.1 Update `packages/types/src/analysis/results.ts`:
+- [x] **Task 12: Update TypeScript Types** (AC: #4)
+  - [x] 12.1 Update `packages/types/src/analysis/results.ts`:
     ```typescript
     export interface RefactoringComplexity {
       /** Overall complexity score (1-10) */
@@ -562,11 +562,11 @@ So that **I can prioritize which cycles to fix based on effort required**.
       complexity?: RefactoringComplexity;
     }
     ```
-  - [ ] 12.2 Run `pnpm nx build types` to verify
-  - [ ] 12.3 Add type tests for RefactoringComplexity
+  - [x] 12.2 Run `pnpm nx build types` to verify
+  - [x] 12.3 Add type tests for RefactoringComplexity
 
-- [ ] **Task 13: Performance Testing** (AC: #7)
-  - [ ] 13.1 Create `pkg/analyzer/complexity_calculator_benchmark_test.go`:
+- [x] **Task 13: Performance Testing** (AC: #7)
+  - [x] 13.1 Create `pkg/analyzer/complexity_calculator_benchmark_test.go`:
     ```go
     func BenchmarkComplexityCalculation(b *testing.B) {
         workspace := generateWorkspace(100)
@@ -582,14 +582,14 @@ So that **I can prioritize which cycles to fix based on effort required**.
         }
     }
     ```
-  - [ ] 13.2 Verify < 100ms for 100 packages with 5 cycles
-  - [ ] 13.3 Document actual performance in completion notes
+  - [x] 13.2 Verify < 100ms for 100 packages with 5 cycles
+  - [x] 13.3 Document actual performance in completion notes
 
-- [ ] **Task 14: Integration Verification** (AC: all)
-  - [ ] 14.1 Run all tests: `cd packages/analysis-engine && make test`
-  - [ ] 14.2 Build WASM: `pnpm nx build @monoguard/analysis-engine`
-  - [ ] 14.3 Run affected CI checks: `pnpm nx affected --target=lint,test,type-check --base=main`
-  - [ ] 14.4 Verify JSON output includes refactoringComplexity field
+- [x] **Task 14: Integration Verification** (AC: all)
+  - [x] 14.1 Run all tests: `cd packages/analysis-engine && make test`
+  - [x] 14.2 Build WASM: `pnpm nx build @monoguard/analysis-engine`
+  - [x] 14.3 Run affected CI checks: `pnpm nx affected --target=lint,test,type-check --base=main`
+  - [x] 14.4 Verify JSON output includes refactoringComplexity field
 
 ## Dev Notes
 

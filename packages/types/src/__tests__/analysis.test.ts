@@ -3,6 +3,8 @@ import type {
   AnalysisResult,
   CheckResult,
   CircularDependencyInfo,
+  ComplexityBreakdown,
+  ComplexityFactor,
   DependencyEdge,
   DependencyGraph,
   EffortLevel,
@@ -11,6 +13,7 @@ import type {
   ImportTrace,
   ImportType,
   PackageNode,
+  RefactoringComplexity,
   RootCauseAnalysis,
   RootCauseEdge,
 } from '../analysis'
@@ -698,5 +701,201 @@ describe('CircularDependencyInfo with FixStrategies', () => {
     // First should be recommended
     expect(circular.fixStrategies?.[0].recommended).toBe(true)
     expect(circular.fixStrategies?.[1].recommended).toBe(false)
+  })
+})
+
+// Story 3.5: Refactoring Complexity Types
+describe('RefactoringComplexity', () => {
+  it('can represent complete complexity breakdown', () => {
+    const complexity: RefactoringComplexity = {
+      score: 5,
+      estimatedTime: '30-60 minutes',
+      breakdown: {
+        filesAffected: {
+          value: 3,
+          weight: 0.25,
+          contribution: 1.5,
+          description: '3 source files need modification',
+        },
+        importsToChange: {
+          value: 4,
+          weight: 0.2,
+          contribution: 1.2,
+          description: '4 import statements need updating',
+        },
+        chainDepth: {
+          value: 3,
+          weight: 0.25,
+          contribution: 1.5,
+          description: 'Dependency chain has 3 levels',
+        },
+        packagesInvolved: {
+          value: 3,
+          weight: 0.15,
+          contribution: 0.9,
+          description: '3 packages involved in cycle',
+        },
+        externalDependencies: {
+          value: 0,
+          weight: 0.15,
+          contribution: 0.15,
+          description: 'No external dependencies in cycle',
+        },
+      },
+      explanation: 'Moderate refactoring: 3 files, 4 imports, 3-level chain',
+    }
+
+    expect(complexity.score).toBe(5)
+    expect(complexity.estimatedTime).toBe('30-60 minutes')
+    expect(complexity.breakdown.filesAffected.value).toBe(3)
+    expect(complexity.breakdown.chainDepth.weight).toBe(0.25)
+  })
+
+  it('weights sum to 1.0', () => {
+    const breakdown: ComplexityBreakdown = {
+      filesAffected: { value: 3, weight: 0.25, contribution: 1.5, description: '' },
+      importsToChange: { value: 4, weight: 0.2, contribution: 1.2, description: '' },
+      chainDepth: { value: 3, weight: 0.25, contribution: 1.5, description: '' },
+      packagesInvolved: { value: 3, weight: 0.15, contribution: 0.9, description: '' },
+      externalDependencies: { value: 0, weight: 0.15, contribution: 0.15, description: '' },
+    }
+
+    const totalWeight =
+      breakdown.filesAffected.weight +
+      breakdown.importsToChange.weight +
+      breakdown.chainDepth.weight +
+      breakdown.packagesInvolved.weight +
+      breakdown.externalDependencies.weight
+
+    expect(totalWeight).toBe(1.0)
+  })
+})
+
+describe('ComplexityFactor', () => {
+  it('can represent individual factor', () => {
+    const factor: ComplexityFactor = {
+      value: 5,
+      weight: 0.25,
+      contribution: 1.5,
+      description: '5 source files need modification',
+    }
+
+    expect(factor.value).toBe(5)
+    expect(factor.weight).toBe(0.25)
+    expect(factor.contribution).toBe(1.5)
+    expect(factor.description).toContain('files')
+  })
+})
+
+describe('CircularDependencyInfo with RefactoringComplexity', () => {
+  it('can include detailed refactoring complexity (Story 3.5)', () => {
+    const circular: CircularDependencyInfo = {
+      cycle: ['pkg-ui', 'pkg-api', 'pkg-core', 'pkg-ui'],
+      type: 'indirect',
+      severity: 'warning',
+      depth: 3,
+      impact: 'Indirect circular dependency involving 3 packages',
+      complexity: 5, // Legacy field
+      refactoringComplexity: {
+        score: 5,
+        estimatedTime: '30-60 minutes',
+        breakdown: {
+          filesAffected: { value: 3, weight: 0.25, contribution: 1.5, description: '3 files' },
+          importsToChange: { value: 3, weight: 0.2, contribution: 1.2, description: '3 imports' },
+          chainDepth: { value: 3, weight: 0.25, contribution: 1.5, description: '3 levels' },
+          packagesInvolved: {
+            value: 3,
+            weight: 0.15,
+            contribution: 0.9,
+            description: '3 packages',
+          },
+          externalDependencies: {
+            value: 0,
+            weight: 0.15,
+            contribution: 0.15,
+            description: 'No external',
+          },
+        },
+        explanation: 'Moderate refactoring',
+      },
+    }
+
+    expect(circular.refactoringComplexity).toBeDefined()
+    expect(circular.refactoringComplexity?.score).toBe(5)
+    expect(circular.refactoringComplexity?.estimatedTime).toBe('30-60 minutes')
+    expect(circular.complexity).toBe(5) // Legacy field still works
+  })
+
+  it('refactoringComplexity is optional for backward compatibility', () => {
+    const circular: CircularDependencyInfo = {
+      cycle: ['pkg-a', 'pkg-b', 'pkg-a'],
+      type: 'direct',
+      severity: 'warning',
+      depth: 2,
+      impact: 'Direct circular dependency',
+      complexity: 3,
+    }
+
+    expect(circular.refactoringComplexity).toBeUndefined()
+    expect(circular.complexity).toBe(3)
+  })
+})
+
+describe('FixStrategy with Complexity', () => {
+  it('can include detailed complexity per strategy (Story 3.5)', () => {
+    const strategy: FixStrategy = {
+      type: 'extract-module',
+      name: 'Extract Shared Module',
+      description: 'Create a new shared package.',
+      suitability: 8,
+      effort: 'medium',
+      pros: ['Clean separation'],
+      cons: ['New package'],
+      recommended: true,
+      targetPackages: ['pkg-ui', 'pkg-api'],
+      newPackageName: '@mono/shared',
+      complexity: {
+        score: 5,
+        estimatedTime: '30-60 minutes',
+        breakdown: {
+          filesAffected: { value: 3, weight: 0.25, contribution: 1.5, description: '3 files' },
+          importsToChange: { value: 3, weight: 0.2, contribution: 1.2, description: '3 imports' },
+          chainDepth: { value: 3, weight: 0.25, contribution: 1.5, description: '3 levels' },
+          packagesInvolved: {
+            value: 3,
+            weight: 0.15,
+            contribution: 0.9,
+            description: '3 packages',
+          },
+          externalDependencies: {
+            value: 0,
+            weight: 0.15,
+            contribution: 0.15,
+            description: 'No external',
+          },
+        },
+        explanation: 'Moderate refactoring',
+      },
+    }
+
+    expect(strategy.complexity).toBeDefined()
+    expect(strategy.complexity?.score).toBe(5)
+    expect(strategy.complexity?.estimatedTime).toBe('30-60 minutes')
+  })
+
+  it('complexity is optional on FixStrategy', () => {
+    const strategy: FixStrategy = {
+      type: 'dependency-injection',
+      name: 'DI',
+      description: 'Invert dependency',
+      suitability: 7,
+      effort: 'low',
+      pros: ['Minimal changes'],
+      cons: ['Adds indirection'],
+      recommended: false,
+      targetPackages: ['pkg-a', 'pkg-b'],
+    }
+
+    expect(strategy.complexity).toBeUndefined()
   })
 })
