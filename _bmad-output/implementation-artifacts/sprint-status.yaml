@@ -80,8 +80,8 @@ development_status:
   4-3-implement-node-expand-collapse-functionality: ready-for-dev
   4-4-add-zoom-pan-and-navigation-controls: ready-for-dev
   4-5-implement-hover-details-and-tooltips: ready-for-dev
-  4-6-export-graph-as-png-svg-images: backlog
-  4-7-export-analysis-reports-in-multiple-formats: backlog
+  4-6-export-graph-as-png-svg-images: ready-for-dev
+  4-7-export-analysis-reports-in-multiple-formats: ready-for-dev
   4-8-create-detailed-diagnostic-reports: backlog
   4-9-implement-hybrid-svg-canvas-rendering: backlog
   epic-4-retrospective: optional
