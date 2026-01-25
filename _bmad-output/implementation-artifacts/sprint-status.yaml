@@ -83,7 +83,7 @@ development_status:
   4-6-export-graph-as-png-svg-images: ready-for-dev
   4-7-export-analysis-reports-in-multiple-formats: ready-for-dev
   4-8-create-detailed-diagnostic-reports: ready-for-dev
-  4-9-implement-hybrid-svg-canvas-rendering: backlog
+  4-9-implement-hybrid-svg-canvas-rendering: ready-for-dev
   epic-4-retrospective: optional
 
   # Epic 5: Web Interface Experience
