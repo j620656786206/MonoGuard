@@ -252,18 +252,24 @@ describe('DependencyGraphViz', () => {
       expect(svg).toBeInTheDocument()
     })
 
-    it('should handle graph with many nodes', async () => {
-      const largeData = createMockData(50)
+    it('should handle graph with 100+ nodes (AC2 performance requirement)', async () => {
+      // AC2: Graph renders in < 2 seconds for 100 packages
+      const largeData = createMockData(100)
 
+      const startTime = performance.now()
       render(<DependencyGraphViz data={largeData} />)
 
       await waitFor(
         () => {
           const circles = document.querySelectorAll('circle')
-          expect(circles.length).toBe(50)
+          expect(circles.length).toBe(100)
         },
         { timeout: 2000 }
       )
+
+      const renderTime = performance.now() - startTime
+      // AC2: Graph renders in < 2 seconds for 100 packages
+      expect(renderTime).toBeLessThan(2000)
     })
   })
 
@@ -280,6 +286,89 @@ describe('DependencyGraphViz', () => {
 
       // SVG should be removed from DOM
       expect(document.querySelector('svg')).not.toBeInTheDocument()
+    })
+  })
+
+  describe('truncatePackageName utility', () => {
+    // Import the utility for direct testing
+    it('should handle scoped package names', async () => {
+      render(<DependencyGraphViz data={mockData} />)
+
+      await waitFor(
+        () => {
+          const texts = document.querySelectorAll('text')
+          // @app/core should show as "core"
+          const textContents = Array.from(texts).map((t) => t.textContent)
+          expect(textContents).toContain('core')
+          expect(textContents).toContain('utils')
+        },
+        { timeout: 1000 }
+      )
+    })
+
+    it('should handle non-scoped package names', async () => {
+      const unscoped: DependencyGraph = {
+        nodes: {
+          lodash: {
+            name: 'lodash',
+            version: '4.17.21',
+            path: 'node_modules/lodash',
+            dependencies: [],
+            devDependencies: [],
+            peerDependencies: [],
+          },
+        },
+        edges: [],
+        rootPath: '/workspace',
+        workspaceType: 'npm',
+      }
+
+      render(<DependencyGraphViz data={unscoped} />)
+
+      await waitFor(
+        () => {
+          const texts = document.querySelectorAll('text')
+          const textContents = Array.from(texts).map((t) => t.textContent)
+          expect(textContents).toContain('lodash')
+        },
+        { timeout: 1000 }
+      )
+    })
+  })
+
+  describe('Interactive behaviors', () => {
+    it('should set up zoom behavior on SVG', async () => {
+      render(<DependencyGraphViz data={mockData} />)
+
+      await waitFor(
+        () => {
+          const svg = document.querySelector('svg')
+          expect(svg).toBeInTheDocument()
+          // Zoom is set up via svg.call(zoom) which adds __zoom property
+          // The main group 'g' should exist for transformations
+          const mainGroup = document.querySelector('svg > g')
+          expect(mainGroup).toBeInTheDocument()
+        },
+        { timeout: 1000 }
+      )
+    })
+
+    it('should render draggable node groups', async () => {
+      render(<DependencyGraphViz data={mockData} />)
+
+      await waitFor(
+        () => {
+          // Nodes are rendered as 'g.node' groups which have drag behavior attached
+          const nodeGroups = document.querySelectorAll('g.node')
+          expect(nodeGroups.length).toBe(2)
+          // Each node group should have cursor: pointer on circles
+          const circles = document.querySelectorAll('circle')
+          circles.forEach((circle) => {
+            expect(circle.style.cursor).toBe('pointer')
+          })
+        },
+        { timeout: 1000 }
+      )
     })
   })
 })

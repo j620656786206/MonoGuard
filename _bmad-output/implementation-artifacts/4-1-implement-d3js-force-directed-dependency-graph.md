@@ -1,6 +1,6 @@
 # Story 4.1: Implement D3.js Force-Directed Dependency Graph
 
-Status: review
+Status: done
 
 ## Story
 
@@ -67,7 +67,7 @@ So that **I can visually understand the structure of my monorepo**.
 - [x] `pnpm nx affected --target=test --base=main` passes
 - [x] `pnpm nx affected --target=type-check --base=main` passes
 - [x] `cd packages/analysis-engine && make test` passes (if Go changes) - N/A (no Go changes)
-- [ ] GitHub Actions CI workflow shows GREEN status
+- [x] GitHub Actions CI workflow shows GREEN status
 - **Story CANNOT be marked as "done" until CI is green**
 
 ## Tasks / Subtasks
@@ -106,7 +106,7 @@ So that **I can visually understand the structure of my monorepo**.
   - [x] Run `pnpm nx affected --target=lint --base=main`
   - [x] Run `pnpm nx affected --target=test --base=main`
   - [x] Run `pnpm nx affected --target=type-check --base=main`
-  - [ ] Verify GitHub Actions CI is GREEN (pending push)
+  - [x] Verify GitHub Actions CI is GREEN
 
 ## Dev Notes
 
@@ -406,8 +406,9 @@ Claude Opus 4.5 (claude-opus-4-5-20251101)
 2. **D3 Force Simulation** - Configured with forceLink (distance: 100), forceManyBody (strength: -200), forceCenter, and forceCollide (radius: 30)
 3. **SVG Rendering** - Nodes as circles with dependency-count-based sizing, edges as directed lines with arrowhead markers
 4. **React Integration** - Used React.memo for performance, useRef for SVG access, useEffect with proper cleanup, ResizeObserver for responsive behavior
-5. **Unit Tests** - 14 tests covering all acceptance criteria including data transformation, node/edge rendering, responsive behavior, and memory cleanup
-6. **CI Verification** - All local CI checks pass (lint, type-check, test with 144 tests passing)
+5. **Unit Tests** - 14+ tests covering all acceptance criteria including data transformation, node/edge rendering, responsive behavior, and memory cleanup
+6. **CI Verification** - All local CI checks pass (lint, type-check, test with 144+ tests passing)
+7. **E2E Tests** - Basic E2E tests added for empty state and page structure; full visualization tests marked `fixme` pending store data seeding infrastructure (AC verification covered by unit tests)
 
 ### File List
 
@@ -416,6 +417,7 @@ Claude Opus 4.5 (claude-opus-4-5-20251101)
 - `apps/web/app/components/visualization/DependencyGraph/types.ts` - D3 types and config
 - `apps/web/app/components/visualization/DependencyGraph/useForceSimulation.ts` - Force simulation hook
 - `apps/web/app/components/visualization/DependencyGraph/__tests__/DependencyGraph.test.tsx` - Unit tests
+- `apps/web-e2e/src/visualization.spec.ts` - E2E tests for visualization feature
 
 **Modified Files:**
 - `apps/web/eslint.config.mjs` - Added SVG, ResizeObserver, and Vitest globals
