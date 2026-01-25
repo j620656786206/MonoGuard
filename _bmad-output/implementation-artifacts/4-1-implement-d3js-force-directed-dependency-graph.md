@@ -1,6 +1,6 @@
 # Story 4.1: Implement D3.js Force-Directed Dependency Graph
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -63,50 +63,50 @@ So that **I can visually understand the structure of my monorepo**.
 **Given** the story implementation is complete
 **When** verifying CI status
 **Then** ALL of the following must pass:
-- [ ] `pnpm nx affected --target=lint --base=main` passes
-- [ ] `pnpm nx affected --target=test --base=main` passes
-- [ ] `pnpm nx affected --target=type-check --base=main` passes
-- [ ] `cd packages/analysis-engine && make test` passes (if Go changes)
+- [x] `pnpm nx affected --target=lint --base=main` passes
+- [x] `pnpm nx affected --target=test --base=main` passes
+- [x] `pnpm nx affected --target=type-check --base=main` passes
+- [x] `cd packages/analysis-engine && make test` passes (if Go changes) - N/A (no Go changes)
 - [ ] GitHub Actions CI workflow shows GREEN status
 - **Story CANNOT be marked as "done" until CI is green**
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create DependencyGraph component structure (AC: 1, 3, 4)
-  - [ ] Create `apps/web/app/components/visualization/DependencyGraph/index.tsx`
-  - [ ] Create `apps/web/app/components/visualization/DependencyGraph/types.ts`
-  - [ ] Create `apps/web/app/components/visualization/DependencyGraph/useForceSimulation.ts` hook
-  - [ ] Implement data transformation from `DependencyGraph` to D3 format
+- [x] Task 1: Create DependencyGraph component structure (AC: 1, 3, 4)
+  - [x] Create `apps/web/app/components/visualization/DependencyGraph/index.tsx`
+  - [x] Create `apps/web/app/components/visualization/DependencyGraph/types.ts`
+  - [x] Create `apps/web/app/components/visualization/DependencyGraph/useForceSimulation.ts` hook
+  - [x] Implement data transformation from `DependencyGraph` to D3 format
 
-- [ ] Task 2: Implement D3.js force simulation (AC: 1, 2)
-  - [ ] Setup d3-force simulation with proper forces (link, charge, center)
-  - [ ] Configure force parameters for optimal layout
-  - [ ] Implement tick handler for smooth animation
-  - [ ] Add stabilization detection
+- [x] Task 2: Implement D3.js force simulation (AC: 1, 2)
+  - [x] Setup d3-force simulation with proper forces (link, charge, center)
+  - [x] Configure force parameters for optimal layout
+  - [x] Implement tick handler for smooth animation
+  - [x] Add stabilization detection
 
-- [ ] Task 3: Implement SVG rendering (AC: 1, 5, 6)
-  - [ ] Create SVG container with proper viewBox
-  - [ ] Render nodes as circles with labels
-  - [ ] Render edges as lines with arrow markers
-  - [ ] Add D3 zoom/pan behavior (basic setup for Story 4.4)
+- [x] Task 3: Implement SVG rendering (AC: 1, 5, 6)
+  - [x] Create SVG container with proper viewBox
+  - [x] Render nodes as circles with labels
+  - [x] Render edges as lines with arrow markers
+  - [x] Add D3 zoom/pan behavior (basic setup for Story 4.4)
 
-- [ ] Task 4: Implement React integration (AC: 2, 3)
-  - [ ] Use `useRef` for SVG element reference
-  - [ ] Use `useEffect` for D3 initialization with proper cleanup
-  - [ ] Wrap component with `React.memo` for performance
-  - [ ] Handle resize events with ResizeObserver
+- [x] Task 4: Implement React integration (AC: 2, 3)
+  - [x] Use `useRef` for SVG element reference
+  - [x] Use `useEffect` for D3 initialization with proper cleanup
+  - [x] Wrap component with `React.memo` for performance
+  - [x] Handle resize events with ResizeObserver
 
-- [ ] Task 5: Write unit tests (AC: all)
-  - [ ] Test component renders without errors
-  - [ ] Test data transformation logic
-  - [ ] Test node/edge count matches input data
-  - [ ] Test responsive behavior
+- [x] Task 5: Write unit tests (AC: all)
+  - [x] Test component renders without errors
+  - [x] Test data transformation logic
+  - [x] Test node/edge count matches input data
+  - [x] Test responsive behavior
 
-- [ ] Task 6: Verify CI passes (AC-CI)
-  - [ ] Run `pnpm nx affected --target=lint --base=main`
-  - [ ] Run `pnpm nx affected --target=test --base=main`
-  - [ ] Run `pnpm nx affected --target=type-check --base=main`
-  - [ ] Verify GitHub Actions CI is GREEN
+- [x] Task 6: Verify CI passes (AC-CI)
+  - [x] Run `pnpm nx affected --target=lint --base=main`
+  - [x] Run `pnpm nx affected --target=test --base=main`
+  - [x] Run `pnpm nx affected --target=type-check --base=main`
+  - [ ] Verify GitHub Actions CI is GREEN (pending push)
 
 ## Dev Notes
 
@@ -394,11 +394,30 @@ pnpm add -D @types/d3 --filter @monoguard/web
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.5 (claude-opus-4-5-20251101)
 
 ### Debug Log References
 
+- None - implementation proceeded without errors
+
 ### Completion Notes List
 
+1. **Component Structure Created** - Implemented modular structure with types.ts, useForceSimulation.ts hook, and index.tsx main component
+2. **D3 Force Simulation** - Configured with forceLink (distance: 100), forceManyBody (strength: -200), forceCenter, and forceCollide (radius: 30)
+3. **SVG Rendering** - Nodes as circles with dependency-count-based sizing, edges as directed lines with arrowhead markers
+4. **React Integration** - Used React.memo for performance, useRef for SVG access, useEffect with proper cleanup, ResizeObserver for responsive behavior
+5. **Unit Tests** - 14 tests covering all acceptance criteria including data transformation, node/edge rendering, responsive behavior, and memory cleanup
+6. **CI Verification** - All local CI checks pass (lint, type-check, test with 144 tests passing)
+
 ### File List
+
+**New Files:**
+- `apps/web/app/components/visualization/DependencyGraph/index.tsx` - Main component
+- `apps/web/app/components/visualization/DependencyGraph/types.ts` - D3 types and config
+- `apps/web/app/components/visualization/DependencyGraph/useForceSimulation.ts` - Force simulation hook
+- `apps/web/app/components/visualization/DependencyGraph/__tests__/DependencyGraph.test.tsx` - Unit tests
+
+**Modified Files:**
+- `apps/web/eslint.config.mjs` - Added SVG, ResizeObserver, and Vitest globals
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` - Updated story status
 

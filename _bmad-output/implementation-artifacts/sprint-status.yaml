@@ -75,7 +75,7 @@ development_status:
 
   # Epic 4: Interactive Visualization & Reporting
   epic-4: in-progress
-  4-1-implement-d3js-force-directed-dependency-graph: ready-for-dev
+  4-1-implement-d3js-force-directed-dependency-graph: review
   4-2-highlight-circular-dependencies-in-graph: ready-for-dev
   4-3-implement-node-expand-collapse-functionality: ready-for-dev
   4-4-add-zoom-pan-and-navigation-controls: ready-for-dev
