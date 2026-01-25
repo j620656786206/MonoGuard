@@ -71,7 +71,7 @@ development_status:
   3-6-generate-impact-assessment: done
   3-7-provide-before-after-fix-explanations: done
   3-8-integrate-fix-suggestions-with-analysis-results: done
-  epic-3-retrospective: optional
+  epic-3-retrospective: done
 
   # Epic 4: Interactive Visualization & Reporting
   epic-4: backlog
