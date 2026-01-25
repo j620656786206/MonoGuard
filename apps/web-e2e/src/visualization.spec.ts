@@ -1,18 +1,21 @@
 /**
- * MonoGuard E2E Tests - Visualization Feature (Story 4.1)
+ * MonoGuard E2E Tests - Visualization Feature (Stories 4.1 & 4.2)
  *
- * Tests for the D3.js force-directed dependency graph visualization.
+ * Tests for the D3.js force-directed dependency graph visualization
+ * and circular dependency highlighting.
  *
  * NOTE: Full visualization tests require analysis data in the store.
  * Tests are split into:
  * - Empty state tests (run without data)
  * - Visualization container tests (verify setup)
  * - Full visualization tests (marked as fixme until data seeding is available)
+ * - Circular dependency highlighting tests (Story 4.2)
  *
  * Following TEA knowledge base patterns:
  * - Given-When-Then format
- * - Priority tags [P1], [P2]
+ * - Priority tags [P0], [P1], [P2]
  * - Explicit assertions
+ * - No hard waits
  */
 
 import { expect, test } from './support/fixtures'
@@ -154,5 +157,244 @@ test.describe('Dependency Graph Visualization (Story 4.1)', () => {
       const renderTime = Date.now() - startTime
       expect(renderTime).toBeLessThan(2000)
     })
+  })
+})
+
+/**
+ * Story 4.2: Highlight Circular Dependencies in Graph
+ *
+ * Tests for visual highlighting of circular dependencies in the dependency graph.
+ * These tests verify:
+ * - AC1: Visual highlighting of cycle nodes (red border/glow)
+ * - AC2: Visual highlighting of cycle edges (red, thicker)
+ * - AC3: Animated cycle paths
+ * - AC4: Color legend display
+ * - AC5: Click-to-highlight cycle interaction
+ * - AC6: Escape key to deselect
+ */
+test.describe('Circular Dependency Highlighting (Story 4.2)', () => {
+  /**
+   * Legend Display Tests (AC4)
+   *
+   * The GraphLegend component is rendered as part of DependencyGraphViz,
+   * which requires analysis data to be present. These tests are marked as
+   * fixme until data seeding is available.
+   *
+   * Unit test coverage: DependencyGraph.test.tsx (GraphLegend tests)
+   */
+  test.describe('Legend Display (AC4)', () => {
+    test.fixme('[P1] should display graph legend on results page', async ({ page }) => {
+      // FIXME: Test requires analysis data in store
+      // When data seeding is available:
+      // 1. Seed analysis results via fixture
+      // 2. Navigate to /results
+      // 3. Verify Legend component is rendered
+      await page.goto('/results')
+
+      // THEN: Legend component should be rendered
+      await expect(page.getByText('Legend')).toBeVisible()
+    })
+
+    test.fixme('[P1] should show normal node/edge colors in legend', async ({ page }) => {
+      // FIXME: Test requires analysis data in store
+      // When data seeding is available:
+      // 1. Seed analysis results via fixture
+      // 2. Navigate to /results
+      // 3. Verify legend displays normal element descriptions
+      await page.goto('/results')
+
+      // THEN: Legend should display normal element descriptions
+      await expect(page.getByText('Normal Package')).toBeVisible()
+      await expect(page.getByText('Normal Dependency')).toBeVisible()
+    })
+  })
+
+  test.describe('Cycle Highlighting with Data (Requires Analysis)', () => {
+    test.fixme('[P1] should display cycle colors in legend when cycles exist', async ({ page }) => {
+      // FIXME: Test requires analysis data with circular dependencies
+      // When data seeding is available:
+      // 1. Seed analysis results with circular dependencies via fixture
+      // 2. Navigate to /results
+      // 3. Verify legend shows cycle-specific colors
+      await page.goto('/results')
+
+      // THEN: Legend should show cycle indicators
+      await expect(page.getByText('In Circular Dependency')).toBeVisible()
+      await expect(page.getByText('Circular Dependency')).toBeVisible()
+    })
+
+    test.fixme('[P1] should highlight cycle nodes with red styling (AC1)', async ({ page }) => {
+      // FIXME: Test requires analysis data with circular dependencies
+      // Verification points:
+      // - Nodes in cycles have red fill (#ef4444)
+      // - Nodes have glow filter applied
+      // - Nodes have CSS class 'node--cycle'
+      await page.goto('/results')
+
+      // Check for cycle node styling
+      const cycleNodes = page.locator('g.node--cycle')
+      await expect(cycleNodes.first()).toBeVisible()
+
+      // Verify red fill color
+      const circle = cycleNodes.first().locator('circle')
+      await expect(circle).toHaveAttribute('fill', '#ef4444')
+    })
+
+    test.fixme('[P1] should highlight cycle edges with red color (AC2)', async ({ page }) => {
+      // FIXME: Test requires analysis data with circular dependencies
+      // Verification points:
+      // - Cycle edges are red (#ef4444)
+      // - Cycle edges are thicker (2.5px vs 1.5px)
+      // - Cycle edges use separate arrow marker
+      await page.goto('/results')
+
+      // Check for cycle edge group
+      const cycleEdgesGroup = page.locator('g.links-cycle')
+      await expect(cycleEdgesGroup).toBeVisible()
+
+      // Verify red stroke color
+      const cycleLine = cycleEdgesGroup.locator('line').first()
+      await expect(cycleLine).toHaveAttribute('stroke', '#ef4444')
+    })
+
+    test.fixme('[P2] should animate cycle edges (AC3)', async ({ page }) => {
+      // FIXME: Test requires analysis data with circular dependencies
+      // Verification points:
+      // - Cycle edges have stroke-dasharray for animation
+      // - CSS animation keyframes are present
+      await page.goto('/results')
+
+      // Check for animation styling
+      const cycleLine = page.locator('g.links-cycle line').first()
+      await expect(cycleLine).toHaveAttribute('stroke-dasharray')
+
+      // Check for style element with animation
+      const styleElement = page.locator('style')
+      await expect(styleElement).toContainText('flowAnimation')
+    })
+
+    test.fixme('[P1] should highlight specific cycle on node click (AC5)', async ({ page }) => {
+      // FIXME: Test requires analysis data with circular dependencies
+      // Verification points:
+      // - Click on cycle node selects that cycle
+      // - Selected cycle is emphasized (brighter)
+      // - Other elements are dimmed
+      await page.goto('/results')
+
+      // Find and click a cycle node
+      const cycleNode = page.locator('g.node--cycle').first()
+      await cycleNode.click()
+
+      // Verify selection state - other nodes should be dimmed
+      const dimmedNodes = page.locator('g.node--dimmed')
+      await expect(dimmedNodes.first()).toBeVisible()
+    })
+
+    test.fixme('[P2] should deselect cycle on Escape key (AC6)', async ({ page }) => {
+      // FIXME: Test requires analysis data with circular dependencies
+      // Verification points:
+      // - Press Escape clears cycle selection
+      // - All elements return to normal highlighting
+      await page.goto('/results')
+
+      // Click a cycle node to select
+      const cycleNode = page.locator('g.node--cycle').first()
+      await cycleNode.click()
+
+      // Verify selection
+      await expect(page.locator('g.node--dimmed').first()).toBeVisible()
+
+      // Press Escape to deselect
+      await page.keyboard.press('Escape')
+
+      // Verify deselection - no dimmed nodes
+      await expect(page.locator('g.node--dimmed')).toHaveCount(0)
+    })
+
+    test.fixme('[P2] should deselect cycle on background click (AC6)', async ({ page }) => {
+      // FIXME: Test requires analysis data with circular dependencies
+      // Verification points:
+      // - Click on graph background clears selection
+      await page.goto('/results')
+
+      // Click a cycle node to select
+      const cycleNode = page.locator('g.node--cycle').first()
+      await cycleNode.click()
+
+      // Click on SVG background
+      const svg = page.locator('svg').first()
+      await svg.click({ position: { x: 10, y: 10 } })
+
+      // Verify deselection
+      await expect(page.locator('g.node--dimmed')).toHaveCount(0)
+    })
+
+    test.fixme('[P1] should show interaction hints in legend (AC4)', async ({ page }) => {
+      // FIXME: Test requires analysis data with circular dependencies
+      // Verification points:
+      // - Legend shows "Click on red nodes" hint
+      // - Legend shows "Escape" to deselect hint
+      await page.goto('/results')
+
+      // Verify interaction hints are visible
+      await expect(page.getByText(/Click on red nodes/i)).toBeVisible()
+      await expect(page.getByText(/Escape/i)).toBeVisible()
+    })
+  })
+
+  test.describe('Performance (AC3)', () => {
+    test.fixme('[P2] should animate at 60fps without frame drops', async ({ page }) => {
+      // FIXME: Test requires analysis data with circular dependencies
+      // Performance verification:
+      // - Animation runs smoothly at 60fps
+      // - No visual jank during animation
+      // - CPU usage remains reasonable
+      await page.goto('/results')
+
+      // Use Performance API to check for frame drops
+      const metrics = await page.evaluate(() => {
+        return new Promise((resolve) => {
+          const frames: number[] = []
+          let lastTime = performance.now()
+
+          const checkFrame = () => {
+            const now = performance.now()
+            frames.push(now - lastTime)
+            lastTime = now
+
+            if (frames.length < 60) {
+              requestAnimationFrame(checkFrame)
+            } else {
+              const avgFrameTime = frames.reduce((a, b) => a + b, 0) / frames.length
+              resolve({ avgFrameTime, maxFrameTime: Math.max(...frames) })
+            }
+          }
+
+          requestAnimationFrame(checkFrame)
+        })
+      })
+
+      // 60fps = 16.67ms per frame, allow some margin
+      expect((metrics as { avgFrameTime: number }).avgFrameTime).toBeLessThan(20)
+    })
+  })
+
+  test.describe('Accessibility', () => {
+    test.fixme(
+      '[P2] should use color AND visual patterns for cycle indication',
+      async ({ page }) => {
+        // FIXME: Test requires analysis data with circular dependencies
+        // Accessibility verification:
+        // - Cycle edges are thicker (not just red) - passes WCAG 2.1
+        // - Cycle nodes have glow effect (not just color)
+        // - Animation provides additional visual cue
+        // - Legend indicates both color and pattern differences
+        await page.goto('/results')
+
+        // THEN: Legend should indicate both color and pattern differences
+        const legend = page.getByText('Legend').locator('..')
+        await expect(legend).toBeVisible()
+      }
+    )
   })
 })
