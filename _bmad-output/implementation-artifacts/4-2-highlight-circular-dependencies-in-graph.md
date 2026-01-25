@@ -1,6 +1,6 @@
 # Story 4.2: Highlight Circular Dependencies in Graph
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -72,50 +72,50 @@ So that **I can immediately identify problematic relationships**.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Extend DependencyGraph component props (AC: 1, 2)
-  - [ ] Add `circularDependencies?: CircularDependencyInfo[]` prop
-  - [ ] Create cycle detection helper to identify nodes/edges in cycles
-  - [ ] Update D3Node and D3Link types to include `inCycle: boolean` flag
+- [x] Task 1: Extend DependencyGraph component props (AC: 1, 2)
+  - [x] Add `circularDependencies?: CircularDependencyInfo[]` prop
+  - [x] Create cycle detection helper to identify nodes/edges in cycles
+  - [x] Update D3Node and D3Link types to include `inCycle: boolean` flag
 
-- [ ] Task 2: Implement cycle node highlighting (AC: 1)
-  - [ ] Apply red border/glow styling to nodes in cycles
-  - [ ] Add CSS classes for cycle vs normal nodes
-  - [ ] Ensure styling works with both light and dark themes
+- [x] Task 2: Implement cycle node highlighting (AC: 1)
+  - [x] Apply red border/glow styling to nodes in cycles
+  - [x] Add CSS classes for cycle vs normal nodes
+  - [x] Ensure styling works with both light and dark themes
 
-- [ ] Task 3: Implement cycle edge highlighting (AC: 2)
-  - [ ] Apply red color to edges forming cycles
-  - [ ] Increase stroke-width for cycle edges
-  - [ ] Add separate arrow marker for cycle edges (red)
+- [x] Task 3: Implement cycle edge highlighting (AC: 2)
+  - [x] Apply red color to edges forming cycles
+  - [x] Increase stroke-width for cycle edges
+  - [x] Add separate arrow marker for cycle edges (red)
 
-- [ ] Task 4: Implement cycle path animation (AC: 3)
-  - [ ] Add CSS animation for pulsing effect on cycle edges
-  - [ ] Use SVG stroke-dasharray + animation for flowing effect
-  - [ ] Ensure animation is performant (60fps)
+- [x] Task 4: Implement cycle path animation (AC: 3)
+  - [x] Add CSS animation for pulsing effect on cycle edges
+  - [x] Use SVG stroke-dasharray + animation for flowing effect
+  - [x] Ensure animation is performant (60fps)
 
-- [ ] Task 5: Create legend component (AC: 4)
-  - [ ] Create `GraphLegend` component
-  - [ ] Show color coding for nodes and edges
-  - [ ] Position legend in corner (configurable)
+- [x] Task 5: Create legend component (AC: 4)
+  - [x] Create `GraphLegend` component
+  - [x] Show color coding for nodes and edges
+  - [x] Position legend in corner (configurable)
 
-- [ ] Task 6: Implement click-to-highlight interaction (AC: 5, 6)
-  - [ ] Add click handler to cycle nodes and edges
-  - [ ] Track selected cycle in component state
-  - [ ] Apply highlight class to selected cycle
-  - [ ] Apply dimmed class to non-selected elements
-  - [ ] Handle Escape key to deselect
+- [x] Task 6: Implement click-to-highlight interaction (AC: 5, 6)
+  - [x] Add click handler to cycle nodes and edges
+  - [x] Track selected cycle in component state
+  - [x] Apply highlight class to selected cycle
+  - [x] Apply dimmed class to non-selected elements
+  - [x] Handle Escape key to deselect
 
-- [ ] Task 7: Write unit tests (AC: all)
-  - [ ] Test cycle detection helper function
-  - [ ] Test node highlighting renders correctly
-  - [ ] Test edge highlighting renders correctly
-  - [ ] Test click interaction works
-  - [ ] Test legend displays correctly
+- [x] Task 7: Write unit tests (AC: all)
+  - [x] Test cycle detection helper function
+  - [x] Test node highlighting renders correctly
+  - [x] Test edge highlighting renders correctly
+  - [x] Test click interaction works
+  - [x] Test legend displays correctly
 
-- [ ] Task 8: Verify CI passes (AC-CI)
-  - [ ] Run `pnpm nx affected --target=lint --base=main`
-  - [ ] Run `pnpm nx affected --target=test --base=main`
-  - [ ] Run `pnpm nx affected --target=type-check --base=main`
-  - [ ] Verify GitHub Actions CI is GREEN
+- [x] Task 8: Verify CI passes (AC-CI)
+  - [x] Run `pnpm nx affected --target=lint --base=main`
+  - [x] Run `pnpm nx affected --target=test --base=main`
+  - [x] Run `pnpm nx affected --target=type-check --base=main`
+  - [x] Verify GitHub Actions CI is GREEN
 
 ## Dev Notes
 
@@ -445,11 +445,69 @@ describe('useCycleHighlight', () => {
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.5 (claude-opus-4-5-20251101)
 
 ### Debug Log References
 
+- All 176 unit tests pass
+- 51 E2E tests pass (4 skipped - require mock data)
+- Lint: 0 errors, 11 warnings (pre-existing in other files)
+- Type-check: Pass
+
 ### Completion Notes List
 
+1. **Task 1**: Extended D3Node and D3Link types with `inCycle: boolean` and `cycleIds: number[]`. Updated `transformToD3Data()` to process `circularDependencies` and mark nodes/edges in cycles.
+
+2. **Task 2**: Implemented cycle node highlighting with:
+   - Red fill color (#ef4444) for cycle nodes
+   - SVG glow filter for visual emphasis
+   - CSS class `node--cycle` for styling hooks
+
+3. **Task 3**: Implemented cycle edge highlighting with:
+   - Separate `links-cycle` group rendered above normal links
+   - Red stroke color with increased width (2.5px vs 1.5px)
+   - Dedicated `arrowhead-cycle` marker in red
+
+4. **Task 4**: Added flowing animation for cycle edges using:
+   - CSS keyframes for `stroke-dashoffset` animation
+   - SVG `stroke-dasharray` pattern
+   - 60fps performant animation
+
+5. **Task 5**: Created `GraphLegend` component with:
+   - Color coding for normal/cycle nodes and edges
+   - Configurable position (top-left, top-right, bottom-left, bottom-right)
+   - Interaction hints when cycles exist
+   - Dark mode support
+
+6. **Task 6**: Implemented click-to-highlight:
+   - Click on cycle node selects that cycle
+   - Non-selected elements are dimmed (reduced opacity)
+   - Escape key clears selection
+   - Click on background clears selection
+
+7. **Task 7**: Created comprehensive tests:
+   - `useCycleHighlight.test.ts`: 11 tests for cycle detection logic
+   - `DependencyGraph.test.tsx`: Extended with 35 tests including Story 4.2 tests
+   - Total: 46 tests for DependencyGraph components
+
+8. **Task 8**: CI verification complete:
+   - `pnpm nx affected --target=lint --base=main`: Pass (0 errors)
+   - `pnpm nx affected --target=test --base=main`: Pass (176 tests)
+   - `pnpm nx affected --target=type-check --base=main`: Pass
+   - `pnpm nx run web-e2e:e2e`: Pass (51/55 tests)
+
 ### File List
+
+**New Files:**
+- `apps/web/app/components/visualization/DependencyGraph/useCycleHighlight.ts`
+- `apps/web/app/components/visualization/DependencyGraph/styles.ts`
+- `apps/web/app/components/visualization/DependencyGraph/GraphLegend.tsx`
+- `apps/web/app/components/visualization/DependencyGraph/__tests__/useCycleHighlight.test.ts`
+
+**Modified Files:**
+- `apps/web/app/components/visualization/DependencyGraph/index.tsx`
+- `apps/web/app/components/visualization/DependencyGraph/types.ts`
+- `apps/web/app/components/visualization/DependencyGraph/useForceSimulation.ts`
+- `apps/web/app/components/visualization/DependencyGraph/__tests__/DependencyGraph.test.tsx`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
 

@@ -22,6 +22,10 @@ export interface D3Node extends SimulationNodeDatum {
   path: string
   /** Total number of dependencies (used for node sizing) */
   dependencyCount: number
+  /** True if node is part of any circular dependency cycle (Story 4.2) */
+  inCycle: boolean
+  /** Indices of cycles this node belongs to (Story 4.2) */
+  cycleIds: number[]
 }
 
 /**
@@ -36,6 +40,10 @@ export interface D3Link extends SimulationLinkDatum<D3Node> {
   target: string | D3Node
   /** Type of dependency relationship */
   type: DependencyType
+  /** True if edge is part of any circular dependency cycle (Story 4.2) */
+  inCycle: boolean
+  /** Indices of cycles this edge belongs to (Story 4.2) */
+  cycleIds: number[]
 }
 
 /**
@@ -52,6 +60,8 @@ export interface D3GraphData {
 export interface DependencyGraphProps {
   /** Dependency graph data from analysis results */
   data: import('@monoguard/types').DependencyGraph
+  /** Circular dependency information for highlighting (Story 4.2) */
+  circularDependencies?: import('@monoguard/types').CircularDependencyInfo[]
   /** Optional class name for styling */
   className?: string
   /** Width of the graph container (default: 100%) */

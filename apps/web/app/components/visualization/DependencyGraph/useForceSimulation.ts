@@ -5,7 +5,7 @@
  * Handles initialization, updates, and cleanup.
  */
 
-import type { DependencyGraph } from '@monoguard/types'
+import type { CircularDependencyInfo, DependencyGraph } from '@monoguard/types'
 import type { Simulation } from 'd3'
 import * as d3 from 'd3'
 import { useCallback, useEffect, useRef } from 'react'
@@ -13,22 +13,70 @@ import type { D3GraphData, D3Link, D3Node, ForceSimulationConfig } from './types
 import { DEFAULT_SIMULATION_CONFIG } from './types'
 
 /**
- * Transform DependencyGraph data to D3-compatible format
+ * Options for transforming dependency graph data
  */
-export function transformToD3Data(data: DependencyGraph): D3GraphData {
-  const nodes: D3Node[] = Object.entries(data.nodes).map(([name, pkg]) => ({
-    id: name,
-    name: pkg.name,
-    path: pkg.path,
-    dependencyCount:
-      pkg.dependencies.length + pkg.devDependencies.length + pkg.peerDependencies.length,
-  }))
+export interface TransformOptions {
+  /** Circular dependency information for marking nodes/edges in cycles */
+  circularDependencies?: CircularDependencyInfo[]
+}
 
-  const links: D3Link[] = data.edges.map((edge) => ({
-    source: edge.from,
-    target: edge.to,
-    type: edge.type,
-  }))
+/**
+ * Transform DependencyGraph data to D3-compatible format
+ *
+ * @param data - Raw dependency graph data
+ * @param options - Optional configuration including circular dependency info
+ * @returns D3-compatible graph data with cycle information
+ */
+export function transformToD3Data(data: DependencyGraph, options?: TransformOptions): D3GraphData {
+  // Build cycle lookup maps if circular dependencies are provided
+  const cycleNodeMap = new Map<string, number[]>()
+  const cycleEdgeMap = new Map<string, number[]>()
+
+  if (options?.circularDependencies) {
+    options.circularDependencies.forEach((cycle, cycleIndex) => {
+      // Add all nodes in this cycle
+      cycle.cycle.forEach((nodeName) => {
+        const existing = cycleNodeMap.get(nodeName) || []
+        if (!existing.includes(cycleIndex)) {
+          cycleNodeMap.set(nodeName, [...existing, cycleIndex])
+        }
+      })
+
+      // Add all edges in this cycle (consecutive pairs)
+      for (let i = 0; i < cycle.cycle.length - 1; i++) {
+        const edgeKey = `${cycle.cycle[i]}->${cycle.cycle[i + 1]}`
+        const existing = cycleEdgeMap.get(edgeKey) || []
+        if (!existing.includes(cycleIndex)) {
+          cycleEdgeMap.set(edgeKey, [...existing, cycleIndex])
+        }
+      }
+    })
+  }
+
+  const nodes: D3Node[] = Object.entries(data.nodes).map(([name, pkg]) => {
+    const cycleIds = cycleNodeMap.get(name) || []
+    return {
+      id: name,
+      name: pkg.name,
+      path: pkg.path,
+      dependencyCount:
+        pkg.dependencies.length + pkg.devDependencies.length + pkg.peerDependencies.length,
+      inCycle: cycleIds.length > 0,
+      cycleIds,
+    }
+  })
+
+  const links: D3Link[] = data.edges.map((edge) => {
+    const edgeKey = `${edge.from}->${edge.to}`
+    const cycleIds = cycleEdgeMap.get(edgeKey) || []
+    return {
+      source: edge.from,
+      target: edge.to,
+      type: edge.type,
+      inCycle: cycleIds.length > 0,
+      cycleIds,
+    }
+  })
 
   return { nodes, links }
 }
@@ -52,6 +100,8 @@ export function truncatePackageName(name: string, maxLength: number = 15): strin
 interface UseForceSimulationOptions {
   svgRef: React.RefObject<SVGSVGElement | null>
   data: DependencyGraph
+  /** Circular dependency information for marking nodes/edges in cycles (Story 4.2) */
+  circularDependencies?: CircularDependencyInfo[]
   config?: Partial<ForceSimulationConfig>
   onTick?: () => void
 }
@@ -70,6 +120,7 @@ interface UseForceSimulationReturn {
 export function useForceSimulation({
   svgRef,
   data,
+  circularDependencies,
   config = {},
   onTick,
 }: UseForceSimulationOptions): UseForceSimulationReturn {
@@ -82,8 +133,8 @@ export function useForceSimulation({
     ...config,
   }
 
-  // Transform data
-  const graphData = transformToD3Data(data)
+  // Transform data with cycle information
+  const graphData = transformToD3Data(data, { circularDependencies })
   graphDataRef.current = graphData
 
   // Create simulation setup function
