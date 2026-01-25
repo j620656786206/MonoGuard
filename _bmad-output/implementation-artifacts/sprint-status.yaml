@@ -78,7 +78,7 @@ development_status:
   4-1-implement-d3js-force-directed-dependency-graph: ready-for-dev
   4-2-highlight-circular-dependencies-in-graph: ready-for-dev
   4-3-implement-node-expand-collapse-functionality: ready-for-dev
-  4-4-add-zoom-pan-and-navigation-controls: backlog
+  4-4-add-zoom-pan-and-navigation-controls: ready-for-dev
   4-5-implement-hover-details-and-tooltips: backlog
   4-6-export-graph-as-png-svg-images: backlog
   4-7-export-analysis-reports-in-multiple-formats: backlog
