@@ -25,6 +25,8 @@ export interface AnalysisResult {
   metadata?: AnalysisMetadata
   /** ISO 8601 timestamp */
   createdAt?: string
+  /** Aggregated fix summary for all circular dependencies (Story 3.8) */
+  fixSummary?: FixSummary
 }
 
 /**
@@ -55,6 +57,10 @@ export interface CircularDependencyInfo {
   fixStrategies?: FixStrategy[]
   /** Impact assessment with blast radius analysis (Story 3.6) */
   impactAssessment?: ImpactAssessment
+  /** Quick access to best fix recommendation (Story 3.8) */
+  quickFix?: QuickFixSummary
+  /** Priority score for sorting - higher = fix first (Story 3.8) */
+  priorityScore: number
 }
 
 /**
@@ -722,6 +728,68 @@ export interface SideEffectWarning {
  * Matches Go: pkg/types/before_after_explanation.go (Story 3.7)
  */
 export type WarningSeverity = 'info' | 'warning' | 'critical'
+
+/**
+ * QuickFixSummary - Quick access to the best fix recommendation
+ *
+ * Matches Go: pkg/types/quick_fix_summary.go (Story 3.8)
+ * This is a convenience wrapper around the best FixStrategy for immediate access
+ */
+export interface QuickFixSummary {
+  /** Type of the recommended fix strategy */
+  strategyType: FixStrategyType
+  /** Human-readable strategy name */
+  strategyName: string
+  /** One-line description of what the fix accomplishes */
+  summary: string
+  /** Suitability score (1-10) - highest available */
+  suitability: number
+  /** Estimated effort level */
+  effort: EffortLevel
+  /** Time to implement (e.g., "15-30 minutes") */
+  estimatedTime: string
+  /** Full step-by-step guide (embedded for one-click access) */
+  guide?: FixGuide
+  /** Index into fixStrategies[] for full details */
+  strategyIndex: number
+}
+
+/**
+ * FixSummary - Aggregated statistics about fix recommendations
+ *
+ * Matches Go: pkg/types/fix_summary.go (Story 3.8)
+ * Provides high-level overview at the AnalysisResult level
+ */
+export interface FixSummary {
+  /** Count of all detected circular dependency cycles */
+  totalCircularDependencies: number
+  /** Sum of all fix times (human-readable, e.g., "2 hours 30 minutes") */
+  totalEstimatedFixTime: string
+  /** Number of low-complexity (score 1-3) fixes available */
+  quickWinsCount: number
+  /** Number of critical impact cycles */
+  criticalCyclesCount: number
+  /** Top 3 cycles to fix first (by priority score) */
+  highPriorityCycles: PriorityCycleSummary[]
+}
+
+/**
+ * PriorityCycleSummary - Brief overview of a prioritized cycle
+ *
+ * Matches Go: pkg/types/fix_summary.go (Story 3.8)
+ */
+export interface PriorityCycleSummary {
+  /** Unique identifier for the cycle (e.g., "core→ui") */
+  cycleId: string
+  /** Packages in the cycle */
+  packagesInvolved: string[]
+  /** Priority score (impact × ease) - higher = fix first */
+  priorityScore: number
+  /** Recommended fix strategy type */
+  recommendedFix: FixStrategyType
+  /** Estimated fix time */
+  estimatedTime: string
+}
 
 export { RiskLevel, Severity } from '../common'
 // Re-export for convenience

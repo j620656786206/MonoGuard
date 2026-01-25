@@ -733,3 +733,183 @@ func TestCircularDependencyInfo_RefactoringComplexityBackwardCompatibility(t *te
 		t.Errorf("Complexity = %d, want 3", decoded.Complexity)
 	}
 }
+
+// ========================================
+// QuickFix and PriorityScore Tests (Story 3.8)
+// ========================================
+
+func TestCircularDependencyInfo_WithQuickFix(t *testing.T) {
+	// Test that QuickFix field is optional and omitted when nil
+	info := &CircularDependencyInfo{
+		Cycle:         []string{"A", "B", "A"},
+		Type:          CircularTypeDirect,
+		Severity:      CircularSeverityWarning,
+		Depth:         2,
+		Impact:        "Direct circular dependency between A and B",
+		Complexity:    3,
+		QuickFix:      nil, // Should be omitted in JSON
+		PriorityScore: 0,
+	}
+
+	data, err := json.Marshal(info)
+	if err != nil {
+		t.Fatalf("Failed to marshal: %v", err)
+	}
+
+	jsonStr := string(data)
+
+	// QuickFix should NOT be in JSON when nil (omitempty)
+	if strings.Contains(jsonStr, `"quickFix"`) {
+		t.Errorf("Expected quickFix to be omitted when nil, got: %s", jsonStr)
+	}
+
+	// PriorityScore should always be present (not omitempty)
+	if !strings.Contains(jsonStr, `"priorityScore"`) {
+		t.Errorf("Expected priorityScore to be present, got: %s", jsonStr)
+	}
+}
+
+func TestCircularDependencyInfo_WithQuickFixPresent(t *testing.T) {
+	// Test that QuickFix field is included when present
+	info := &CircularDependencyInfo{
+		Cycle:      []string{"@mono/ui", "@mono/api", "@mono/core", "@mono/ui"},
+		Type:       CircularTypeIndirect,
+		Severity:   CircularSeverityInfo,
+		Depth:      3,
+		Impact:     "Indirect circular dependency involving 3 packages",
+		Complexity: 5,
+		QuickFix: &QuickFixSummary{
+			StrategyType:  FixStrategyExtractModule,
+			StrategyName:  "Extract Shared Module",
+			Summary:       "Create new shared package '@mono/shared' to break the cycle",
+			Suitability:   8,
+			Effort:        EffortMedium,
+			EstimatedTime: "30-60 minutes",
+			StrategyIndex: 0,
+		},
+		PriorityScore: 80.0,
+	}
+
+	data, err := json.Marshal(info)
+	if err != nil {
+		t.Fatalf("Failed to marshal: %v", err)
+	}
+
+	jsonStr := string(data)
+
+	// QuickFix should be in JSON when present
+	expectedFields := []string{
+		`"quickFix"`,
+		`"strategyType"`,
+		`"strategyName"`,
+		`"summary"`,
+		`"suitability"`,
+		`"effort"`,
+		`"estimatedTime"`,
+		`"strategyIndex"`,
+		`"priorityScore"`,
+	}
+
+	for _, field := range expectedFields {
+		if !strings.Contains(jsonStr, field) {
+			t.Errorf("Expected JSON to contain %s, got: %s", field, jsonStr)
+		}
+	}
+
+	// Verify priorityScore value
+	if !strings.Contains(jsonStr, `"priorityScore":80`) {
+		t.Errorf("Expected priorityScore:80, got: %s", jsonStr)
+	}
+
+	// Verify round-trip
+	var decoded CircularDependencyInfo
+	if err := json.Unmarshal(data, &decoded); err != nil {
+		t.Fatalf("Failed to unmarshal: %v", err)
+	}
+
+	if decoded.QuickFix == nil {
+		t.Fatal("QuickFix should not be nil after round-trip")
+	}
+	if decoded.QuickFix.StrategyType != FixStrategyExtractModule {
+		t.Errorf("StrategyType = %s, want extract-module", decoded.QuickFix.StrategyType)
+	}
+	if decoded.QuickFix.Suitability != 8 {
+		t.Errorf("Suitability = %d, want 8", decoded.QuickFix.Suitability)
+	}
+	if decoded.PriorityScore != 80.0 {
+		t.Errorf("PriorityScore = %f, want 80.0", decoded.PriorityScore)
+	}
+}
+
+func TestCircularDependencyInfo_QuickFixBackwardCompatibility(t *testing.T) {
+	// Test that existing JSON without quickFix/priorityScore still deserializes correctly
+	jsonStr := `{
+		"cycle": ["A", "B", "A"],
+		"type": "direct",
+		"severity": "warning",
+		"depth": 2,
+		"impact": "Direct circular dependency between A and B",
+		"complexity": 3
+	}`
+
+	var decoded CircularDependencyInfo
+	if err := json.Unmarshal([]byte(jsonStr), &decoded); err != nil {
+		t.Fatalf("Failed to unmarshal legacy JSON: %v", err)
+	}
+
+	// QuickFix should be nil for legacy JSON
+	if decoded.QuickFix != nil {
+		t.Error("QuickFix should be nil for legacy JSON without quickFix field")
+	}
+
+	// PriorityScore should default to 0
+	if decoded.PriorityScore != 0 {
+		t.Errorf("PriorityScore should be 0 for legacy JSON, got %f", decoded.PriorityScore)
+	}
+
+	// Other fields should be correct
+	if decoded.Type != CircularTypeDirect {
+		t.Errorf("Type = %q, want %q", decoded.Type, CircularTypeDirect)
+	}
+}
+
+func TestCircularDependencyInfo_PriorityScoreValues(t *testing.T) {
+	tests := []struct {
+		name          string
+		priorityScore float64
+	}{
+		{"zero", 0},
+		{"low", 10.5},
+		{"medium", 45.0},
+		{"high", 80.0},
+		{"maximum", 100.0},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			info := &CircularDependencyInfo{
+				Cycle:         []string{"A", "B", "A"},
+				Type:          CircularTypeDirect,
+				Severity:      CircularSeverityWarning,
+				Depth:         2,
+				Impact:        "Test",
+				Complexity:    3,
+				PriorityScore: tt.priorityScore,
+			}
+
+			data, err := json.Marshal(info)
+			if err != nil {
+				t.Fatalf("Failed to marshal: %v", err)
+			}
+
+			var decoded CircularDependencyInfo
+			if err := json.Unmarshal(data, &decoded); err != nil {
+				t.Fatalf("Failed to unmarshal: %v", err)
+			}
+
+			if decoded.PriorityScore != tt.priorityScore {
+				t.Errorf("PriorityScore = %f, want %f", decoded.PriorityScore, tt.priorityScore)
+			}
+		})
+	}
+}

@@ -398,3 +398,125 @@ func TestWorkspaceDataWithNestedPackages(t *testing.T) {
 		t.Errorf("Dependency version = %q, want %q", pkgA.Dependencies["@mono/pkg-b"], "^1.0.0")
 	}
 }
+
+// ========================================
+// FixSummary Integration Tests (Story 3.8)
+// ========================================
+
+func TestAnalysisResult_WithFixSummary(t *testing.T) {
+	// Test that FixSummary field is optional and omitted when nil
+	result := AnalysisResult{
+		HealthScore: 85,
+		Packages:    10,
+		FixSummary:  nil, // Should be omitted in JSON
+	}
+
+	jsonBytes, err := json.Marshal(result)
+	if err != nil {
+		t.Fatalf("Failed to marshal AnalysisResult: %v", err)
+	}
+
+	jsonStr := string(jsonBytes)
+
+	// FixSummary should NOT be in JSON when nil (omitempty)
+	if containsTypesStr(jsonStr, `"fixSummary"`) {
+		t.Errorf("Expected fixSummary to be omitted when nil, got: %s", jsonStr)
+	}
+}
+
+func TestAnalysisResult_WithFixSummaryPresent(t *testing.T) {
+	// Test that FixSummary field is included when present
+	result := AnalysisResult{
+		HealthScore: 75,
+		Packages:    15,
+		FixSummary: &FixSummary{
+			TotalCircularDependencies: 3,
+			TotalEstimatedFixTime:     "2 hours",
+			QuickWinsCount:            2,
+			CriticalCyclesCount:       1,
+			HighPriorityCycles: []PriorityCycleSummary{
+				{
+					CycleID:          "core→ui",
+					PackagesInvolved: []string{"@mono/core", "@mono/ui"},
+					PriorityScore:    80.0,
+					RecommendedFix:   FixStrategyExtractModule,
+					EstimatedTime:    "30-60 minutes",
+				},
+			},
+		},
+	}
+
+	jsonBytes, err := json.Marshal(result)
+	if err != nil {
+		t.Fatalf("Failed to marshal AnalysisResult: %v", err)
+	}
+
+	jsonStr := string(jsonBytes)
+
+	// FixSummary should be in JSON when present
+	expectedFields := []string{
+		`"fixSummary"`,
+		`"totalCircularDependencies"`,
+		`"totalEstimatedFixTime"`,
+		`"quickWinsCount"`,
+		`"criticalCyclesCount"`,
+		`"highPriorityCycles"`,
+	}
+
+	for _, field := range expectedFields {
+		if !containsTypesStr(jsonStr, field) {
+			t.Errorf("Expected JSON to contain %s, got: %s", field, jsonStr)
+		}
+	}
+
+	// Verify round-trip
+	var decoded AnalysisResult
+	if err := json.Unmarshal(jsonBytes, &decoded); err != nil {
+		t.Fatalf("Failed to unmarshal: %v", err)
+	}
+
+	if decoded.FixSummary == nil {
+		t.Fatal("FixSummary should not be nil after round-trip")
+	}
+	if decoded.FixSummary.TotalCircularDependencies != 3 {
+		t.Errorf("TotalCircularDependencies = %d, want 3", decoded.FixSummary.TotalCircularDependencies)
+	}
+	if decoded.FixSummary.QuickWinsCount != 2 {
+		t.Errorf("QuickWinsCount = %d, want 2", decoded.FixSummary.QuickWinsCount)
+	}
+}
+
+func TestAnalysisResult_FixSummaryBackwardCompatibility(t *testing.T) {
+	// Test that existing JSON without fixSummary still deserializes correctly
+	jsonStr := `{
+		"healthScore": 85,
+		"packages": 10
+	}`
+
+	var decoded AnalysisResult
+	if err := json.Unmarshal([]byte(jsonStr), &decoded); err != nil {
+		t.Fatalf("Failed to unmarshal legacy JSON: %v", err)
+	}
+
+	// FixSummary should be nil for legacy JSON
+	if decoded.FixSummary != nil {
+		t.Error("FixSummary should be nil for legacy JSON without fixSummary field")
+	}
+
+	// Other fields should be correct
+	if decoded.HealthScore != 85 {
+		t.Errorf("HealthScore = %d, want 85", decoded.HealthScore)
+	}
+	if decoded.Packages != 10 {
+		t.Errorf("Packages = %d, want 10", decoded.Packages)
+	}
+}
+
+func containsTypesStr(s, substr string) bool {
+	for i := 0; i <= len(s)-len(substr); i++ {
+		if s[i:i+len(substr)] == substr {
+			return true
+		}
+	}
+	return false
+}

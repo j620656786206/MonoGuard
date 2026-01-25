@@ -11,17 +11,19 @@ import "fmt"
 // CircularDependencyInfo represents a detected circular dependency.
 // Matches @monoguard/types CircularDependencyInfo interface.
 type CircularDependencyInfo struct {
-	Cycle                 []string               `json:"cycle"`                            // Package names in order, ends with first
-	Type                  CircularType           `json:"type"`                             // direct or indirect
-	Severity              CircularSeverity       `json:"severity"`                         // critical, warning, or info
-	Depth                 int                    `json:"depth"`                            // Number of unique packages in cycle
-	Impact                string                 `json:"impact"`                           // Human-readable impact description
-	Complexity            int                    `json:"complexity"`                       // Legacy: Basic refactoring complexity (1-10)
-	RefactoringComplexity *RefactoringComplexity `json:"refactoringComplexity,omitempty"`  // Story 3.5: Detailed refactoring complexity
-	RootCause             *RootCauseAnalysis     `json:"rootCause,omitempty"`              // Story 3.1: Optional root cause analysis
-	ImportTraces          []ImportTrace          `json:"importTraces,omitempty"`           // Story 3.2: Import statements forming the cycle
-	FixStrategies         []FixStrategy          `json:"fixStrategies,omitempty"`          // Story 3.3: Recommended fix strategies
-	ImpactAssessment      *ImpactAssessment      `json:"impactAssessment,omitempty"`       // Story 3.6: Impact assessment
+	Cycle                 []string               `json:"cycle"`                           // Package names in order, ends with first
+	Type                  CircularType           `json:"type"`                            // direct or indirect
+	Severity              CircularSeverity       `json:"severity"`                        // critical, warning, or info
+	Depth                 int                    `json:"depth"`                           // Number of unique packages in cycle
+	Impact                string                 `json:"impact"`                          // Human-readable impact description
+	Complexity            int                    `json:"complexity"`                      // Legacy: Basic refactoring complexity (1-10)
+	RefactoringComplexity *RefactoringComplexity `json:"refactoringComplexity,omitempty"` // Story 3.5: Detailed refactoring complexity
+	RootCause             *RootCauseAnalysis     `json:"rootCause,omitempty"`             // Story 3.1: Optional root cause analysis
+	ImportTraces          []ImportTrace          `json:"importTraces,omitempty"`          // Story 3.2: Import statements forming the cycle
+	FixStrategies         []FixStrategy          `json:"fixStrategies,omitempty"`         // Story 3.3: Recommended fix strategies
+	ImpactAssessment      *ImpactAssessment      `json:"impactAssessment,omitempty"`      // Story 3.6: Impact assessment
+	QuickFix              *QuickFixSummary       `json:"quickFix,omitempty"`              // Story 3.8: Quick access to best fix
+	PriorityScore         float64                `json:"priorityScore"`                   // Story 3.8: Priority for sorting (higher = fix first)
 }
 
 // CircularType classifies the cycle length.

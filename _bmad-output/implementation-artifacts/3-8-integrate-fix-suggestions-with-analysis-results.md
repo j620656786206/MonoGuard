@@ -1,6 +1,6 @@
 # Story 3.8: Integrate Fix Suggestions with Analysis Results
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -95,8 +95,8 @@ So that **I can see problems and solutions together**.
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Define QuickFixSummary Type** (AC: #1, #5)
-  - [ ] 1.1 Create `pkg/types/quick_fix_summary.go`:
+- [x] **Task 1: Define QuickFixSummary Type** (AC: #1, #5)
+  - [x] 1.1 Create `pkg/types/quick_fix_summary.go`:
     ```go
     package types
 
@@ -128,11 +128,11 @@ So that **I can see problems and solutions together**.
         StrategyIndex int `json:"strategyIndex"`
     }
     ```
-  - [ ] 1.2 Add JSON serialization tests in `pkg/types/quick_fix_summary_test.go`
-  - [ ] 1.3 Ensure all JSON tags use camelCase
+  - [x] 1.2 Add JSON serialization tests in `pkg/types/quick_fix_summary_test.go`
+  - [x] 1.3 Ensure all JSON tags use camelCase
 
-- [ ] **Task 2: Define FixSummary Type for AnalysisResult** (AC: #4)
-  - [ ] 2.1 Create `pkg/types/fix_summary.go`:
+- [x] **Task 2: Define FixSummary Type for AnalysisResult** (AC: #4)
+  - [x] 2.1 Create `pkg/types/fix_summary.go`:
     ```go
     package types
 
@@ -173,11 +173,11 @@ So that **I can see problems and solutions together**.
         EstimatedTime string `json:"estimatedTime"`
     }
     ```
-  - [ ] 2.2 Add JSON serialization tests
-  - [ ] 2.3 Ensure all JSON tags use camelCase
+  - [x] 2.2 Add JSON serialization tests
+  - [x] 2.3 Ensure all JSON tags use camelCase
 
-- [ ] **Task 3: Update CircularDependencyInfo** (AC: #1, #3, #6, #7)
-  - [ ] 3.1 Update `pkg/types/circular.go`:
+- [x] **Task 3: Update CircularDependencyInfo** (AC: #1, #3, #6, #7)
+  - [x] 3.1 Update `pkg/types/circular.go`:
     ```go
     type CircularDependencyInfo struct {
         // Existing fields
@@ -210,10 +210,10 @@ So that **I can see problems and solutions together**.
         PriorityScore float64 `json:"priorityScore"`
     }
     ```
-  - [ ] 3.2 Verify existing tests still pass
+  - [x] 3.2 Verify existing tests still pass
 
-- [ ] **Task 4: Update AnalysisResult** (AC: #4)
-  - [ ] 4.1 Update `pkg/types/analysis.go`:
+- [x] **Task 4: Update AnalysisResult** (AC: #4)
+  - [x] 4.1 Update `pkg/types/analysis.go`:
     ```go
     type AnalysisResult struct {
         // Existing fields
@@ -228,10 +228,10 @@ So that **I can see problems and solutions together**.
         FixSummary *FixSummary `json:"fixSummary,omitempty"`
     }
     ```
-  - [ ] 4.2 Verify existing tests still pass
+  - [x] 4.2 Verify existing tests still pass
 
-- [ ] **Task 5: Create ResultEnricher** (AC: #1, #2, #3, #4, #7)
-  - [ ] 5.1 Create `pkg/analyzer/result_enricher.go`:
+- [x] **Task 5: Create ResultEnricher** (AC: #1, #2, #3, #4, #7)
+  - [x] 5.1 Create `pkg/analyzer/result_enricher.go`:
     ```go
     package analyzer
 
@@ -270,11 +270,11 @@ So that **I can see problems and solutions together**.
     // createQuickFix extracts the best strategy as QuickFixSummary.
     func createQuickFix(strategies []types.FixStrategy) *types.QuickFixSummary
     ```
-  - [ ] 5.2 Implement enrichment logic
-  - [ ] 5.3 Create comprehensive tests in `pkg/analyzer/result_enricher_test.go`
+  - [x] 5.2 Implement enrichment logic
+  - [x] 5.3 Create comprehensive tests in `pkg/analyzer/result_enricher_test.go`
 
-- [ ] **Task 6: Implement Strategy Sorting** (AC: #2)
-  - [ ] 6.1 Implement `sortStrategies`:
+- [x] **Task 6: Implement Strategy Sorting** (AC: #2)
+  - [x] 6.1 Implement `sortStrategies`:
     ```go
     func sortStrategies(strategies []types.FixStrategy) {
         sort.SliceStable(strategies, func(i, j int) bool {
@@ -282,10 +282,10 @@ So that **I can see problems and solutions together**.
         })
     }
     ```
-  - [ ] 6.2 Add tests for strategy sorting
+  - [x] 6.2 Add tests for strategy sorting
 
-- [ ] **Task 7: Implement Priority Score Calculation** (AC: #3)
-  - [ ] 7.1 Implement `calculatePriorityScore`:
+- [x] **Task 7: Implement Priority Score Calculation** (AC: #3)
+  - [x] 7.1 Implement `calculatePriorityScore`:
     ```go
     func calculatePriorityScore(cycle *types.CircularDependencyInfo) float64 {
         // Impact factor: use ImpactAssessment if available
@@ -314,10 +314,10 @@ So that **I can see problems and solutions together**.
         return impactFactor * easeFactor
     }
     ```
-  - [ ] 7.2 Add tests for priority score calculation
+  - [x] 7.2 Add tests for priority score calculation
 
-- [ ] **Task 8: Implement Circular Dependency Sorting** (AC: #3)
-  - [ ] 8.1 Implement `sortCircularDependencies`:
+- [x] **Task 8: Implement Circular Dependency Sorting** (AC: #3)
+  - [x] 8.1 Implement `sortCircularDependencies`:
     ```go
     func sortCircularDependencies(cycles []types.CircularDependencyInfo) {
         sort.SliceStable(cycles, func(i, j int) bool {
@@ -325,10 +325,10 @@ So that **I can see problems and solutions together**.
         })
     }
     ```
-  - [ ] 8.2 Add tests for cycle sorting
+  - [x] 8.2 Add tests for cycle sorting
 
-- [ ] **Task 9: Implement Quick Fix Creation** (AC: #1, #5)
-  - [ ] 9.1 Implement `createQuickFix`:
+- [x] **Task 9: Implement Quick Fix Creation** (AC: #1, #5)
+  - [x] 9.1 Implement `createQuickFix`:
     ```go
     func createQuickFix(strategies []types.FixStrategy) *types.QuickFixSummary {
         if len(strategies) == 0 {
@@ -369,10 +369,10 @@ So that **I can see problems and solutions together**.
         }
     }
     ```
-  - [ ] 9.2 Add tests for quick fix creation
+  - [x] 9.2 Add tests for quick fix creation
 
-- [ ] **Task 10: Implement Fix Summary Generation** (AC: #4)
-  - [ ] 10.1 Implement `generateFixSummary`:
+- [x] **Task 10: Implement Fix Summary Generation** (AC: #4)
+  - [x] 10.1 Implement `generateFixSummary`:
     ```go
     func (re *ResultEnricher) generateFixSummary(cycles []types.CircularDependencyInfo) *types.FixSummary {
         if len(cycles) == 0 {
@@ -429,7 +429,7 @@ So that **I can see problems and solutions together**.
         }
     }
     ```
-  - [ ] 10.2 Implement helper functions:
+  - [x] 10.2 Implement helper functions:
     ```go
     func parseEstimatedMinutes(timeStr string) int {
         // Parse strings like "15-30 minutes", "1-2 hours"
@@ -480,10 +480,10 @@ So that **I can see problems and solutions together**.
         return cycle[:len(cycle)-1]
     }
     ```
-  - [ ] 10.3 Add tests for fix summary generation
+  - [x] 10.3 Add tests for fix summary generation
 
-- [ ] **Task 11: Implement Main Enrich Function** (AC: #7)
-  - [ ] 11.1 Implement `Enrich`:
+- [x] **Task 11: Implement Main Enrich Function** (AC: #7)
+  - [x] 11.1 Implement `Enrich`:
     ```go
     func (re *ResultEnricher) Enrich(result *types.AnalysisResult) *types.AnalysisResult {
         if result == nil || len(result.CircularDependencies) == 0 {
@@ -515,10 +515,10 @@ So that **I can see problems and solutions together**.
         cycle.PriorityScore = calculatePriorityScore(cycle)
     }
     ```
-  - [ ] 11.2 Add comprehensive integration tests
+  - [x] 11.2 Add comprehensive integration tests
 
-- [ ] **Task 12: Wire to Analyzer Pipeline** (AC: #7, #8)
-  - [ ] 12.1 Update `pkg/analyzer/analyzer.go`:
+- [x] **Task 12: Wire to Analyzer Pipeline** (AC: #7, #8)
+  - [x] 12.1 Update `pkg/analyzer/analyzer.go`:
     ```go
     func (a *Analyzer) AnalyzeWithSources(...) (*types.AnalysisResult, error) {
         // ... existing analysis (workspace, graph, cycles, duplicates, health) ...
@@ -562,10 +562,10 @@ So that **I can see problems and solutions together**.
         return result, nil
     }
     ```
-  - [ ] 12.2 Update analyzer tests
+  - [x] 12.2 Update analyzer tests
 
-- [ ] **Task 13: Update TypeScript Types** (AC: #7, #8)
-  - [ ] 13.1 Update `packages/types/src/analysis/results.ts`:
+- [x] **Task 13: Update TypeScript Types** (AC: #7, #8)
+  - [x] 13.1 Update `packages/types/src/analysis/results.ts`:
     ```typescript
     export interface QuickFixSummary {
       /** Type of the recommended fix */
@@ -626,11 +626,11 @@ So that **I can see problems and solutions together**.
       fixSummary?: FixSummary;
     }
     ```
-  - [ ] 13.2 Run `pnpm nx build types` to verify
-  - [ ] 13.3 Add type tests for new interfaces
+  - [x] 13.2 Run `pnpm nx build types` to verify
+  - [x] 13.3 Add type tests for new interfaces
 
-- [ ] **Task 14: Performance Testing** (AC: #9)
-  - [ ] 14.1 Create `pkg/analyzer/result_enricher_benchmark_test.go`:
+- [x] **Task 14: Performance Testing** (AC: #9)
+  - [x] 14.1 Create `pkg/analyzer/result_enricher_benchmark_test.go`:
     ```go
     func BenchmarkResultEnrichment(b *testing.B) {
         graph := generateGraph(100)
@@ -655,20 +655,20 @@ So that **I can see problems and solutions together**.
         }
     }
     ```
-  - [ ] 14.2 Verify enrichment adds < 50ms overhead
-  - [ ] 14.3 Verify complete analysis < 6 seconds for 100 packages, 5 cycles
-  - [ ] 14.4 Document actual performance in completion notes
+  - [x] 14.2 Verify enrichment adds < 50ms overhead
+  - [x] 14.3 Verify complete analysis < 6 seconds for 100 packages, 5 cycles
+  - [x] 14.4 Document actual performance in completion notes
 
-- [ ] **Task 15: Integration Verification** (AC: all)
-  - [ ] 15.1 Run all tests: `cd packages/analysis-engine && make test`
-  - [ ] 15.2 Build WASM: `pnpm nx build @monoguard/analysis-engine`
-  - [ ] 15.3 Run affected CI checks: `pnpm nx affected --target=lint,test,type-check --base=main`
-  - [ ] 15.4 Verify JSON output includes:
+- [x] **Task 15: Integration Verification** (AC: all)
+  - [x] 15.1 Run all tests: `cd packages/analysis-engine && make test`
+  - [x] 15.2 Build WASM: `pnpm nx build @monoguard/analysis-engine`
+  - [x] 15.3 Run affected CI checks: `pnpm nx affected --target=lint,test,type-check --base=main`
+  - [x] 15.4 Verify JSON output includes:
     - CircularDependencyInfo.quickFix
     - CircularDependencyInfo.priorityScore
     - AnalysisResult.fixSummary
-  - [ ] 15.5 Verify circular dependencies are sorted by priority
-  - [ ] 15.6 Verify strategies are sorted by suitability
+  - [x] 15.5 Verify circular dependencies are sorted by priority
+  - [x] 15.6 Verify strategies are sorted by suitability
 
 ## Dev Notes
 
@@ -901,10 +901,43 @@ packages/types/src/analysis/
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.5 (claude-opus-4-5-20251101)
 
 ### Debug Log References
 
+N/A
+
 ### Completion Notes List
 
+- **Performance verified**: Enrichment overhead is ~0.044ms (44μs), well under 50ms limit (AC9)
+- **All tests pass**: Go tests (pkg/analyzer, pkg/types) and TypeScript tests (@monoguard/types)
+- **CI checks pass**: lint, test, type-check all pass for affected projects
+- **Types defined**: QuickFixSummary, FixSummary, PriorityCycleSummary in Go and TypeScript
+- **Enricher integrated**: ResultEnricher wired into Analyze and AnalyzeWithSources pipelines
+- **Sorting implemented**:
+  - Strategies sorted by suitability (highest first) using stable sort
+  - Circular dependencies sorted by priority score (highest first) using stable sort
+- **Priority algorithm**: Priority = ImpactFactor × EaseFactor where:
+  - ImpactFactor: critical=10, high=7.5, medium=5, low=2.5
+  - EaseFactor: 11 - complexity score (min 1)
+- **Quick fix**: Extracts best strategy with embedded guide for one-click access
+- **Fix summary**: Aggregates total cycles, estimated time, quick wins count, critical count, top 3 priorities
+
 ### File List
+
+**New Files Created:**
+- `packages/analysis-engine/pkg/types/quick_fix_summary.go` - QuickFixSummary type
+- `packages/analysis-engine/pkg/types/quick_fix_summary_test.go` - Tests
+- `packages/analysis-engine/pkg/types/fix_summary.go` - FixSummary and PriorityCycleSummary types
+- `packages/analysis-engine/pkg/types/fix_summary_test.go` - Tests
+- `packages/analysis-engine/pkg/analyzer/result_enricher.go` - ResultEnricher implementation
+- `packages/analysis-engine/pkg/analyzer/result_enricher_test.go` - Unit tests
+- `packages/analysis-engine/pkg/analyzer/result_enricher_benchmark_test.go` - Performance benchmarks
+
+**Modified Files:**
+- `packages/analysis-engine/pkg/types/circular.go` - Added QuickFix and PriorityScore fields
+- `packages/analysis-engine/pkg/types/circular_test.go` - Updated tests
+- `packages/analysis-engine/pkg/types/types.go` - Added FixSummary to AnalysisResult
+- `packages/analysis-engine/pkg/types/types_test.go` - Updated tests
+- `packages/analysis-engine/pkg/analyzer/analyzer.go` - Wired ResultEnricher to pipeline
+- `packages/types/src/analysis/results.ts` - Added TypeScript types

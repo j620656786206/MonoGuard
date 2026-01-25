@@ -54,6 +54,7 @@ type AnalysisResult struct {
 	VersionConflicts     []*VersionConflictInfo    `json:"versionConflicts,omitempty"`     // Story 2.4
 	CreatedAt            string                    `json:"createdAt,omitempty"`            // ISO 8601 format
 	Placeholder          bool                      `json:"placeholder,omitempty"`          // True when returning placeholder data
+	FixSummary           *FixSummary               `json:"fixSummary,omitempty"`           // Story 3.8 - aggregated fix summary
 }
 
 // VersionInfo represents the version response.

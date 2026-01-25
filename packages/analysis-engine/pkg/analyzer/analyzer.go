@@ -11,6 +11,7 @@
 //   - Refactoring complexity calculation (Story 3.5)
 //   - Impact assessment for circular dependencies (Story 3.6)
 //   - Before/after fix explanations for circular dependencies (Story 3.7)
+//   - Integration of fix suggestions with analysis results (Story 3.8)
 package analyzer
 
 import (
@@ -127,7 +128,7 @@ func (a *Analyzer) Analyze(workspace *types.WorkspaceData) (*types.AnalysisResul
 	healthCalc := NewHealthCalculator(filteredGraph, cycles, conflicts)
 	healthScore := healthCalc.Calculate()
 
-	return &types.AnalysisResult{
+	result := &types.AnalysisResult{
 		HealthScore:          healthScore.Overall,
 		HealthScoreDetails:   healthScore,
 		Packages:             packageCount,
@@ -136,7 +137,13 @@ func (a *Analyzer) Analyze(workspace *types.WorkspaceData) (*types.AnalysisResul
 		CircularDependencies: cycles,
 		VersionConflicts:     conflicts,
 		CreatedAt:            time.Now().UTC().Format(time.RFC3339),
-	}, nil
+	}
+
+	// Story 3.8: Enrich result with QuickFix, priority scores, and FixSummary
+	enricher := NewResultEnricher(filteredGraph, workspace)
+	result = enricher.Enrich(result)
+
+	return result, nil
 }
 
 // AnalyzeWithSources performs complete workspace analysis with optional import tracing.
@@ -225,7 +232,7 @@ func (a *Analyzer) AnalyzeWithSources(
 	healthCalc := NewHealthCalculator(filteredGraph, cycles, conflicts)
 	healthScore := healthCalc.Calculate()
 
-	return &types.AnalysisResult{
+	result := &types.AnalysisResult{
 		HealthScore:          healthScore.Overall,
 		HealthScoreDetails:   healthScore,
 		Packages:             packageCount,
@@ -234,7 +241,13 @@ func (a *Analyzer) AnalyzeWithSources(
 		CircularDependencies: cycles,
 		VersionConflicts:     conflicts,
 		CreatedAt:            time.Now().UTC().Format(time.RFC3339),
-	}, nil
+	}
+
+	// Story 3.8: Enrich result with QuickFix, priority scores, and FixSummary
+	enricher := NewResultEnricher(filteredGraph, workspace)
+	result = enricher.Enrich(result)
+
+	return result, nil
 }
 
 // filterExcludedPackages creates a new graph with only non-excluded packages.
