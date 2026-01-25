@@ -93,22 +93,3 @@ export function useCycleHighlight(
     }
   }, [circularDependencies])
 }
-
-/**
- * Hook for managing selected cycle state for click-to-highlight feature
- *
- * @see AC5: Click-to-Highlight Cycle
- * @see AC6: Dim Non-Cycle Elements on Selection
- */
-export interface CycleSelectionState {
-  /** Currently selected cycle index (null if none selected) */
-  selectedCycleIndex: number | null
-  /** Select a specific cycle by index */
-  selectCycle: (index: number) => void
-  /** Clear the current selection */
-  clearSelection: () => void
-  /** Check if a node is in the selected cycle */
-  isNodeInSelectedCycle: (nodeId: string) => boolean
-  /** Check if an edge is in the selected cycle */
-  isEdgeInSelectedCycle: (from: string, to: string) => boolean
-}

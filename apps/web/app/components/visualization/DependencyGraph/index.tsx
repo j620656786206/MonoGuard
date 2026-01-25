@@ -36,6 +36,23 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
   const [dimensions, setDimensions] = useState({ width: 800, height: 500 })
   const [selectedCycleIndex, setSelectedCycleIndex] = useState<number | null>(null)
 
+  // Refs to store D3 selections for style updates without full redraw
+  const nodeSelectionRef = useRef<d3.Selection<SVGGElement, D3Node, SVGGElement, unknown> | null>(
+    null
+  )
+  const normalLinkSelectionRef = useRef<d3.Selection<
+    SVGLineElement,
+    D3Link,
+    SVGGElement,
+    unknown
+  > | null>(null)
+  const cycleLinkSelectionRef = useRef<d3.Selection<
+    SVGLineElement,
+    D3Link,
+    SVGGElement,
+    unknown
+  > | null>(null)
+
   // Handle cycle selection clear on Escape key
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
@@ -74,7 +91,7 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
     }
   }, [height])
 
-  // Main D3 rendering effect
+  // Main D3 initialization effect - only runs when data/dimensions change
   useEffect(() => {
     if (!svgRef.current || !data) return
 
@@ -88,7 +105,12 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
     const { nodes, links } = transformToD3Data(data, { circularDependencies })
 
     // If no nodes, don't render anything
-    if (nodes.length === 0) return
+    if (nodes.length === 0) {
+      nodeSelectionRef.current = null
+      normalLinkSelectionRef.current = null
+      cycleLinkSelectionRef.current = null
+      return
+    }
 
     // Create main group for zoom/pan
     const g = svg.append('g')
@@ -142,40 +164,6 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
       .attr('d', 'M0,-5L10,0L0,5')
       .attr('fill', EDGE_COLORS.cycle.stroke)
 
-    // Helper to determine node styling based on cycle state and selection
-    const getNodeStyle = (d: D3Node) => {
-      if (selectedCycleIndex !== null) {
-        // Selection mode: highlight selected cycle, dim others
-        const isInSelected = d.cycleIds.includes(selectedCycleIndex)
-        if (isInSelected) {
-          return NODE_COLORS.selected
-        }
-        return NODE_COLORS.dimmed
-      }
-      // Normal mode: highlight all cycle nodes
-      if (d.inCycle) {
-        return NODE_COLORS.cycle
-      }
-      return NODE_COLORS.normal
-    }
-
-    // Helper to determine edge styling based on cycle state and selection
-    const getEdgeStyle = (d: D3Link) => {
-      if (selectedCycleIndex !== null) {
-        // Selection mode: highlight selected cycle, dim others
-        const isInSelected = d.cycleIds.includes(selectedCycleIndex)
-        if (isInSelected) {
-          return EDGE_COLORS.selected
-        }
-        return EDGE_COLORS.dimmed
-      }
-      // Normal mode: highlight all cycle edges
-      if (d.inCycle) {
-        return EDGE_COLORS.cycle
-      }
-      return EDGE_COLORS.normal
-    }
-
     // Separate links into normal and cycle links for layering
     const normalLinks = links.filter((l) => !l.inCycle)
     const cycleLinks = links.filter((l) => l.inCycle)
@@ -187,9 +175,9 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
       .selectAll<SVGLineElement, D3Link>('line')
       .data(normalLinks)
       .join('line')
-      .attr('stroke', (d) => getEdgeStyle(d).stroke)
-      .attr('stroke-opacity', (d) => getEdgeStyle(d).opacity)
-      .attr('stroke-width', (d) => getEdgeStyle(d).width)
+      .attr('stroke', EDGE_COLORS.normal.stroke)
+      .attr('stroke-opacity', EDGE_COLORS.normal.opacity)
+      .attr('stroke-width', EDGE_COLORS.normal.width)
       .attr('marker-end', 'url(#arrowhead)')
 
     // Create cycle link elements (above normal links)
@@ -199,9 +187,9 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
       .selectAll<SVGLineElement, D3Link>('line')
       .data(cycleLinks)
       .join('line')
-      .attr('stroke', (d) => getEdgeStyle(d).stroke)
-      .attr('stroke-opacity', (d) => getEdgeStyle(d).opacity)
-      .attr('stroke-width', (d) => getEdgeStyle(d).width)
+      .attr('stroke', EDGE_COLORS.cycle.stroke)
+      .attr('stroke-opacity', EDGE_COLORS.cycle.opacity)
+      .attr('stroke-width', EDGE_COLORS.cycle.width)
       .attr('marker-end', 'url(#arrowhead-cycle)')
       // AC3: Animated cycle paths with flowing effect
       .attr('stroke-dasharray', ANIMATION.dashArray)
@@ -220,10 +208,10 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
     node
       .append('circle')
       .attr('r', (d) => Math.max(8, Math.min(16, 8 + d.dependencyCount * 0.5)))
-      .attr('fill', (d) => getNodeStyle(d).fill)
-      .attr('stroke', (d) => getNodeStyle(d).stroke)
+      .attr('fill', (d) => (d.inCycle ? NODE_COLORS.cycle.fill : NODE_COLORS.normal.fill))
+      .attr('stroke', (d) => (d.inCycle ? NODE_COLORS.cycle.stroke : NODE_COLORS.normal.stroke))
       .attr('stroke-width', (d) => (d.inCycle ? 3 : 2))
-      .attr('filter', (d) => (d.inCycle && selectedCycleIndex === null ? 'url(#glow)' : null))
+      .attr('filter', (d) => (d.inCycle ? 'url(#glow)' : null))
       .style('cursor', 'pointer')
 
     // Add labels to nodes
@@ -232,26 +220,27 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
       .text((d) => truncatePackageName(d.name))
       .attr('font-size', '11px')
       .attr('font-family', 'system-ui, sans-serif')
-      .attr('fill', (d) =>
-        selectedCycleIndex !== null && !d.cycleIds.includes(selectedCycleIndex)
-          ? '#9ca3af'
-          : '#374151'
-      )
+      .attr('fill', '#374151')
       .attr('dx', 14)
       .attr('dy', 4)
       .style('pointer-events', 'none')
       .style('user-select', 'none')
 
+    // Store selections in refs for style updates
+    nodeSelectionRef.current = node
+    normalLinkSelectionRef.current = normalLink
+    cycleLinkSelectionRef.current = cycleLink
+
     // AC5: Click handler for cycle nodes to highlight specific cycle
     node.on('click', (_event, d) => {
       if (d.inCycle && d.cycleIds.length > 0) {
         // Toggle selection: if clicking same cycle node, deselect
-        if (selectedCycleIndex !== null && d.cycleIds.includes(selectedCycleIndex)) {
-          setSelectedCycleIndex(null)
-        } else {
-          // Select the first cycle this node belongs to
-          setSelectedCycleIndex(d.cycleIds[0])
-        }
+        setSelectedCycleIndex((prev) => {
+          if (prev !== null && d.cycleIds.includes(prev)) {
+            return null
+          }
+          return d.cycleIds[0]
+        })
       } else {
         // Clicking a non-cycle node clears selection
         setSelectedCycleIndex(null)
@@ -342,8 +331,79 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
       svg.on('click', null) // Remove click listener
       node.on('click', null) // Remove node click listeners
       svg.selectAll('*').remove() // Clean DOM
+      nodeSelectionRef.current = null
+      normalLinkSelectionRef.current = null
+      cycleLinkSelectionRef.current = null
     }
-  }, [data, circularDependencies, dimensions, selectedCycleIndex])
+  }, [data, circularDependencies, dimensions])
+
+  // Separate effect for style updates when selection changes (performance optimization)
+  // This avoids recreating the entire graph when just the selection changes
+  useEffect(() => {
+    const nodeSelection = nodeSelectionRef.current
+    const normalLinkSelection = normalLinkSelectionRef.current
+    const cycleLinkSelection = cycleLinkSelectionRef.current
+
+    if (!nodeSelection || !normalLinkSelection || !cycleLinkSelection) return
+
+    // Helper to determine node styling based on cycle state and selection
+    const getNodeStyle = (d: D3Node) => {
+      if (selectedCycleIndex !== null) {
+        const isInSelected = d.cycleIds.includes(selectedCycleIndex)
+        if (isInSelected) {
+          return NODE_COLORS.selected
+        }
+        return NODE_COLORS.dimmed
+      }
+      if (d.inCycle) {
+        return NODE_COLORS.cycle
+      }
+      return NODE_COLORS.normal
+    }
+
+    // Helper to determine edge styling based on cycle state and selection
+    const getEdgeStyle = (d: D3Link) => {
+      if (selectedCycleIndex !== null) {
+        const isInSelected = d.cycleIds.includes(selectedCycleIndex)
+        if (isInSelected) {
+          return EDGE_COLORS.selected
+        }
+        return EDGE_COLORS.dimmed
+      }
+      if (d.inCycle) {
+        return EDGE_COLORS.cycle
+      }
+      return EDGE_COLORS.normal
+    }
+
+    // Update node circle styles
+    nodeSelection
+      .select('circle')
+      .attr('fill', (d) => getNodeStyle(d).fill)
+      .attr('stroke', (d) => getNodeStyle(d).stroke)
+      .attr('filter', (d) => (d.inCycle && selectedCycleIndex === null ? 'url(#glow)' : null))
+
+    // Update node text styles
+    nodeSelection
+      .select('text')
+      .attr('fill', (d) =>
+        selectedCycleIndex !== null && !d.cycleIds.includes(selectedCycleIndex)
+          ? '#9ca3af'
+          : '#374151'
+      )
+
+    // Update normal link styles
+    normalLinkSelection
+      .attr('stroke', (d) => getEdgeStyle(d).stroke)
+      .attr('stroke-opacity', (d) => getEdgeStyle(d).opacity)
+      .attr('stroke-width', (d) => getEdgeStyle(d).width)
+
+    // Update cycle link styles
+    cycleLinkSelection
+      .attr('stroke', (d) => getEdgeStyle(d).stroke)
+      .attr('stroke-opacity', (d) => getEdgeStyle(d).opacity)
+      .attr('stroke-width', (d) => getEdgeStyle(d).width)
+  }, [selectedCycleIndex])
 
   // Determine if there are any cycles to display in legend
   const hasCycles = circularDependencies && circularDependencies.length > 0
@@ -385,6 +445,6 @@ export type { GraphLegendProps } from './GraphLegend'
 export { GraphLegend } from './GraphLegend'
 // Re-export types and utilities
 export type { D3GraphData, D3Link, D3Node, DependencyGraphProps } from './types'
-export type { CycleHighlightResult, CycleSelectionState } from './useCycleHighlight'
+export type { CycleHighlightResult } from './useCycleHighlight'
 export { useCycleHighlight } from './useCycleHighlight'
 export { transformToD3Data, truncatePackageName } from './useForceSimulation'
