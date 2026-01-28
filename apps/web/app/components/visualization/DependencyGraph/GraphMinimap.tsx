@@ -10,7 +10,7 @@
 'use client'
 
 import type React from 'react'
-import { useCallback, useMemo, useRef } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 
 import type { D3Link, D3Node } from './types'
 import type { Bounds } from './utils/calculateBounds'
@@ -69,6 +69,7 @@ export function GraphMinimap({
   height = MINIMAP_CONFIG.height,
 }: GraphMinimapProps) {
   const svgRef = useRef<SVGSVGElement>(null)
+  const [isDragging, setIsDragging] = useState(false)
 
   // Calculate scale to fit graph in minimap
   const scale = useMemo(() => {
@@ -118,10 +119,40 @@ export function GraphMinimap({
 
   const handleClick = useCallback(
     (event: React.MouseEvent<SVGSVGElement>) => {
+      // Only navigate on click if not dragging
+      if (!isDragging) {
+        handleNavigate(event.clientX, event.clientY)
+      }
+    },
+    [handleNavigate, isDragging]
+  )
+
+  // AC5: Drag-to-navigate functionality
+  const handleMouseDown = useCallback(
+    (event: React.MouseEvent<SVGSVGElement>) => {
+      event.preventDefault()
+      setIsDragging(true)
       handleNavigate(event.clientX, event.clientY)
     },
     [handleNavigate]
   )
+
+  const handleMouseMove = useCallback(
+    (event: React.MouseEvent<SVGSVGElement>) => {
+      if (isDragging) {
+        handleNavigate(event.clientX, event.clientY)
+      }
+    },
+    [isDragging, handleNavigate]
+  )
+
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false)
+  }, [])
+
+  const handleMouseLeave = useCallback(() => {
+    setIsDragging(false)
+  }, [])
 
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<SVGSVGElement>) => {
@@ -156,74 +187,74 @@ export function GraphMinimap({
       className="absolute top-4 left-4 bg-white/90 dark:bg-gray-800/90
                   rounded-lg shadow-lg p-1 border border-gray-200 dark:border-gray-700 z-10"
     >
-      <svg
-        ref={svgRef}
-        width={width}
-        height={height}
-        className="cursor-pointer"
+      <button
+        type="button"
+        className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 rounded p-0 bg-transparent border-none"
         onClick={handleClick}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseLeave}
         onKeyDown={handleKeyDown}
-        role="img"
-        aria-labelledby="minimap-title"
+        aria-label="Graph minimap navigation. Click or drag to navigate to a position in the graph."
       >
-        <title id="minimap-title">
-          Graph minimap navigation. Click to navigate to a position in the graph.
-        </title>
-        {/* Background */}
-        <rect width={width} height={height} fill="transparent" />
+        <svg ref={svgRef} width={width} height={height} aria-hidden="true">
+          {/* Background */}
+          <rect width={width} height={height} fill="transparent" />
 
-        {/* Graph content group */}
-        <g transform={`translate(${offset.x}, ${offset.y}) scale(${scale})`}>
-          {/* Links */}
-          {links.map((link) => {
-            // Get source and target nodes
-            const sourceId = typeof link.source === 'string' ? link.source : link.source.id
-            const targetId = typeof link.target === 'string' ? link.target : link.target.id
-            const source =
-              typeof link.source === 'string' ? nodeMap.get(sourceId) : (link.source as D3Node)
-            const target =
-              typeof link.target === 'string' ? nodeMap.get(targetId) : (link.target as D3Node)
+          {/* Graph content group */}
+          <g transform={`translate(${offset.x}, ${offset.y}) scale(${scale})`}>
+            {/* Links */}
+            {links.map((link) => {
+              // Get source and target nodes
+              const sourceId = typeof link.source === 'string' ? link.source : link.source.id
+              const targetId = typeof link.target === 'string' ? link.target : link.target.id
+              const source =
+                typeof link.source === 'string' ? nodeMap.get(sourceId) : (link.source as D3Node)
+              const target =
+                typeof link.target === 'string' ? nodeMap.get(targetId) : (link.target as D3Node)
 
-            if (!source || !target) return null
+              if (!source || !target) return null
 
-            return (
-              <line
-                key={`link-${sourceId}-${targetId}`}
-                x1={source.x ?? 0}
-                y1={source.y ?? 0}
-                x2={target.x ?? 0}
-                y2={target.y ?? 0}
-                stroke="#9ca3af"
-                strokeWidth={0.5 / scale}
-                strokeOpacity={0.5}
+              return (
+                <line
+                  key={`link-${sourceId}-${targetId}`}
+                  x1={source.x ?? 0}
+                  y1={source.y ?? 0}
+                  x2={target.x ?? 0}
+                  y2={target.y ?? 0}
+                  stroke="#9ca3af"
+                  strokeWidth={0.5 / scale}
+                  strokeOpacity={0.5}
+                />
+              )
+            })}
+
+            {/* Nodes */}
+            {nodes.map((node) => (
+              <circle
+                key={node.id}
+                cx={node.x ?? 0}
+                cy={node.y ?? 0}
+                r={3 / scale}
+                fill={node.inCycle ? '#ef4444' : '#4f46e5'}
               />
-            )
-          })}
+            ))}
+          </g>
 
-          {/* Nodes */}
-          {nodes.map((node) => (
-            <circle
-              key={node.id}
-              cx={node.x ?? 0}
-              cy={node.y ?? 0}
-              r={3 / scale}
-              fill={node.inCycle ? '#ef4444' : '#4f46e5'}
-            />
-          ))}
-        </g>
-
-        {/* Viewport indicator */}
-        <rect
-          x={viewportRect.x}
-          y={viewportRect.y}
-          width={Math.max(viewportRect.width, 10)}
-          height={Math.max(viewportRect.height, 10)}
-          fill="rgba(99, 102, 241, 0.2)"
-          stroke="#6366f1"
-          strokeWidth={1.5}
-          rx={2}
-        />
-      </svg>
+          {/* Viewport indicator */}
+          <rect
+            x={viewportRect.x}
+            y={viewportRect.y}
+            width={Math.max(viewportRect.width, 10)}
+            height={Math.max(viewportRect.height, 10)}
+            fill="rgba(99, 102, 241, 0.2)"
+            stroke="#6366f1"
+            strokeWidth={1.5}
+            rx={2}
+          />
+        </svg>
+      </button>
     </div>
   )
 }

@@ -36,6 +36,7 @@ import { useZoomPan, ZOOM_CONFIG } from './useZoomPan'
 import { calculateNodeBounds, calculateViewportBounds } from './utils/calculateBounds'
 import { calculateNodeDepths } from './utils/calculateDepth'
 import { computeVisibleNodes } from './utils/computeVisibleNodes'
+import { ZoomControls } from './ZoomControls'
 
 /**
  * DependencyGraphViz component
@@ -706,117 +707,15 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
 
       {/* Story 4.4 AC3, AC6: Zoom controls with level display */}
       {fullGraphData.nodes.length > 0 && (
-        <div className="absolute bottom-4 right-4 flex flex-col gap-2 items-end z-10">
-          <div
-            className="bg-white/90 dark:bg-gray-800/90
-                        rounded-lg shadow-lg p-2 flex items-center gap-1"
-          >
-            {/* Zoom Out Button */}
-            <button
-              type="button"
-              onClick={zoomOut}
-              disabled={!canZoomOut}
-              className="w-8 h-8 flex items-center justify-center rounded
-                         hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors
-                         disabled:opacity-40 disabled:cursor-not-allowed"
-              aria-label="Zoom out"
-              title="Zoom out"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
-              </svg>
-            </button>
-
-            {/* Zoom Level Display (AC6) */}
-            <div className="w-14 text-center text-sm font-medium tabular-nums">{zoomPercent}%</div>
-
-            {/* Zoom In Button */}
-            <button
-              type="button"
-              onClick={zoomIn}
-              disabled={!canZoomIn}
-              className="w-8 h-8 flex items-center justify-center rounded
-                         hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors
-                         disabled:opacity-40 disabled:cursor-not-allowed"
-              aria-label="Zoom in"
-              title="Zoom in"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
-            </button>
-
-            {/* Divider */}
-            <div className="w-px h-6 bg-gray-200 dark:bg-gray-700 mx-1" />
-
-            {/* Fit to Screen Button (AC4) */}
-            <button
-              type="button"
-              onClick={fitToScreen}
-              className="w-8 h-8 flex items-center justify-center rounded
-                         hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              aria-label="Fit to screen"
-              title="Fit to screen"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5"
-                />
-              </svg>
-            </button>
-
-            {/* Reset Zoom Button */}
-            <button
-              type="button"
-              onClick={resetZoom}
-              className="w-8 h-8 flex items-center justify-center rounded
-                         hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              aria-label="Reset zoom to 100%"
-              title="Reset zoom to 100%"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                />
-              </svg>
-            </button>
-          </div>
-        </div>
+        <ZoomControls
+          zoomPercent={zoomPercent}
+          onZoomIn={zoomIn}
+          onZoomOut={zoomOut}
+          onFitToScreen={fitToScreen}
+          onResetZoom={resetZoom}
+          canZoomIn={canZoomIn}
+          canZoomOut={canZoomOut}
+        />
       )}
 
       {/* AC4: Color legend showing meaning of different elements */}

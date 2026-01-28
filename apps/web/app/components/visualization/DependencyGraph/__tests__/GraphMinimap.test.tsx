@@ -208,8 +208,118 @@ describe('GraphMinimap', () => {
     it('should have pointer cursor for interactivity', () => {
       const { container } = render(<GraphMinimap {...defaultProps} />)
 
-      const svg = container.querySelector('svg')
-      expect(svg).toHaveClass('cursor-pointer')
+      // The interactive wrapper div (not SVG) has the cursor-pointer class
+      const wrapper = container.querySelector('button')
+      expect(wrapper).toHaveClass('cursor-pointer')
+    })
+
+    it('should call onNavigate when dragging (AC5 drag-to-navigate)', () => {
+      const onNavigate = vi.fn()
+      const { container } = render(<GraphMinimap {...defaultProps} onNavigate={onNavigate} />)
+
+      // Events are now on the wrapper div, not the SVG
+      const wrapper = container.querySelector('button')
+      expect(wrapper).not.toBeNull()
+      if (!wrapper) return
+
+      // Mock getBoundingClientRect on the wrapper
+      wrapper.getBoundingClientRect = vi.fn(() => ({
+        left: 0,
+        top: 0,
+        right: 150,
+        bottom: 100,
+        width: 150,
+        height: 100,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      }))
+
+      // Simulate drag: mousedown, mousemove, mouseup
+      fireEvent.mouseDown(wrapper, { clientX: 50, clientY: 30 })
+      expect(onNavigate).toHaveBeenCalledTimes(1)
+
+      fireEvent.mouseMove(wrapper, { clientX: 75, clientY: 50 })
+      expect(onNavigate).toHaveBeenCalledTimes(2)
+
+      fireEvent.mouseMove(wrapper, { clientX: 100, clientY: 60 })
+      expect(onNavigate).toHaveBeenCalledTimes(3)
+
+      fireEvent.mouseUp(wrapper)
+
+      // After mouseUp, mousemove should not trigger navigate
+      fireEvent.mouseMove(wrapper, { clientX: 120, clientY: 70 })
+      expect(onNavigate).toHaveBeenCalledTimes(3)
+    })
+
+    it('should stop dragging when mouse leaves minimap', () => {
+      const onNavigate = vi.fn()
+      const { container } = render(<GraphMinimap {...defaultProps} onNavigate={onNavigate} />)
+
+      // Events are now on the wrapper div, not the SVG
+      const wrapper = container.querySelector('button')
+      expect(wrapper).not.toBeNull()
+      if (!wrapper) return
+
+      wrapper.getBoundingClientRect = vi.fn(() => ({
+        left: 0,
+        top: 0,
+        right: 150,
+        bottom: 100,
+        width: 150,
+        height: 100,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      }))
+
+      // Start dragging
+      fireEvent.mouseDown(wrapper, { clientX: 50, clientY: 30 })
+      fireEvent.mouseMove(wrapper, { clientX: 75, clientY: 50 })
+      expect(onNavigate).toHaveBeenCalledTimes(2)
+
+      // Mouse leaves
+      fireEvent.mouseLeave(wrapper)
+
+      // Move should not trigger navigate after leave
+      fireEvent.mouseMove(wrapper, { clientX: 100, clientY: 60 })
+      expect(onNavigate).toHaveBeenCalledTimes(2)
+    })
+  })
+
+  describe('accessibility', () => {
+    it('should have focus indicator styles (L1 fix)', () => {
+      const { container } = render(<GraphMinimap {...defaultProps} />)
+
+      // Focus styles are on the wrapper div, not the SVG
+      const wrapper = container.querySelector('button')
+      expect(wrapper).toHaveClass('focus:ring-2')
+      expect(wrapper).toHaveClass('focus:ring-indigo-500')
+    })
+
+    it('should be focusable for keyboard navigation', () => {
+      const { container } = render(<GraphMinimap {...defaultProps} />)
+
+      const button = container.querySelector('button')
+      // Native button elements are focusable by default, no tabIndex needed
+      expect(button).toBeInTheDocument()
+      // Verify it's not explicitly set to non-focusable
+      expect(button).not.toHaveAttribute('tabindex', '-1')
+    })
+
+    it('should use semantic button element for interactivity', () => {
+      const { container } = render(<GraphMinimap {...defaultProps} />)
+
+      const button = container.querySelector('button')
+      expect(button).toBeInTheDocument()
+      expect(button).toHaveAttribute('type', 'button')
+    })
+
+    it('should have aria-label for screen readers', () => {
+      const { container } = render(<GraphMinimap {...defaultProps} />)
+
+      const wrapper = container.querySelector('button')
+      expect(wrapper).toHaveAttribute('aria-label')
     })
   })
 
