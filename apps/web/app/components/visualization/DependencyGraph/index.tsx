@@ -5,10 +5,12 @@
  * Uses SVG rendering for graphs with < 500 nodes (per architecture.md).
  * Highlights circular dependencies with distinct styling (Story 4.2).
  * Supports expand/collapse of nodes with depth-based controls (Story 4.3).
+ * Includes zoom, pan, minimap navigation, and zoom controls (Story 4.4).
  *
  * @see Story 4.1: Implement D3.js Force-Directed Dependency Graph
  * @see Story 4.2: Highlight Circular Dependencies in Graph
  * @see Story 4.3: Implement Node Expand/Collapse Functionality
+ * @see Story 4.4: Add Zoom, Pan, and Navigation Controls
  */
 'use client'
 
@@ -16,6 +18,7 @@ import * as d3 from 'd3'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { GraphControls } from './GraphControls'
 import { GraphLegend } from './GraphLegend'
+import { GraphMinimap } from './GraphMinimap'
 import {
   ANIMATION,
   COLLAPSED_STYLES,
@@ -29,6 +32,8 @@ import type { D3Link, D3Node, DependencyGraphProps } from './types'
 import { DEFAULT_SIMULATION_CONFIG } from './types'
 import { transformToD3Data, truncatePackageName } from './useForceSimulation'
 import { useNodeExpandCollapse } from './useNodeExpandCollapse'
+import { useZoomPan, ZOOM_CONFIG } from './useZoomPan'
+import { calculateNodeBounds, calculateViewportBounds } from './utils/calculateBounds'
 import { calculateNodeDepths } from './utils/calculateDepth'
 import { computeVisibleNodes } from './utils/computeVisibleNodes'
 
@@ -47,10 +52,30 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
 }: DependencyGraphProps) {
   const svgRef = useRef<SVGSVGElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const graphContainerRef = useRef<SVGGElement>(null)
   const simulationRef = useRef<d3.Simulation<D3Node, D3Link> | null>(null)
+  const zoomBehaviorRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null)
   const [dimensions, setDimensions] = useState({ width: 800, height: 500 })
   const [selectedCycleIndex, setSelectedCycleIndex] = useState<number | null>(null)
   const [currentDepth, setCurrentDepth] = useState<number | 'all'>('all')
+  const [graphBounds, setGraphBounds] = useState({ x: 0, y: 0, width: 0, height: 0 })
+
+  // Story 4.4: Zoom and pan state management
+  const {
+    zoomState,
+    zoomPercent,
+    zoomIn,
+    zoomOut,
+    resetZoom,
+    fitToScreen,
+    setZoomBehavior,
+    handleZoomChange,
+    canZoomIn,
+    canZoomOut,
+  } = useZoomPan({
+    svgRef,
+    containerRef: graphContainerRef,
+  })
 
   // Refs to store D3 selections for style updates without full redraw
   const nodeSelectionRef = useRef<d3.Selection<SVGGElement, D3Node, SVGGElement, unknown> | null>(
@@ -180,7 +205,8 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
     }
 
     // Create main group for zoom/pan
-    const g = svg.append('g')
+    const g = svg.append('g').attr('class', 'graph-container')
+    graphContainerRef.current = g.node()
 
     // Define SVG filters and markers
     const defs = svg.append('defs')
@@ -451,6 +477,12 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
       )
     })
 
+    // Story 4.4: Calculate graph bounds after simulation stabilizes (for minimap)
+    simulation.on('end', () => {
+      const bounds = calculateNodeBounds(visibleNodes)
+      setGraphBounds(bounds)
+    })
+
     // Add drag behavior
     const drag = d3
       .drag<SVGGElement, D3Node>()
@@ -471,21 +503,31 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
 
     node.call(drag)
 
-    // Add basic zoom behavior (setup for Story 4.4)
+    // Story 4.4: Zoom behavior with React state sync
     const zoom = d3
       .zoom<SVGSVGElement, unknown>()
-      .scaleExtent([0.1, 4])
+      .scaleExtent(ZOOM_CONFIG.scaleExtent)
       .on('zoom', (event) => {
         g.attr('transform', event.transform)
+        // Sync with React state for UI updates (AC6: real-time display)
+        handleZoomChange({ k: event.transform.k, x: event.transform.x, y: event.transform.y })
       })
 
     svg.call(zoom)
+
+    // Story 4.4 + 4.3: Disable double-click zoom (conflicts with expand/collapse)
+    svg.on('dblclick.zoom', null)
+
+    // Store zoom behavior for external control (zoom buttons, fit-to-screen)
+    zoomBehaviorRef.current = zoom
+    setZoomBehavior(zoom)
 
     // CRITICAL: Cleanup to prevent memory leaks (per project-context.md)
     return () => {
       if (clickTimer) clearTimeout(clickTimer)
       simulation.stop()
       svg.on('.zoom', null) // Remove zoom listener
+      svg.on('dblclick.zoom', null) // Remove double-click zoom listener
       svg.on('click', null) // Remove click listener
       node.on('click', null) // Remove node click listeners
       node.on('dblclick', null) // Remove double-click listeners
@@ -496,6 +538,8 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
       cycleLinkSelectionRef.current = null
       badgeSelectionRef.current = null
       simulationRef.current = null
+      zoomBehaviorRef.current = null
+      graphContainerRef.current = null
     }
   }, [
     data,
@@ -505,6 +549,8 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
     hiddenChildCounts,
     dimensions,
     toggleNode,
+    handleZoomChange,
+    setZoomBehavior,
   ])
 
   // Separate effect for style updates when selection changes (performance optimization)
@@ -585,6 +631,33 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
   // Determine if there are any cycles to display in legend
   const hasCycles = circularDependencies && circularDependencies.length > 0
 
+  // Story 4.4: Calculate viewport bounds for minimap
+  const viewportBounds = useMemo(() => {
+    return calculateViewportBounds(
+      { k: zoomState.scale, x: zoomState.translateX, y: zoomState.translateY },
+      dimensions.width,
+      dimensions.height
+    )
+  }, [zoomState, dimensions])
+
+  // Story 4.4: Navigate from minimap click
+  const handleMinimapNavigate = useCallback(
+    (x: number, y: number) => {
+      if (!svgRef.current || !zoomBehaviorRef.current) return
+
+      const svg = d3.select(svgRef.current)
+      const { width: svgWidth, height: svgHeight } = dimensions
+
+      // Center viewport on clicked position
+      const transform = d3.zoomIdentity
+        .translate(svgWidth / 2 - x * zoomState.scale, svgHeight / 2 - y * zoomState.scale)
+        .scale(zoomState.scale)
+
+      svg.transition().duration(300).call(zoomBehaviorRef.current.transform, transform)
+    },
+    [dimensions, zoomState.scale]
+  )
+
   return (
     <div
       ref={containerRef}
@@ -622,6 +695,130 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
           onCollapseAll={collapseAll}
         />
       )}
+      {/* Story 4.4 AC5: Minimap for large graphs (>= 50 nodes) */}
+      <GraphMinimap
+        nodes={visibleNodes}
+        links={visibleLinks}
+        viewportBounds={viewportBounds}
+        graphBounds={graphBounds}
+        onNavigate={handleMinimapNavigate}
+      />
+
+      {/* Story 4.4 AC3, AC6: Zoom controls with level display */}
+      {fullGraphData.nodes.length > 0 && (
+        <div className="absolute bottom-4 right-4 flex flex-col gap-2 items-end z-10">
+          <div
+            className="bg-white/90 dark:bg-gray-800/90
+                        rounded-lg shadow-lg p-2 flex items-center gap-1"
+          >
+            {/* Zoom Out Button */}
+            <button
+              type="button"
+              onClick={zoomOut}
+              disabled={!canZoomOut}
+              className="w-8 h-8 flex items-center justify-center rounded
+                         hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors
+                         disabled:opacity-40 disabled:cursor-not-allowed"
+              aria-label="Zoom out"
+              title="Zoom out"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+              </svg>
+            </button>
+
+            {/* Zoom Level Display (AC6) */}
+            <div className="w-14 text-center text-sm font-medium tabular-nums">{zoomPercent}%</div>
+
+            {/* Zoom In Button */}
+            <button
+              type="button"
+              onClick={zoomIn}
+              disabled={!canZoomIn}
+              className="w-8 h-8 flex items-center justify-center rounded
+                         hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors
+                         disabled:opacity-40 disabled:cursor-not-allowed"
+              aria-label="Zoom in"
+              title="Zoom in"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+            </button>
+
+            {/* Divider */}
+            <div className="w-px h-6 bg-gray-200 dark:bg-gray-700 mx-1" />
+
+            {/* Fit to Screen Button (AC4) */}
+            <button
+              type="button"
+              onClick={fitToScreen}
+              className="w-8 h-8 flex items-center justify-center rounded
+                         hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              aria-label="Fit to screen"
+              title="Fit to screen"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5"
+                />
+              </svg>
+            </button>
+
+            {/* Reset Zoom Button */}
+            <button
+              type="button"
+              onClick={resetZoom}
+              className="w-8 h-8 flex items-center justify-center rounded
+                         hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              aria-label="Reset zoom to 100%"
+              title="Reset zoom to 100%"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* AC4: Color legend showing meaning of different elements */}
       <GraphLegend position="bottom-left" hasCycles={hasCycles} />
     </div>
@@ -632,6 +829,8 @@ export type { GraphControlsProps } from './GraphControls'
 export { GraphControls } from './GraphControls'
 export type { GraphLegendProps } from './GraphLegend'
 export { GraphLegend } from './GraphLegend'
+export type { GraphMinimapProps } from './GraphMinimap'
+export { GraphMinimap } from './GraphMinimap'
 // Re-export types and utilities
 export type { D3GraphData, D3Link, D3Node, DependencyGraphProps } from './types'
 export type { CycleHighlightResult } from './useCycleHighlight'
@@ -639,6 +838,21 @@ export { useCycleHighlight } from './useCycleHighlight'
 export { transformToD3Data, truncatePackageName } from './useForceSimulation'
 export type { ExpandCollapseState, UseNodeExpandCollapseProps } from './useNodeExpandCollapse'
 export { useNodeExpandCollapse } from './useNodeExpandCollapse'
+export type {
+  UseZoomPanProps,
+  UseZoomPanResult,
+  ZoomPanState,
+  ZoomTransform,
+} from './useZoomPan'
+export { useZoomPan, ZOOM_CONFIG } from './useZoomPan'
+export type { Bounds } from './utils/calculateBounds'
+export {
+  calculateFitTransform,
+  calculateNodeBounds,
+  calculateViewportBounds,
+} from './utils/calculateBounds'
 export type { DepthEdge } from './utils/calculateDepth'
 export { calculateNodeDepths } from './utils/calculateDepth'
 export { computeVisibleNodes } from './utils/computeVisibleNodes'
+export type { ZoomControlsProps } from './ZoomControls'
+export { ZoomControls } from './ZoomControls'

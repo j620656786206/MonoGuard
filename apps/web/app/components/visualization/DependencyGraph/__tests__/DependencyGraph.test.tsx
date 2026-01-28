@@ -263,8 +263,9 @@ describe('DependencyGraphViz', () => {
 
       await waitFor(
         () => {
-          const circles = document.querySelectorAll('circle')
-          expect(circles.length).toBe(100)
+          // Select only circles in the main graph container (excludes minimap)
+          const mainGraphCircles = document.querySelectorAll('g.graph-container circle')
+          expect(mainGraphCircles.length).toBe(100)
         },
         { timeout: 2000 }
       )

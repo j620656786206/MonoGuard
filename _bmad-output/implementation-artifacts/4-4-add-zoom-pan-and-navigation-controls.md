@@ -1,6 +1,6 @@
 # Story 4.4: Add Zoom, Pan, and Navigation Controls
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -82,57 +82,57 @@ So that **I can navigate large graphs effectively**.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Implement D3 zoom behavior (AC: 1, 2, 7)
-  - [ ] Configure `d3.zoom()` with scale extent [0.1, 4]
-  - [ ] Attach zoom behavior to SVG element
-  - [ ] Handle wheel events for zoom
-  - [ ] Handle drag events for pan
-  - [ ] Add zoom transform to graph container group
+- [x] Task 1: Implement D3 zoom behavior (AC: 1, 2, 7)
+  - [x] Configure `d3.zoom()` with scale extent [0.1, 4]
+  - [x] Attach zoom behavior to SVG element
+  - [x] Handle wheel events for zoom
+  - [x] Handle drag events for pan
+  - [x] Add zoom transform to graph container group
 
-- [ ] Task 2: Create zoom controls component (AC: 3, 6)
-  - [ ] Create `ZoomControls.tsx` component
-  - [ ] Implement zoom in button with increment logic
-  - [ ] Implement zoom out button with decrement logic
-  - [ ] Add current zoom level display
-  - [ ] Style controls with proper positioning
+- [x] Task 2: Create zoom controls component (AC: 3, 6)
+  - [x] Create `ZoomControls.tsx` component
+  - [x] Implement zoom in button with increment logic
+  - [x] Implement zoom out button with decrement logic
+  - [x] Add current zoom level display
+  - [x] Style controls with proper positioning
 
-- [ ] Task 3: Implement fit-to-screen functionality (AC: 4)
-  - [ ] Calculate bounding box of all nodes
-  - [ ] Compute required scale and translation
-  - [ ] Implement smooth transition to fit view
-  - [ ] Add "Fit" button to zoom controls
+- [x] Task 3: Implement fit-to-screen functionality (AC: 4)
+  - [x] Calculate bounding box of all nodes
+  - [x] Compute required scale and translation
+  - [x] Implement smooth transition to fit view
+  - [x] Add "Fit" button to zoom controls
 
-- [ ] Task 4: Create minimap component (AC: 5)
-  - [ ] Create `GraphMinimap.tsx` component
-  - [ ] Render scaled-down version of graph
-  - [ ] Show viewport indicator rectangle
-  - [ ] Implement click-to-navigate on minimap
-  - [ ] Implement drag-to-navigate on minimap
-  - [ ] Add conditional rendering (> 50 nodes only)
+- [x] Task 4: Create minimap component (AC: 5)
+  - [x] Create `GraphMinimap.tsx` component
+  - [x] Render scaled-down version of graph
+  - [x] Show viewport indicator rectangle
+  - [x] Implement click-to-navigate on minimap
+  - [x] Implement drag-to-navigate on minimap
+  - [x] Add conditional rendering (> 50 nodes only)
 
-- [ ] Task 5: Integrate zoom state with React (AC: 1, 2, 3, 6)
-  - [ ] Create `useZoomPan.ts` custom hook
-  - [ ] Sync D3 zoom state with React state
-  - [ ] Expose zoom controls API (zoomIn, zoomOut, fitToScreen, resetZoom)
-  - [ ] Handle zoom level as percentage for display
+- [x] Task 5: Integrate zoom state with React (AC: 1, 2, 3, 6)
+  - [x] Create `useZoomPan.ts` custom hook
+  - [x] Sync D3 zoom state with React state
+  - [x] Expose zoom controls API (zoomIn, zoomOut, fitToScreen, resetZoom)
+  - [x] Handle zoom level as percentage for display
 
-- [ ] Task 6: Handle edge cases (AC: 7)
-  - [ ] Prevent zoom beyond limits
-  - [ ] Handle empty graph (no nodes)
-  - [ ] Handle single node graph
-  - [ ] Ensure touch device compatibility (pinch-to-zoom)
+- [x] Task 6: Handle edge cases (AC: 7)
+  - [x] Prevent zoom beyond limits
+  - [x] Handle empty graph (no nodes)
+  - [x] Handle single node graph
+  - [x] Ensure touch device compatibility (pinch-to-zoom)
 
-- [ ] Task 7: Write unit tests (AC: all)
-  - [ ] Test zoom controls render correctly
-  - [ ] Test zoom in/out functions
-  - [ ] Test fit-to-screen calculation
-  - [ ] Test minimap visibility logic
-  - [ ] Test zoom limits enforcement
+- [x] Task 7: Write unit tests (AC: all)
+  - [x] Test zoom controls render correctly
+  - [x] Test zoom in/out functions
+  - [x] Test fit-to-screen calculation
+  - [x] Test minimap visibility logic
+  - [x] Test zoom limits enforcement
 
-- [ ] Task 8: Verify CI passes (AC-CI)
-  - [ ] Run `pnpm nx affected --target=lint --base=main`
-  - [ ] Run `pnpm nx affected --target=test --base=main`
-  - [ ] Run `pnpm nx affected --target=type-check --base=main`
+- [x] Task 8: Verify CI passes (AC-CI)
+  - [x] Run `pnpm nx affected --target=lint --base=main`
+  - [x] Run `pnpm nx affected --target=test --base=main`
+  - [x] Run `pnpm nx affected --target=type-check --base=main`
   - [ ] Verify GitHub Actions CI is GREEN
 
 ## Dev Notes
@@ -991,11 +991,36 @@ describe('GraphMinimap', () => {
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.5 (claude-opus-4-5-20251101)
 
 ### Debug Log References
 
+- Fixed test assertion for 100+ nodes performance test (line selector needed to exclude minimap circles)
+- Fixed calculateBounds test assertions for -0 vs 0 floating point comparisons
+
 ### Completion Notes List
 
+1. **useZoomPan hook** - Custom hook for zoom/pan state management with D3 integration
+2. **ZoomControls component** - UI controls for zoom in/out, fit-to-screen, reset with zoom level display
+3. **GraphMinimap component** - Miniature overview for large graphs (>= 50 nodes) with click-to-navigate
+4. **calculateBounds utilities** - Functions for node bounds calculation and viewport tracking
+5. **Main component integration** - Updated DependencyGraphViz to integrate all zoom/pan functionality
+6. **D3 double-click zoom disabled** - Prevents conflict with expand/collapse from Story 4.3
+7. **All 316 tests passing** - 186 tests for DependencyGraph alone
+
 ### File List
+
+**New Files:**
+- `apps/web/app/components/visualization/DependencyGraph/useZoomPan.ts`
+- `apps/web/app/components/visualization/DependencyGraph/ZoomControls.tsx`
+- `apps/web/app/components/visualization/DependencyGraph/GraphMinimap.tsx`
+- `apps/web/app/components/visualization/DependencyGraph/utils/calculateBounds.ts`
+- `apps/web/app/components/visualization/DependencyGraph/__tests__/useZoomPan.test.ts`
+- `apps/web/app/components/visualization/DependencyGraph/__tests__/ZoomControls.test.tsx`
+- `apps/web/app/components/visualization/DependencyGraph/__tests__/GraphMinimap.test.tsx`
+- `apps/web/app/components/visualization/DependencyGraph/__tests__/calculateBounds.test.ts`
+
+**Modified Files:**
+- `apps/web/app/components/visualization/DependencyGraph/index.tsx` (integrated zoom/pan)
+- `apps/web/app/components/visualization/DependencyGraph/__tests__/DependencyGraph.test.tsx` (updated 100+ nodes test)
 
