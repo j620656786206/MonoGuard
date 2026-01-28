@@ -118,7 +118,7 @@ export function GraphMinimap({
   )
 
   const handleClick = useCallback(
-    (event: React.MouseEvent<SVGSVGElement>) => {
+    (event: React.MouseEvent<HTMLButtonElement>) => {
       // Only navigate on click if not dragging
       if (!isDragging) {
         handleNavigate(event.clientX, event.clientY)
@@ -129,7 +129,7 @@ export function GraphMinimap({
 
   // AC5: Drag-to-navigate functionality
   const handleMouseDown = useCallback(
-    (event: React.MouseEvent<SVGSVGElement>) => {
+    (event: React.MouseEvent<HTMLButtonElement>) => {
       event.preventDefault()
       setIsDragging(true)
       handleNavigate(event.clientX, event.clientY)
@@ -138,7 +138,7 @@ export function GraphMinimap({
   )
 
   const handleMouseMove = useCallback(
-    (event: React.MouseEvent<SVGSVGElement>) => {
+    (event: React.MouseEvent<HTMLButtonElement>) => {
       if (isDragging) {
         handleNavigate(event.clientX, event.clientY)
       }
@@ -155,7 +155,7 @@ export function GraphMinimap({
   }, [])
 
   const handleKeyDown = useCallback(
-    (event: React.KeyboardEvent<SVGSVGElement>) => {
+    (event: React.KeyboardEvent<HTMLButtonElement>) => {
       if (event.key === 'Enter' || event.key === ' ') {
         event.preventDefault()
         // Navigate to center when activated via keyboard
