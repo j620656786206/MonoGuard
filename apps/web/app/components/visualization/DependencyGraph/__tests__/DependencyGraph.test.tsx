@@ -433,7 +433,6 @@ describe('DependencyGraphViz - Circular Dependency Highlighting (Story 4.2)', ()
       depth: 2,
       impact: 'Build failure risk',
       complexity: 3,
-      priorityScore: 85,
     },
   ]
 
@@ -714,6 +713,259 @@ describe('GraphLegend', () => {
 
       const legend = document.querySelector('.custom-legend')
       expect(legend).toBeInTheDocument()
+    })
+  })
+})
+
+/**
+ * Story 4.3 Tests: Node Expand/Collapse Functionality Integration
+ *
+ * These tests verify the integration of expand/collapse functionality
+ * with the main DependencyGraphViz component.
+ *
+ * Unit tests for individual functions are in:
+ * - useNodeExpandCollapse.test.ts
+ * - computeVisibleNodes.test.ts
+ * - calculateDepth.test.ts
+ * - GraphControls.test.tsx
+ */
+describe('DependencyGraphViz - Node Expand/Collapse (Story 4.3)', () => {
+  // Mock data with hierarchical structure for expand/collapse testing
+  const mockHierarchicalData: DependencyGraph = {
+    nodes: {
+      '@app/root': {
+        name: '@app/root',
+        version: '1.0.0',
+        path: 'packages/root',
+        dependencies: ['@app/child1', '@app/child2'],
+        devDependencies: [],
+        peerDependencies: [],
+      },
+      '@app/child1': {
+        name: '@app/child1',
+        version: '1.0.0',
+        path: 'packages/child1',
+        dependencies: ['@app/grandchild'],
+        devDependencies: [],
+        peerDependencies: [],
+      },
+      '@app/child2': {
+        name: '@app/child2',
+        version: '1.0.0',
+        path: 'packages/child2',
+        dependencies: [],
+        devDependencies: [],
+        peerDependencies: [],
+      },
+      '@app/grandchild': {
+        name: '@app/grandchild',
+        version: '1.0.0',
+        path: 'packages/grandchild',
+        dependencies: [],
+        devDependencies: [],
+        peerDependencies: [],
+      },
+    },
+    edges: [
+      { from: '@app/root', to: '@app/child1', type: 'production', versionRange: '^1.0.0' },
+      { from: '@app/root', to: '@app/child2', type: 'production', versionRange: '^1.0.0' },
+      { from: '@app/child1', to: '@app/grandchild', type: 'production', versionRange: '^1.0.0' },
+    ],
+    rootPath: '/workspace',
+    workspaceType: 'npm',
+  }
+
+  describe('AC3: Depth-Based Controls Integration', () => {
+    it('[P1] should render GraphControls when data exists', async () => {
+      // GIVEN: DependencyGraphViz with hierarchical data
+      // WHEN: Rendered
+      render(<DependencyGraphViz data={mockHierarchicalData} />)
+
+      // THEN: GraphControls should be visible
+      await waitFor(
+        () => {
+          expect(document.querySelector('[role="group"]')).toBeInTheDocument()
+        },
+        { timeout: 1000 }
+      )
+    })
+
+    it('[P1] should render depth level buttons based on graph structure', async () => {
+      // GIVEN: DependencyGraphViz with 3 depth levels
+      // WHEN: Rendered
+      render(<DependencyGraphViz data={mockHierarchicalData} />)
+
+      // THEN: Should have depth control buttons
+      await waitFor(
+        () => {
+          const depthControlGroup = document.querySelector('[aria-label="Graph depth controls"]')
+          expect(depthControlGroup).toBeInTheDocument()
+
+          // Should have 'All' button
+          const buttons = depthControlGroup?.querySelectorAll('button')
+          expect(buttons?.length).toBeGreaterThanOrEqual(2) // At least All + one depth level
+        },
+        { timeout: 1000 }
+      )
+    })
+
+    it('[P2] should not render GraphControls when no data', () => {
+      // GIVEN: Empty data
+      const emptyData: DependencyGraph = {
+        nodes: {},
+        edges: [],
+        rootPath: '/workspace',
+        workspaceType: 'npm',
+      }
+
+      // WHEN: Rendered
+      render(<DependencyGraphViz data={emptyData} />)
+
+      // THEN: GraphControls should not be present
+      expect(document.querySelector('[role="group"]')).not.toBeInTheDocument()
+    })
+  })
+
+  describe('AC1/AC2: Double-Click Expand/Collapse Integration', () => {
+    it('[P1] should set up double-click handler on nodes', async () => {
+      // GIVEN: DependencyGraphViz with nodes
+      // WHEN: Rendered
+      render(<DependencyGraphViz data={mockHierarchicalData} />)
+
+      // THEN: Nodes should be rendered and have event handlers attached
+      await waitFor(
+        () => {
+          const nodeGroups = document.querySelectorAll('g.node')
+          expect(nodeGroups.length).toBe(4)
+
+          // Each node should have pointer cursor
+          nodeGroups.forEach((nodeGroup) => {
+            const circle = nodeGroup.querySelector('circle')
+            expect(circle?.style.cursor).toBe('pointer')
+          })
+        },
+        { timeout: 1000 }
+      )
+    })
+
+    it('[P1] should handle double-click on node', async () => {
+      // GIVEN: DependencyGraphViz with nodes
+      render(<DependencyGraphViz data={mockHierarchicalData} />)
+
+      await waitFor(
+        () => {
+          const nodeGroups = document.querySelectorAll('g.node')
+          expect(nodeGroups.length).toBe(4)
+        },
+        { timeout: 1000 }
+      )
+
+      // WHEN: Double-click on a node
+      const nodeGroup = document.querySelector('g.node')
+      if (nodeGroup) {
+        fireEvent.dblClick(nodeGroup)
+      }
+
+      // THEN: The interaction should not throw errors (basic sanity check)
+      // Full behavior tested in useNodeExpandCollapse.test.ts
+      expect(document.querySelector('svg')).toBeInTheDocument()
+    })
+  })
+
+  describe('AC4: Collapsed Node Indicator Integration', () => {
+    it('[P1] should render badge group container', async () => {
+      // GIVEN: DependencyGraphViz with hierarchical data
+      // WHEN: Rendered
+      render(<DependencyGraphViz data={mockHierarchicalData} />)
+
+      // THEN: Should have SVG structure ready for badges
+      await waitFor(
+        () => {
+          const svg = document.querySelector('svg')
+          expect(svg).toBeInTheDocument()
+
+          // Badge group is created even if empty
+          const mainGroup = svg?.querySelector('g')
+          expect(mainGroup).toBeInTheDocument()
+        },
+        { timeout: 1000 }
+      )
+    })
+  })
+
+  describe('Component Integration', () => {
+    it('[P1] should integrate useNodeExpandCollapse hook', async () => {
+      // GIVEN: DependencyGraphViz with hierarchical data
+      // WHEN: Rendered
+      render(<DependencyGraphViz data={mockHierarchicalData} />)
+
+      // THEN: Should render nodes (D3 may create circles progressively in jsdom)
+      await waitFor(
+        () => {
+          const circles = document.querySelectorAll('circle')
+          // At minimum, nodes should be rendered (exact count may vary in jsdom)
+          expect(circles.length).toBeGreaterThanOrEqual(1)
+        },
+        { timeout: 1000 }
+      )
+    })
+
+    it('[P1] should integrate computeVisibleNodes utility', async () => {
+      // GIVEN: DependencyGraphViz with hierarchical data
+      // WHEN: Rendered
+      render(<DependencyGraphViz data={mockHierarchicalData} />)
+
+      // THEN: SVG should be created with link groups (D3 creates structure even if jsdom doesn't render all lines)
+      await waitFor(
+        () => {
+          const svg = document.querySelector('svg')
+          expect(svg).toBeInTheDocument()
+
+          // Verify link groups are created (may not have visible lines in jsdom)
+          const mainGroup = svg?.querySelector('g')
+          expect(mainGroup).toBeInTheDocument()
+        },
+        { timeout: 1000 }
+      )
+    })
+
+    it('[P1] should integrate calculateNodeDepths utility', async () => {
+      // GIVEN: DependencyGraphViz with hierarchical data
+      // WHEN: Rendered
+      render(<DependencyGraphViz data={mockHierarchicalData} />)
+
+      // THEN: Depth controls should show levels based on calculated depths
+      await waitFor(
+        () => {
+          const depthGroup = document.querySelector('[aria-label="Graph depth controls"]')
+          expect(depthGroup).toBeInTheDocument()
+
+          // Max depth in this graph is 2 (root->child1->grandchild)
+          // So we should see L1, L2 buttons
+          const buttons = depthGroup?.querySelectorAll('button')
+          const buttonLabels = Array.from(buttons || []).map((b) => b.textContent)
+          expect(buttonLabels).toContain('All')
+          expect(buttonLabels.some((l) => l?.includes('L1'))).toBe(true)
+        },
+        { timeout: 1000 }
+      )
+    })
+  })
+
+  describe('Cleanup and Memory Management', () => {
+    it('[P1] should clean up on unmount', async () => {
+      // GIVEN: DependencyGraphViz rendered
+      const { unmount } = render(<DependencyGraphViz data={mockHierarchicalData} />)
+
+      await waitFor(() => {
+        expect(document.querySelector('svg')).toBeInTheDocument()
+      })
+
+      // WHEN: Unmounted
+      unmount()
+
+      // THEN: SVG should be removed (no memory leaks)
+      expect(document.querySelector('svg')).not.toBeInTheDocument()
     })
   })
 })

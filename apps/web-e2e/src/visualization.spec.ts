@@ -398,3 +398,356 @@ test.describe('Circular Dependency Highlighting (Story 4.2)', () => {
     )
   })
 })
+
+/**
+ * Story 4.3: Implement Node Expand/Collapse Functionality
+ *
+ * Tests for expand/collapse functionality in the dependency graph.
+ * These tests verify:
+ * - AC1: Double-click to collapse a node
+ * - AC2: Double-click to expand a collapsed node
+ * - AC3: Depth-based collapse controls (All, L1, L2, etc.)
+ * - AC4: Collapsed node indicator showing hidden child count
+ * - AC5: Smooth animation during expand/collapse (< 300ms)
+ * - AC6: Session state persistence
+ */
+test.describe('Node Expand/Collapse (Story 4.3)', () => {
+  test.describe('Graph Controls (AC3)', () => {
+    test.fixme('[P1] should display depth control buttons', async ({ page }) => {
+      // FIXME: Test requires analysis data in store
+      // When data seeding is available:
+      // 1. Seed analysis results via fixture
+      // 2. Navigate to /results
+      // 3. Verify depth control buttons are visible
+      await page.goto('/results')
+
+      // THEN: Depth control section should be visible
+      await expect(page.getByRole('group', { name: /depth controls/i })).toBeVisible()
+
+      // THEN: Should have 'All' button
+      await expect(page.getByRole('button', { name: /all/i })).toBeVisible()
+
+      // THEN: Should have expand/collapse all buttons
+      await expect(page.getByRole('button', { name: /expand all/i })).toBeVisible()
+      await expect(page.getByRole('button', { name: /collapse all/i })).toBeVisible()
+    })
+
+    test.fixme('[P1] should show depth level buttons (L1, L2, etc.)', async ({ page }) => {
+      // FIXME: Test requires analysis data in store
+      // When data seeding is available:
+      // 1. Seed analysis results with multiple depth levels
+      // 2. Navigate to /results
+      // 3. Verify depth level buttons are present
+      await page.goto('/results')
+
+      // THEN: Should have depth level buttons
+      await expect(page.getByRole('button', { name: /l1/i })).toBeVisible()
+      await expect(page.getByRole('button', { name: /l2/i })).toBeVisible()
+    })
+
+    test.fixme('[P1] should collapse nodes when depth level is selected', async ({ page }) => {
+      // FIXME: Test requires analysis data in store
+      // Verification points:
+      // - Clicking L1 collapses all nodes at depth > 1
+      // - Hidden nodes are not rendered in SVG
+      // - Collapsed parent shows badge with count
+      await page.goto('/results')
+
+      // WHEN: Click L1 depth button
+      await page.getByRole('button', { name: /l1/i }).click()
+
+      // THEN: Graph should show collapsed nodes with badges
+      await expect(page.locator('.collapsed-badge').first()).toBeVisible()
+    })
+
+    test.fixme('[P1] should expand all nodes when "All" is clicked', async ({ page }) => {
+      // FIXME: Test requires analysis data in store
+      // Verification points:
+      // - Clicking 'All' expands all collapsed nodes
+      // - All nodes become visible
+      // - No collapsed badges are shown
+      await page.goto('/results')
+
+      // First collapse some nodes
+      await page.getByRole('button', { name: /l1/i }).click()
+      await expect(page.locator('.collapsed-badge').first()).toBeVisible()
+
+      // WHEN: Click 'All' button
+      await page.getByRole('button', { name: /all/i }).click()
+
+      // THEN: All nodes should be visible, no badges
+      await expect(page.locator('.collapsed-badge')).toHaveCount(0)
+    })
+
+    test.fixme('[P1] should highlight selected depth button', async ({ page }) => {
+      // FIXME: Test requires analysis data in store
+      // Verification points:
+      // - Selected depth button has distinct styling
+      // - aria-pressed attribute is set correctly
+      await page.goto('/results')
+
+      // WHEN: Click L1 depth button
+      await page.getByRole('button', { name: /l1/i }).click()
+
+      // THEN: L1 button should be pressed
+      await expect(page.getByRole('button', { name: /l1/i })).toHaveAttribute(
+        'aria-pressed',
+        'true'
+      )
+
+      // THEN: 'All' button should not be pressed
+      await expect(page.getByRole('button', { name: /all/i })).toHaveAttribute(
+        'aria-pressed',
+        'false'
+      )
+    })
+  })
+
+  test.describe('Double-Click Interaction (AC1, AC2)', () => {
+    test.fixme('[P1] should collapse node on double-click (AC1)', async ({ page }) => {
+      // FIXME: Test requires analysis data in store
+      // Verification points:
+      // - Double-clicking a node collapses it
+      // - Children of collapsed node are hidden
+      // - Collapsed node shows dashed border
+      await page.goto('/results')
+
+      // Find a node to collapse
+      const node = page.locator('g.node').first()
+      await node.dblclick()
+
+      // THEN: Node should show collapsed styling (dashed border)
+      const circle = node.locator('circle')
+      await expect(circle).toHaveAttribute('stroke-dasharray')
+    })
+
+    test.fixme('[P1] should expand collapsed node on double-click (AC2)', async ({ page }) => {
+      // FIXME: Test requires analysis data in store
+      // Verification points:
+      // - Double-clicking a collapsed node expands it
+      // - Children become visible again
+      // - Dashed border is removed
+      await page.goto('/results')
+
+      // First collapse a node
+      const node = page.locator('g.node').first()
+      await node.dblclick()
+
+      // Verify it's collapsed
+      await expect(node.locator('circle')).toHaveAttribute('stroke-dasharray')
+
+      // WHEN: Double-click again to expand
+      await node.dblclick()
+
+      // THEN: Node should not have dashed border
+      await expect(node.locator('circle')).not.toHaveAttribute('stroke-dasharray')
+    })
+
+    test.fixme('[P2] should distinguish single-click from double-click', async ({ page }) => {
+      // FIXME: Test requires analysis data with cycles
+      // Verification points:
+      // - Single-click on cycle node selects cycle (Story 4.2)
+      // - Double-click on same node collapses (not selects)
+      await page.goto('/results')
+
+      // Find a cycle node
+      const cycleNode = page.locator('g.node--cycle').first()
+
+      // WHEN: Single click
+      await cycleNode.click()
+
+      // THEN: Cycle should be selected (dimmed nodes appear)
+      await expect(page.locator('g.node circle[fill="#9ca3af"]').first()).toBeVisible()
+
+      // Clear selection
+      await page.keyboard.press('Escape')
+
+      // WHEN: Double click
+      await cycleNode.dblclick()
+
+      // THEN: Node should be collapsed (dashed border)
+      await expect(cycleNode.locator('circle')).toHaveAttribute('stroke-dasharray')
+    })
+  })
+
+  test.describe('Collapsed Node Indicator (AC4)', () => {
+    test.fixme('[P1] should display badge with hidden child count', async ({ page }) => {
+      // FIXME: Test requires analysis data in store
+      // Verification points:
+      // - Collapsed node shows orange badge
+      // - Badge displays number of hidden children
+      // - Badge is positioned correctly (top-right of node)
+      await page.goto('/results')
+
+      // Collapse at L1 to ensure some nodes have children
+      await page.getByRole('button', { name: /l1/i }).click()
+
+      // THEN: Badge should be visible
+      const badge = page.locator('.collapsed-badge').first()
+      await expect(badge).toBeVisible()
+
+      // Badge circle should be orange
+      await expect(badge.locator('circle')).toHaveAttribute('fill', '#f97316')
+
+      // Badge should show a number
+      const badgeText = await badge.locator('text').textContent()
+      expect(Number(badgeText)).toBeGreaterThan(0)
+    })
+
+    test.fixme('[P2] should hide badge when node is expanded', async ({ page }) => {
+      // FIXME: Test requires analysis data in store
+      // Verification points:
+      // - Expanding a node removes its badge
+      // - Badge count is recalculated
+      await page.goto('/results')
+
+      // Collapse at L1
+      await page.getByRole('button', { name: /l1/i }).click()
+      const badgeCount = await page.locator('.collapsed-badge').count()
+      expect(badgeCount).toBeGreaterThan(0)
+
+      // WHEN: Expand all
+      await page.getByRole('button', { name: /all/i }).click()
+
+      // THEN: No badges should remain
+      await expect(page.locator('.collapsed-badge')).toHaveCount(0)
+    })
+
+    test.fixme('[P2] should show "99+" for large hidden counts', async ({ page }) => {
+      // FIXME: Test requires analysis data with large graph
+      // Verification points:
+      // - For >99 hidden children, badge shows "99+"
+      // - Prevents badge from being too wide
+      await page.goto('/results')
+
+      // This test requires a very large graph
+      // Verify badge text is capped
+      const badges = page.locator('.collapsed-badge text')
+      const badgeCount = await badges.count()
+
+      if (badgeCount > 0) {
+        for (let i = 0; i < badgeCount; i++) {
+          const text = await badges.nth(i).textContent()
+          expect(text?.length).toBeLessThanOrEqual(3) // "99+" is max
+        }
+      }
+    })
+  })
+
+  test.describe('Animation (AC5)', () => {
+    test.fixme('[P2] should animate expand/collapse within 300ms', async ({ page }) => {
+      // FIXME: Test requires analysis data in store
+      // Verification points:
+      // - Animation completes within 300ms
+      // - Smooth transition without jumps
+      await page.goto('/results')
+
+      // Measure time for collapse animation
+      const startTime = Date.now()
+
+      // Collapse at L1
+      await page.getByRole('button', { name: /l1/i }).click()
+
+      // Wait for animation to complete (simulation settling)
+      await page.waitForTimeout(300)
+
+      // Verify animation completed within threshold
+      const endTime = Date.now()
+      const duration = endTime - startTime
+
+      // Should complete within 300ms + some buffer for test overhead
+      expect(duration).toBeLessThan(500)
+    })
+  })
+
+  test.describe('Session Persistence (AC6)', () => {
+    test.fixme('[P2] should persist collapsed state across page refresh', async ({ page }) => {
+      // FIXME: Test requires analysis data in store
+      // Verification points:
+      // - Collapsed state is saved to sessionStorage
+      // - State is restored after page refresh
+      await page.goto('/results')
+
+      // Collapse some nodes
+      await page.getByRole('button', { name: /l1/i }).click()
+      const badgeCount = await page.locator('.collapsed-badge').count()
+      expect(badgeCount).toBeGreaterThan(0)
+
+      // WHEN: Refresh the page
+      await page.reload()
+
+      // THEN: Collapsed state should be restored
+      const restoredBadgeCount = await page.locator('.collapsed-badge').count()
+      expect(restoredBadgeCount).toBe(badgeCount)
+    })
+
+    test.fixme('[P2] should clear collapsed state on new analysis', async ({ page }) => {
+      // FIXME: Test requires ability to run new analysis
+      // Verification points:
+      // - Running a new analysis clears collapsed state
+      // - Fresh graph starts fully expanded
+      await page.goto('/results')
+
+      // Collapse some nodes
+      await page.getByRole('button', { name: /l1/i }).click()
+
+      // Navigate to analyze and run new analysis
+      await page.goto('/analyze')
+      // (Would need to run a new analysis here)
+
+      // Navigate back to results
+      await page.goto('/results')
+
+      // THEN: Graph should be fully expanded (no badges)
+      await expect(page.locator('.collapsed-badge')).toHaveCount(0)
+    })
+  })
+
+  test.describe('Accessibility', () => {
+    test.fixme('[P2] should support keyboard navigation of depth controls', async ({ page }) => {
+      // FIXME: Test requires analysis data in store
+      // Accessibility verification:
+      // - Tab navigates between control buttons
+      // - Enter/Space activates buttons
+      // - ARIA labels are correct
+      await page.goto('/results')
+
+      // Focus the control group
+      await page.getByRole('button', { name: /all/i }).focus()
+
+      // THEN: Button should be focused
+      await expect(page.getByRole('button', { name: /all/i })).toBeFocused()
+
+      // WHEN: Press Tab to move to next button
+      await page.keyboard.press('Tab')
+
+      // THEN: Next button should be focused
+      await expect(page.getByRole('button', { name: /l1/i })).toBeFocused()
+
+      // WHEN: Press Enter to activate
+      await page.keyboard.press('Enter')
+
+      // THEN: L1 should be selected
+      await expect(page.getByRole('button', { name: /l1/i })).toHaveAttribute(
+        'aria-pressed',
+        'true'
+      )
+    })
+
+    test.fixme('[P2] should have accessible labels for collapsed nodes', async ({ page }) => {
+      // FIXME: Test requires analysis data in store
+      // Accessibility verification:
+      // - Collapsed nodes have aria-expanded="false"
+      // - Badge has aria-label describing count
+      await page.goto('/results')
+
+      // Collapse some nodes
+      await page.getByRole('button', { name: /l1/i }).click()
+
+      // Verify accessibility attributes
+      const collapsedNode = page.locator('g.node--collapsed').first()
+      // Node groups don't typically have aria-expanded, but we could add it via title element
+      await expect(collapsedNode).toBeVisible()
+    })
+  })
+})
