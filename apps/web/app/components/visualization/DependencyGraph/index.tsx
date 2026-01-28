@@ -6,11 +6,13 @@
  * Highlights circular dependencies with distinct styling (Story 4.2).
  * Supports expand/collapse of nodes with depth-based controls (Story 4.3).
  * Includes zoom, pan, minimap navigation, and zoom controls (Story 4.4).
+ * Provides hover tooltips and edge highlighting (Story 4.5).
  *
  * @see Story 4.1: Implement D3.js Force-Directed Dependency Graph
  * @see Story 4.2: Highlight Circular Dependencies in Graph
  * @see Story 4.3: Implement Node Expand/Collapse Functionality
  * @see Story 4.4: Add Zoom, Pan, and Navigation Controls
+ * @see Story 4.5: Implement Hover Details and Tooltips
  */
 'use client'
 
@@ -19,6 +21,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { GraphControls } from './GraphControls'
 import { GraphLegend } from './GraphLegend'
 import { GraphMinimap } from './GraphMinimap'
+import { NodeTooltip } from './NodeTooltip'
 import {
   ANIMATION,
   COLLAPSED_STYLES,
@@ -32,9 +35,11 @@ import type { D3Link, D3Node, DependencyGraphProps } from './types'
 import { DEFAULT_SIMULATION_CONFIG } from './types'
 import { transformToD3Data, truncatePackageName } from './useForceSimulation'
 import { useNodeExpandCollapse } from './useNodeExpandCollapse'
+import { useNodeHover } from './useNodeHover'
 import { useZoomPan, ZOOM_CONFIG } from './useZoomPan'
 import { calculateNodeBounds, calculateViewportBounds } from './utils/calculateBounds'
 import { calculateNodeDepths } from './utils/calculateDepth'
+import { computeTooltipData } from './utils/computeConnectedElements'
 import { computeVisibleNodes } from './utils/computeVisibleNodes'
 import { ZoomControls } from './ZoomControls'
 
@@ -134,6 +139,33 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
   const { visibleNodes, visibleLinks, hiddenChildCounts } = useMemo(() => {
     return computeVisibleNodes(fullGraphData.nodes, fullGraphData.links, collapsedNodeIds)
   }, [fullGraphData, collapsedNodeIds])
+
+  // Story 4.5: Node hover state management
+  const {
+    hoverState,
+    connectedNodeIds,
+    connectedLinkIndices,
+    handleNodeMouseEnter,
+    handleNodeMouseLeave,
+    handleNodeMouseMove,
+  } = useNodeHover({
+    nodes: visibleNodes,
+    links: visibleLinks,
+  })
+
+  // Story 4.5: Compute tooltip data for hovered node
+  const tooltipData = useMemo(() => {
+    if (!hoverState.nodeId) return null
+
+    const node = visibleNodes.find((n) => n.id === hoverState.nodeId)
+    if (!node) return null
+
+    return computeTooltipData({
+      node,
+      links: visibleLinks,
+      circularDependencies: circularDependencies ?? [],
+    })
+  }, [hoverState.nodeId, visibleNodes, visibleLinks, circularDependencies])
 
   // Handle depth change from controls
   const handleDepthChange = useCallback(
@@ -420,6 +452,18 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
       toggleNode(d.id)
     })
 
+    // Story 4.5: Add hover event handlers for tooltips and edge highlighting (AC2, AC4)
+    node
+      .on('mouseenter', (event: MouseEvent, d: D3Node) => {
+        handleNodeMouseEnter(d.id, event)
+      })
+      .on('mousemove', (event: MouseEvent) => {
+        handleNodeMouseMove(event)
+      })
+      .on('mouseleave', () => {
+        handleNodeMouseLeave()
+      })
+
     // AC6: Click on background to deselect
     svg.on('click', (event) => {
       if (event.target === svgRef.current) {
@@ -532,6 +576,9 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
       svg.on('click', null) // Remove click listener
       node.on('click', null) // Remove node click listeners
       node.on('dblclick', null) // Remove double-click listeners
+      node.on('mouseenter', null) // Remove hover enter listener (Story 4.5)
+      node.on('mousemove', null) // Remove hover move listener (Story 4.5)
+      node.on('mouseleave', null) // Remove hover leave listener (Story 4.5)
       node.on('.drag', null) // Remove drag listeners (CR-7)
       svg.selectAll('*').remove() // Clean DOM
       nodeSelectionRef.current = null
@@ -552,6 +599,9 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
     toggleNode,
     handleZoomChange,
     setZoomBehavior,
+    handleNodeMouseEnter,
+    handleNodeMouseLeave,
+    handleNodeMouseMove,
   ])
 
   // Separate effect for style updates when selection changes (performance optimization)
@@ -628,6 +678,77 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
       .attr('stroke-opacity', (d) => getEdgeStyle(d).opacity)
       .attr('stroke-width', (d) => getEdgeStyle(d).width)
   }, [selectedCycleIndex, collapsedNodeIds])
+
+  // Story 4.5: Effect to update visual highlighting when hover changes (AC4)
+  useEffect(() => {
+    const nodeSelection = nodeSelectionRef.current
+    const normalLinkSelection = normalLinkSelectionRef.current
+    const cycleLinkSelection = cycleLinkSelectionRef.current
+
+    if (!nodeSelection || !normalLinkSelection || !cycleLinkSelection) return
+
+    // Only apply hover highlighting if a cycle is NOT selected (cycle selection takes priority)
+    if (selectedCycleIndex !== null) return
+
+    const HOVER_TRANSITION_DURATION = 150 // ms, matches tooltip animation
+
+    if (hoverState.nodeId) {
+      // Dim non-connected elements, highlight connected ones
+      nodeSelection
+        .select('circle')
+        .transition()
+        .duration(HOVER_TRANSITION_DURATION)
+        .attr('opacity', (d: D3Node) => (connectedNodeIds.has(d.id) ? 1 : 0.3))
+
+      nodeSelection
+        .select('text')
+        .transition()
+        .duration(HOVER_TRANSITION_DURATION)
+        .attr('opacity', (d: D3Node) => (connectedNodeIds.has(d.id) ? 1 : 0.3))
+
+      // Highlight connected links, dim others
+      normalLinkSelection
+        .transition()
+        .duration(HOVER_TRANSITION_DURATION)
+        .attr('stroke-opacity', (_d: D3Link, i: number) =>
+          connectedLinkIndices.has(i) ? 0.8 : 0.1
+        )
+        .attr('stroke-width', (_d: D3Link, i: number) => (connectedLinkIndices.has(i) ? 2 : 1))
+
+      cycleLinkSelection
+        .transition()
+        .duration(HOVER_TRANSITION_DURATION)
+        .attr('stroke-opacity', (_d: D3Link, i: number) =>
+          connectedLinkIndices.has(i) ? 0.8 : 0.1
+        )
+        .attr('stroke-width', (_d: D3Link, i: number) => (connectedLinkIndices.has(i) ? 3 : 1))
+    } else {
+      // Reset all elements to default state
+      nodeSelection
+        .select('circle')
+        .transition()
+        .duration(HOVER_TRANSITION_DURATION)
+        .attr('opacity', 1)
+
+      nodeSelection
+        .select('text')
+        .transition()
+        .duration(HOVER_TRANSITION_DURATION)
+        .attr('opacity', 1)
+
+      normalLinkSelection
+        .transition()
+        .duration(HOVER_TRANSITION_DURATION)
+        .attr('stroke-opacity', EDGE_COLORS.normal.opacity)
+        .attr('stroke-width', EDGE_COLORS.normal.width)
+
+      cycleLinkSelection
+        .transition()
+        .duration(HOVER_TRANSITION_DURATION)
+        .attr('stroke-opacity', EDGE_COLORS.cycle.opacity)
+        .attr('stroke-width', EDGE_COLORS.cycle.width)
+    }
+  }, [hoverState.nodeId, connectedNodeIds, connectedLinkIndices, selectedCycleIndex])
 
   // Determine if there are any cycles to display in legend
   const hasCycles = circularDependencies && circularDependencies.length > 0
@@ -720,6 +841,9 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
 
       {/* AC4: Color legend showing meaning of different elements */}
       <GraphLegend position="bottom-left" hasCycles={hasCycles} />
+
+      {/* Story 4.5: Node tooltip on hover (AC1, AC2, AC3, AC7) */}
+      <NodeTooltip data={tooltipData} position={hoverState.position} containerRef={containerRef} />
     </div>
   )
 })
@@ -730,6 +854,8 @@ export type { GraphLegendProps } from './GraphLegend'
 export { GraphLegend } from './GraphLegend'
 export type { GraphMinimapProps } from './GraphMinimap'
 export { GraphMinimap } from './GraphMinimap'
+export type { NodeTooltipProps } from './NodeTooltip'
+export { NodeTooltip } from './NodeTooltip'
 // Re-export types and utilities
 export type { D3GraphData, D3Link, D3Node, DependencyGraphProps } from './types'
 export type { CycleHighlightResult } from './useCycleHighlight'
@@ -737,6 +863,8 @@ export { useCycleHighlight } from './useCycleHighlight'
 export { transformToD3Data, truncatePackageName } from './useForceSimulation'
 export type { ExpandCollapseState, UseNodeExpandCollapseProps } from './useNodeExpandCollapse'
 export { useNodeExpandCollapse } from './useNodeExpandCollapse'
+export type { UseNodeHoverProps, UseNodeHoverResult } from './useNodeHover'
+export { useNodeHover } from './useNodeHover'
 export type {
   UseZoomPanProps,
   UseZoomPanResult,
@@ -752,6 +880,16 @@ export {
 } from './utils/calculateBounds'
 export type { DepthEdge } from './utils/calculateDepth'
 export { calculateNodeDepths } from './utils/calculateDepth'
+export type {
+  ComputeTooltipDataParams,
+  ConnectedElements,
+  DependencyCounts,
+} from './utils/computeConnectedElements'
+export {
+  computeConnectedElements,
+  computeDependencyCounts,
+  computeTooltipData,
+} from './utils/computeConnectedElements'
 export { computeVisibleNodes } from './utils/computeVisibleNodes'
 export type { ZoomControlsProps } from './ZoomControls'
 export { ZoomControls } from './ZoomControls'

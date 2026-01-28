@@ -93,3 +93,50 @@ export const DEFAULT_SIMULATION_CONFIG: ForceSimulationConfig = {
   collisionRadius: 30,
   alphaDecay: 0.02,
 }
+
+/**
+ * TooltipData - Data structure for node tooltip content (Story 4.5)
+ */
+export interface TooltipData {
+  /** Package name for display */
+  packageName: string
+  /** Package path relative to workspace root */
+  packagePath: string
+  /** Number of dependencies pointing TO this node */
+  incomingCount: number
+  /** Number of dependencies this node points TO */
+  outgoingCount: number
+  /** Impact on overall health score (positive = good, negative = bad) */
+  healthContribution: number
+  /** Whether this node is part of a circular dependency */
+  inCycle: boolean
+  /** Cycle information if node is in a cycle */
+  cycleInfo?: {
+    /** Number of cycles this node is involved in */
+    cycleCount: number
+    /** Other packages in the same cycle(s) */
+    packages: string[]
+  }
+}
+
+/**
+ * TooltipPosition - Calculated position for tooltip with placement hint
+ */
+export interface TooltipPosition {
+  /** X coordinate relative to container */
+  x: number
+  /** Y coordinate relative to container */
+  y: number
+  /** Placement direction (used for styling) */
+  placement: 'top' | 'bottom' | 'left' | 'right'
+}
+
+/**
+ * HoverState - Tracks which node is being hovered (Story 4.5)
+ */
+export interface HoverState {
+  /** ID of the currently hovered node, null if none */
+  nodeId: string | null
+  /** Mouse position for tooltip placement */
+  position: { x: number; y: number } | null
+}

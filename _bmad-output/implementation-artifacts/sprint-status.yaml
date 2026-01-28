@@ -79,7 +79,7 @@ development_status:
   4-2-highlight-circular-dependencies-in-graph: done
   4-3-implement-node-expand-collapse-functionality: done
   4-4-add-zoom-pan-and-navigation-controls: done
-  4-5-implement-hover-details-and-tooltips: ready-for-dev
+  4-5-implement-hover-details-and-tooltips: review
   4-6-export-graph-as-png-svg-images: ready-for-dev
   4-7-export-analysis-reports-in-multiple-formats: ready-for-dev
   4-8-create-detailed-diagnostic-reports: ready-for-dev
