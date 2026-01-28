@@ -4,19 +4,32 @@
  * Renders package dependencies as an interactive force-directed graph using D3.js.
  * Uses SVG rendering for graphs with < 500 nodes (per architecture.md).
  * Highlights circular dependencies with distinct styling (Story 4.2).
+ * Supports expand/collapse of nodes with depth-based controls (Story 4.3).
  *
  * @see Story 4.1: Implement D3.js Force-Directed Dependency Graph
  * @see Story 4.2: Highlight Circular Dependencies in Graph
+ * @see Story 4.3: Implement Node Expand/Collapse Functionality
  */
 'use client'
 
 import * as d3 from 'd3'
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { GraphControls } from './GraphControls'
 import { GraphLegend } from './GraphLegend'
-import { ANIMATION, EDGE_COLORS, GLOW_FILTER, NODE_COLORS } from './styles'
+import {
+  ANIMATION,
+  COLLAPSED_STYLES,
+  EDGE_COLORS,
+  EXPAND_COLLAPSE_ANIMATION,
+  GLOW_FILTER,
+  NODE_COLORS,
+} from './styles'
 import type { D3Link, D3Node, DependencyGraphProps } from './types'
 import { DEFAULT_SIMULATION_CONFIG } from './types'
 import { transformToD3Data, truncatePackageName } from './useForceSimulation'
+import { useNodeExpandCollapse } from './useNodeExpandCollapse'
+import { calculateNodeDepths } from './utils/calculateDepth'
+import { computeVisibleNodes } from './utils/computeVisibleNodes'
 
 /**
  * DependencyGraphViz component
@@ -33,8 +46,10 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
 }: DependencyGraphProps) {
   const svgRef = useRef<SVGSVGElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const simulationRef = useRef<d3.Simulation<D3Node, D3Link> | null>(null)
   const [dimensions, setDimensions] = useState({ width: 800, height: 500 })
   const [selectedCycleIndex, setSelectedCycleIndex] = useState<number | null>(null)
+  const [currentDepth, setCurrentDepth] = useState<number | 'all'>('all')
 
   // Refs to store D3 selections for style updates without full redraw
   const nodeSelectionRef = useRef<d3.Selection<SVGGElement, D3Node, SVGGElement, unknown> | null>(
@@ -52,6 +67,59 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
     SVGGElement,
     unknown
   > | null>(null)
+  const badgeSelectionRef = useRef<d3.Selection<SVGGElement, D3Node, SVGGElement, unknown> | null>(
+    null
+  )
+
+  // Transform data to D3 format with cycle information
+  const fullGraphData = useMemo(() => {
+    if (!data) return { nodes: [], links: [] }
+    return transformToD3Data(data, { circularDependencies })
+  }, [data, circularDependencies])
+
+  // Calculate node depths for depth-based controls
+  const nodeDepths = useMemo(() => {
+    const edges = fullGraphData.links.map((l) => ({
+      source: typeof l.source === 'string' ? l.source : l.source.id,
+      target: typeof l.target === 'string' ? l.target : l.target.id,
+    }))
+    return calculateNodeDepths(
+      fullGraphData.nodes.map((n) => n.id),
+      edges
+    )
+  }, [fullGraphData])
+
+  // Calculate max depth for controls
+  const maxDepth = useMemo(() => {
+    if (nodeDepths.size === 0) return 0
+    return Math.max(...nodeDepths.values())
+  }, [nodeDepths])
+
+  // Initialize expand/collapse state
+  const { collapsedNodeIds, toggleNode, expandAll, collapseAll, collapseAtDepth } =
+    useNodeExpandCollapse({
+      nodeIds: fullGraphData.nodes.map((n) => n.id),
+      nodeDepths,
+      sessionKey: data ? `graph-${Object.keys(data.nodes).length}` : undefined,
+    })
+
+  // Compute visible nodes based on collapsed state
+  const { visibleNodes, visibleLinks, hiddenChildCounts } = useMemo(() => {
+    return computeVisibleNodes(fullGraphData.nodes, fullGraphData.links, collapsedNodeIds)
+  }, [fullGraphData, collapsedNodeIds])
+
+  // Handle depth change from controls
+  const handleDepthChange = useCallback(
+    (depth: number | 'all') => {
+      setCurrentDepth(depth)
+      if (depth === 'all') {
+        expandAll()
+      } else {
+        collapseAtDepth(depth + 1) // Collapse nodes at depth > selected
+      }
+    },
+    [expandAll, collapseAtDepth]
+  )
 
   // Handle cycle selection clear on Escape key
   const handleKeyDown = useCallback(
@@ -101,14 +169,12 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
     // Clear previous content
     svg.selectAll('*').remove()
 
-    // Transform data to D3 format with cycle information
-    const { nodes, links } = transformToD3Data(data, { circularDependencies })
-
     // If no nodes, don't render anything
-    if (nodes.length === 0) {
+    if (visibleNodes.length === 0) {
       nodeSelectionRef.current = null
       normalLinkSelectionRef.current = null
       cycleLinkSelectionRef.current = null
+      badgeSelectionRef.current = null
       return
     }
 
@@ -165,8 +231,8 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
       .attr('fill', EDGE_COLORS.cycle.stroke)
 
     // Separate links into normal and cycle links for layering
-    const normalLinks = links.filter((l) => !l.inCycle)
-    const cycleLinks = links.filter((l) => l.inCycle)
+    const normalLinks = visibleLinks.filter((l) => !l.inCycle)
+    const cycleLinks = visibleLinks.filter((l) => l.inCycle)
 
     // Create link elements - render normal links first (below cycle links)
     const normalLink = g
@@ -200,18 +266,37 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
       .append('g')
       .attr('class', 'nodes')
       .selectAll<SVGGElement, D3Node>('g')
-      .data(nodes)
+      .data(visibleNodes)
       .join('g')
-      .attr('class', (d) => `node ${d.inCycle ? 'node--cycle' : ''}`)
+      .attr('class', (d) => {
+        let classes = 'node'
+        if (d.inCycle) classes += ' node--cycle'
+        if (collapsedNodeIds.has(d.id)) classes += ' node--collapsed'
+        return classes
+      })
 
-    // Add circles to nodes with cycle-aware styling
+    // Add circles to nodes with cycle-aware and collapse-aware styling
     node
       .append('circle')
       .attr('r', (d) => Math.max(8, Math.min(16, 8 + d.dependencyCount * 0.5)))
-      .attr('fill', (d) => (d.inCycle ? NODE_COLORS.cycle.fill : NODE_COLORS.normal.fill))
-      .attr('stroke', (d) => (d.inCycle ? NODE_COLORS.cycle.stroke : NODE_COLORS.normal.stroke))
-      .attr('stroke-width', (d) => (d.inCycle ? 3 : 2))
-      .attr('filter', (d) => (d.inCycle ? 'url(#glow)' : null))
+      .attr('fill', (d) => {
+        if (collapsedNodeIds.has(d.id)) return COLLAPSED_STYLES.node.fill
+        if (d.inCycle) return NODE_COLORS.cycle.fill
+        return NODE_COLORS.normal.fill
+      })
+      .attr('stroke', (d) => {
+        if (collapsedNodeIds.has(d.id)) return COLLAPSED_STYLES.node.stroke
+        if (d.inCycle) return NODE_COLORS.cycle.stroke
+        return NODE_COLORS.normal.stroke
+      })
+      .attr('stroke-width', (d) => {
+        if (collapsedNodeIds.has(d.id)) return COLLAPSED_STYLES.node.strokeWidth
+        return d.inCycle ? 3 : 2
+      })
+      .attr('stroke-dasharray', (d) =>
+        collapsedNodeIds.has(d.id) ? COLLAPSED_STYLES.node.strokeDasharray : null
+      )
+      .attr('filter', (d) => (d.inCycle && !collapsedNodeIds.has(d.id) ? 'url(#glow)' : null))
       .style('cursor', 'pointer')
 
     // Add labels to nodes
@@ -226,25 +311,77 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
       .style('pointer-events', 'none')
       .style('user-select', 'none')
 
-    // Store selections in refs for style updates
+    // Story 4.3 AC4: Add collapsed badge with hidden child count
+    const collapsedNodesWithCount = visibleNodes.filter(
+      (n) => collapsedNodeIds.has(n.id) && (hiddenChildCounts.get(n.id) ?? 0) > 0
+    )
+
+    const badge = g
+      .append('g')
+      .attr('class', 'collapsed-badges')
+      .selectAll<SVGGElement, D3Node>('g')
+      .data(collapsedNodesWithCount)
+      .join('g')
+      .attr('class', 'collapsed-badge')
+
+    badge
+      .append('circle')
+      .attr('r', COLLAPSED_STYLES.badge.radius)
+      .attr('fill', COLLAPSED_STYLES.badge.fill)
+
+    badge
+      .append('text')
+      .attr('text-anchor', 'middle')
+      .attr('dominant-baseline', 'central')
+      .attr('fill', COLLAPSED_STYLES.badge.textFill)
+      .attr('font-size', COLLAPSED_STYLES.badge.fontSize)
+      .attr('font-weight', COLLAPSED_STYLES.badge.fontWeight)
+      .text((d) => {
+        const count = hiddenChildCounts.get(d.id) ?? 0
+        return count > 99 ? '99+' : String(count)
+      })
+
+    // Store selections in refs for updates
     nodeSelectionRef.current = node
     normalLinkSelectionRef.current = normalLink
     cycleLinkSelectionRef.current = cycleLink
+    badgeSelectionRef.current = badge
 
-    // AC5: Click handler for cycle nodes to highlight specific cycle
+    // Story 4.3 AC1/AC2: Double-click handler for expand/collapse
+    // Use timer pattern to differentiate from single click
+    let clickTimer: ReturnType<typeof setTimeout> | null = null
+
     node.on('click', (_event, d) => {
-      if (d.inCycle && d.cycleIds.length > 0) {
-        // Toggle selection: if clicking same cycle node, deselect
-        setSelectedCycleIndex((prev) => {
-          if (prev !== null && d.cycleIds.includes(prev)) {
-            return null
-          }
-          return d.cycleIds[0]
-        })
-      } else {
-        // Clicking a non-cycle node clears selection
-        setSelectedCycleIndex(null)
+      if (clickTimer) {
+        // Double-click detected
+        clearTimeout(clickTimer)
+        clickTimer = null
+        return
       }
+
+      clickTimer = setTimeout(() => {
+        // Single click - handle cycle selection
+        if (d.inCycle && d.cycleIds.length > 0) {
+          setSelectedCycleIndex((prev) => {
+            if (prev !== null && d.cycleIds.includes(prev)) {
+              return null
+            }
+            return d.cycleIds[0]
+          })
+        } else {
+          setSelectedCycleIndex(null)
+        }
+        clickTimer = null
+      }, 200)
+    })
+
+    node.on('dblclick', (event, d) => {
+      event.stopPropagation()
+      if (clickTimer) {
+        clearTimeout(clickTimer)
+        clickTimer = null
+      }
+      toggleNode(d.id)
     })
 
     // AC6: Click on background to deselect
@@ -256,11 +393,11 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
 
     // Create force simulation
     const simulation = d3
-      .forceSimulation<D3Node>(nodes)
+      .forceSimulation<D3Node>(visibleNodes)
       .force(
         'link',
         d3
-          .forceLink<D3Node, D3Link>(links)
+          .forceLink<D3Node, D3Link>(visibleLinks)
           .id((d) => d.id)
           .distance(DEFAULT_SIMULATION_CONFIG.linkDistance)
       )
@@ -273,7 +410,9 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
         'collision',
         d3.forceCollide<D3Node>().radius(DEFAULT_SIMULATION_CONFIG.collisionRadius)
       )
-      .alphaDecay(DEFAULT_SIMULATION_CONFIG.alphaDecay)
+      .alphaDecay(EXPAND_COLLAPSE_ANIMATION.alphaDecay)
+
+    simulationRef.current = simulation
 
     // Update positions on each tick
     simulation.on('tick', () => {
@@ -292,6 +431,16 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
         .attr('y2', (d) => (d.target as D3Node).y ?? 0)
 
       node.attr('transform', (d) => `translate(${d.x ?? 0},${d.y ?? 0})`)
+
+      // Update badge positions (Story 4.3)
+      badge.attr('transform', (d) => {
+        // Find the corresponding node to get position
+        const nodeData = visibleNodes.find((n) => n.id === d.id)
+        if (nodeData) {
+          return `translate(${(nodeData.x ?? 0) + COLLAPSED_STYLES.badge.offsetX}, ${(nodeData.y ?? 0) + COLLAPSED_STYLES.badge.offsetY})`
+        }
+        return ''
+      })
     })
 
     // Add drag behavior
@@ -326,16 +475,28 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
 
     // CRITICAL: Cleanup to prevent memory leaks (per project-context.md)
     return () => {
+      if (clickTimer) clearTimeout(clickTimer)
       simulation.stop()
       svg.on('.zoom', null) // Remove zoom listener
       svg.on('click', null) // Remove click listener
       node.on('click', null) // Remove node click listeners
+      node.on('dblclick', null) // Remove double-click listeners
       svg.selectAll('*').remove() // Clean DOM
       nodeSelectionRef.current = null
       normalLinkSelectionRef.current = null
       cycleLinkSelectionRef.current = null
+      badgeSelectionRef.current = null
+      simulationRef.current = null
     }
-  }, [data, circularDependencies, dimensions])
+  }, [
+    data,
+    visibleNodes,
+    visibleLinks,
+    collapsedNodeIds,
+    hiddenChildCounts,
+    dimensions,
+    toggleNode,
+  ])
 
   // Separate effect for style updates when selection changes (performance optimization)
   // This avoids recreating the entire graph when just the selection changes
@@ -354,6 +515,9 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
           return NODE_COLORS.selected
         }
         return NODE_COLORS.dimmed
+      }
+      if (collapsedNodeIds.has(d.id)) {
+        return COLLAPSED_STYLES.node
       }
       if (d.inCycle) {
         return NODE_COLORS.cycle
@@ -381,7 +545,11 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
       .select('circle')
       .attr('fill', (d) => getNodeStyle(d).fill)
       .attr('stroke', (d) => getNodeStyle(d).stroke)
-      .attr('filter', (d) => (d.inCycle && selectedCycleIndex === null ? 'url(#glow)' : null))
+      .attr('filter', (d) =>
+        d.inCycle && selectedCycleIndex === null && !collapsedNodeIds.has(d.id)
+          ? 'url(#glow)'
+          : null
+      )
 
     // Update node text styles
     nodeSelection
@@ -403,7 +571,7 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
       .attr('stroke', (d) => getEdgeStyle(d).stroke)
       .attr('stroke-opacity', (d) => getEdgeStyle(d).opacity)
       .attr('stroke-width', (d) => getEdgeStyle(d).width)
-  }, [selectedCycleIndex])
+  }, [selectedCycleIndex, collapsedNodeIds])
 
   // Determine if there are any cycles to display in legend
   const hasCycles = circularDependencies && circularDependencies.length > 0
@@ -435,12 +603,24 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
           height: '100%',
         }}
       />
+      {/* Story 4.3 AC3: Depth-based controls */}
+      {fullGraphData.nodes.length > 0 && (
+        <GraphControls
+          currentDepth={currentDepth}
+          maxDepth={maxDepth}
+          onDepthChange={handleDepthChange}
+          onExpandAll={expandAll}
+          onCollapseAll={collapseAll}
+        />
+      )}
       {/* AC4: Color legend showing meaning of different elements */}
       <GraphLegend position="bottom-left" hasCycles={hasCycles} />
     </div>
   )
 })
 
+export type { GraphControlsProps } from './GraphControls'
+export { GraphControls } from './GraphControls'
 export type { GraphLegendProps } from './GraphLegend'
 export { GraphLegend } from './GraphLegend'
 // Re-export types and utilities
@@ -448,3 +628,7 @@ export type { D3GraphData, D3Link, D3Node, DependencyGraphProps } from './types'
 export type { CycleHighlightResult } from './useCycleHighlight'
 export { useCycleHighlight } from './useCycleHighlight'
 export { transformToD3Data, truncatePackageName } from './useForceSimulation'
+export type { ExpandCollapseState, UseNodeExpandCollapseProps } from './useNodeExpandCollapse'
+export { useNodeExpandCollapse } from './useNodeExpandCollapse'
+export { calculateNodeDepths } from './utils/calculateDepth'
+export { computeVisibleNodes } from './utils/computeVisibleNodes'

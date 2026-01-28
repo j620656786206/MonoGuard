@@ -104,9 +104,43 @@ export const CSS_CLASSES = {
   nodeInCycle: 'dependency-node--cycle',
   nodeSelected: 'dependency-node--selected',
   nodeDimmed: 'dependency-node--dimmed',
+  nodeCollapsed: 'dependency-node--collapsed',
   edge: 'dependency-edge',
   edgeInCycle: 'dependency-edge--cycle',
   edgeSelected: 'dependency-edge--selected',
   edgeDimmed: 'dependency-edge--dimmed',
   edgeAnimated: 'dependency-edge--animated',
+} as const
+
+/**
+ * Collapsed node styling (Story 4.3)
+ */
+export const COLLAPSED_STYLES = {
+  node: {
+    fill: '#6366f1', // indigo-500
+    stroke: '#a5b4fc', // indigo-300
+    strokeDasharray: '4,2', // Dashed border
+    strokeWidth: 2,
+  },
+  badge: {
+    fill: '#f97316', // orange-500
+    textFill: '#ffffff',
+    fontSize: '8px',
+    fontWeight: 'bold',
+    radius: 8,
+    offsetX: 12,
+    offsetY: -12,
+  },
+} as const
+
+/**
+ * Animation configuration for expand/collapse (Story 4.3)
+ * Must complete in < 300ms per AC5
+ */
+export const EXPAND_COLLAPSE_ANIMATION = {
+  duration: 250, // < 300ms as per AC5
+  easing: 'easeCubicOut',
+  alphaDecay: 0.02, // Slower decay for smoother settling
+  alphaTarget: 0,
+  velocityDecay: 0.4,
 } as const
