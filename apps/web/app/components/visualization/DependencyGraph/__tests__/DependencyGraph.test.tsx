@@ -433,6 +433,7 @@ describe('DependencyGraphViz - Circular Dependency Highlighting (Story 4.2)', ()
       depth: 2,
       impact: 'Build failure risk',
       complexity: 3,
+      priorityScore: 85,
     },
   ]
 
