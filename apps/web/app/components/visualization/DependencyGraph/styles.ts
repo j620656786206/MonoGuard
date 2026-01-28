@@ -144,3 +144,11 @@ export const EXPAND_COLLAPSE_ANIMATION = {
   alphaTarget: 0,
   velocityDecay: 0.4,
 } as const
+
+/**
+ * Interaction timing configuration
+ */
+export const INTERACTION_TIMING = {
+  /** Threshold to distinguish single-click from double-click (ms) */
+  doubleClickThreshold: 200,
+} as const

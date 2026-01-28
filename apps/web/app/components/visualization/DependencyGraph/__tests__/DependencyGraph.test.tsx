@@ -782,9 +782,11 @@ describe('DependencyGraphViz - Node Expand/Collapse (Story 4.3)', () => {
       render(<DependencyGraphViz data={mockHierarchicalData} />)
 
       // THEN: GraphControls should be visible
+      // Note: Using aria-label selector because fieldset has implicit role="group"
+      // which may not be recognized by document.querySelector in JSDOM
       await waitFor(
         () => {
-          expect(document.querySelector('[role="group"]')).toBeInTheDocument()
+          expect(document.querySelector('[aria-label="Graph depth controls"]')).toBeInTheDocument()
         },
         { timeout: 1000 }
       )
@@ -822,7 +824,7 @@ describe('DependencyGraphViz - Node Expand/Collapse (Story 4.3)', () => {
       render(<DependencyGraphViz data={emptyData} />)
 
       // THEN: GraphControls should not be present
-      expect(document.querySelector('[role="group"]')).not.toBeInTheDocument()
+      expect(document.querySelector('[aria-label="Graph depth controls"]')).not.toBeInTheDocument()
     })
   })
 

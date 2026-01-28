@@ -22,6 +22,7 @@ import {
   EDGE_COLORS,
   EXPAND_COLLAPSE_ANIMATION,
   GLOW_FILTER,
+  INTERACTION_TIMING,
   NODE_COLORS,
 } from './styles'
 import type { D3Link, D3Node, DependencyGraphProps } from './types'
@@ -324,10 +325,17 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
       .join('g')
       .attr('class', 'collapsed-badge')
 
+    // Add accessible title for screen readers (CR-6)
+    badge.append('title').text((d) => {
+      const count = hiddenChildCounts.get(d.id) ?? 0
+      return `${count} hidden ${count === 1 ? 'dependency' : 'dependencies'}. Double-click to expand.`
+    })
+
     badge
       .append('circle')
       .attr('r', COLLAPSED_STYLES.badge.radius)
       .attr('fill', COLLAPSED_STYLES.badge.fill)
+      .attr('aria-hidden', 'true') // Decorative, title provides accessible name
 
     badge
       .append('text')
@@ -336,6 +344,7 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
       .attr('fill', COLLAPSED_STYLES.badge.textFill)
       .attr('font-size', COLLAPSED_STYLES.badge.fontSize)
       .attr('font-weight', COLLAPSED_STYLES.badge.fontWeight)
+      .attr('aria-hidden', 'true') // Title element provides accessible text
       .text((d) => {
         const count = hiddenChildCounts.get(d.id) ?? 0
         return count > 99 ? '99+' : String(count)
@@ -372,7 +381,7 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
           setSelectedCycleIndex(null)
         }
         clickTimer = null
-      }, 200)
+      }, INTERACTION_TIMING.doubleClickThreshold)
     })
 
     node.on('dblclick', (event, d) => {
@@ -433,14 +442,13 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
       node.attr('transform', (d) => `translate(${d.x ?? 0},${d.y ?? 0})`)
 
       // Update badge positions (Story 4.3)
-      badge.attr('transform', (d) => {
-        // Find the corresponding node to get position
-        const nodeData = visibleNodes.find((n) => n.id === d.id)
-        if (nodeData) {
-          return `translate(${(nodeData.x ?? 0) + COLLAPSED_STYLES.badge.offsetX}, ${(nodeData.y ?? 0) + COLLAPSED_STYLES.badge.offsetY})`
-        }
-        return ''
-      })
+      // Note: badge data elements ARE nodes (from collapsedNodesWithCount),
+      // so d.x/d.y are updated directly by the simulation - no lookup needed
+      badge.attr(
+        'transform',
+        (d) =>
+          `translate(${(d.x ?? 0) + COLLAPSED_STYLES.badge.offsetX}, ${(d.y ?? 0) + COLLAPSED_STYLES.badge.offsetY})`
+      )
     })
 
     // Add drag behavior
@@ -481,6 +489,7 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
       svg.on('click', null) // Remove click listener
       node.on('click', null) // Remove node click listeners
       node.on('dblclick', null) // Remove double-click listeners
+      node.on('.drag', null) // Remove drag listeners (CR-7)
       svg.selectAll('*').remove() // Clean DOM
       nodeSelectionRef.current = null
       normalLinkSelectionRef.current = null
@@ -630,5 +639,6 @@ export { useCycleHighlight } from './useCycleHighlight'
 export { transformToD3Data, truncatePackageName } from './useForceSimulation'
 export type { ExpandCollapseState, UseNodeExpandCollapseProps } from './useNodeExpandCollapse'
 export { useNodeExpandCollapse } from './useNodeExpandCollapse'
+export type { DepthEdge } from './utils/calculateDepth'
 export { calculateNodeDepths } from './utils/calculateDepth'
 export { computeVisibleNodes } from './utils/computeVisibleNodes'
