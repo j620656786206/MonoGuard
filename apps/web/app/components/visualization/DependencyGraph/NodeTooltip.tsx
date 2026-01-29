@@ -46,43 +46,55 @@ export function NodeTooltip({
   const [isVisible, setIsVisible] = useState(false)
 
   // Calculate position to keep tooltip in viewport (AC3)
+  // CR-3: Use requestAnimationFrame to ensure tooltip is rendered before measuring
   useEffect(() => {
     if (!data || !position || !tooltipRef.current || !containerRef.current) {
       setIsVisible(false)
       return
     }
 
-    const tooltipRect = tooltipRef.current.getBoundingClientRect()
-    const containerRect = containerRef.current.getBoundingClientRect()
+    // Use rAF to ensure tooltip is rendered before measuring dimensions
+    const frameId = requestAnimationFrame(() => {
+      if (!tooltipRef.current || !containerRef.current) return
 
-    let x = position.x - containerRect.left + TOOLTIP_OFFSET
-    let y = position.y - containerRect.top + TOOLTIP_OFFSET
-    let placement: TooltipPosition['placement'] = 'right'
+      const tooltipRect = tooltipRef.current.getBoundingClientRect()
+      const containerRect = containerRef.current.getBoundingClientRect()
 
-    // Adjust if tooltip would clip right edge
-    if (x + tooltipRect.width > containerRect.width) {
-      x = position.x - containerRect.left - tooltipRect.width - TOOLTIP_OFFSET
-      placement = 'left'
-    }
+      // Use fallback dimensions if tooltip hasn't rendered yet (CR-3: fix race condition)
+      const tooltipWidth = tooltipRect.width || 200 // min-w-[200px] from className
+      const tooltipHeight = tooltipRect.height || 100 // estimated height
 
-    // Adjust if tooltip would clip bottom edge
-    if (y + tooltipRect.height > containerRect.height) {
-      y = position.y - containerRect.top - tooltipRect.height - TOOLTIP_OFFSET
-      placement = placement === 'left' ? 'left' : 'top'
-    }
+      let x = position.x - containerRect.left + TOOLTIP_OFFSET
+      let y = position.y - containerRect.top + TOOLTIP_OFFSET
+      let placement: TooltipPosition['placement'] = 'right'
 
-    // Adjust if tooltip would clip left edge
-    if (x < 0) {
-      x = TOOLTIP_OFFSET
-    }
+      // Adjust if tooltip would clip right edge
+      if (x + tooltipWidth > containerRect.width) {
+        x = position.x - containerRect.left - tooltipWidth - TOOLTIP_OFFSET
+        placement = 'left'
+      }
 
-    // Adjust if tooltip would clip top edge
-    if (y < 0) {
-      y = TOOLTIP_OFFSET
-    }
+      // Adjust if tooltip would clip bottom edge
+      if (y + tooltipHeight > containerRect.height) {
+        y = position.y - containerRect.top - tooltipHeight - TOOLTIP_OFFSET
+        placement = placement === 'left' ? 'left' : 'top'
+      }
 
-    setCalculatedPosition({ x, y, placement })
-    setIsVisible(true)
+      // Adjust if tooltip would clip left edge
+      if (x < 0) {
+        x = TOOLTIP_OFFSET
+      }
+
+      // Adjust if tooltip would clip top edge
+      if (y < 0) {
+        y = TOOLTIP_OFFSET
+      }
+
+      setCalculatedPosition({ x, y, placement })
+      setIsVisible(true)
+    })
+
+    return () => cancelAnimationFrame(frameId)
   }, [data, position, containerRef])
 
   // Don't render if no data or position

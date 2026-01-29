@@ -7,15 +7,15 @@
  * @see Story 4.5: Implement Hover Details and Tooltips (AC2, AC4, AC5)
  */
 
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { D3Link, D3Node, HoverState } from './types'
 
 /**
  * Props for useNodeHover hook
  */
 export interface UseNodeHoverProps {
-  /** All nodes in the graph */
-  nodes: D3Node[]
+  /** All nodes in the graph (reserved for future use, e.g., node lookup optimization) */
+  nodes?: D3Node[]
   /** All links in the graph */
   links: D3Link[]
 }
@@ -28,8 +28,6 @@ export interface UseNodeHoverResult {
   hoverState: HoverState
   /** Set of node IDs connected to the hovered node */
   connectedNodeIds: Set<string>
-  /** Set of link indices connected to the hovered node */
-  connectedLinkIndices: Set<number>
   /** Handler for mouse enter on a node */
   handleNodeMouseEnter: (nodeId: string, event: MouseEvent) => void
   /** Handler for mouse leave from a node */
@@ -58,32 +56,38 @@ export function useNodeHover({ links }: UseNodeHoverProps): UseNodeHoverResult {
     position: null,
   })
 
-  // Compute connected nodes and links when hover changes (AC4)
-  // Uses useMemo for performance optimization (AC5)
-  const { connectedNodeIds, connectedLinkIndices } = useMemo(() => {
-    if (!hoverState.nodeId) {
-      return {
-        connectedNodeIds: new Set<string>(),
-        connectedLinkIndices: new Set<number>(),
+  // CR2-3: rAF ref for throttling mousemove position updates
+  const rafRef = useRef<number | null>(null)
+
+  // Cleanup rAF on unmount
+  useEffect(() => {
+    return () => {
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current)
       }
+    }
+  }, [])
+
+  // Compute connected nodes when hover changes (AC4)
+  // CR2-1: Removed connectedLinkIndices - edge highlighting uses isLinkConnected() in index.tsx
+  const connectedNodeIds = useMemo(() => {
+    if (!hoverState.nodeId) {
+      return new Set<string>()
     }
 
     const nodeIds = new Set<string>([hoverState.nodeId])
-    const linkIndices = new Set<number>()
 
-    links.forEach((link, index) => {
+    links.forEach((link) => {
       const sourceId = getNodeId(link.source)
       const targetId = getNodeId(link.target)
 
-      // Check if this link connects to the hovered node
       if (sourceId === hoverState.nodeId || targetId === hoverState.nodeId) {
-        linkIndices.add(index)
         nodeIds.add(sourceId)
         nodeIds.add(targetId)
       }
     })
 
-    return { connectedNodeIds: nodeIds, connectedLinkIndices: linkIndices }
+    return nodeIds
   }, [hoverState.nodeId, links])
 
   // Handler for mouse entering a node (AC2)
@@ -94,12 +98,17 @@ export function useNodeHover({ links }: UseNodeHoverProps): UseNodeHoverResult {
     })
   }, [])
 
-  // Handler for mouse moving within a node (AC2)
+  // Handler for mouse moving within a node (AC2, AC5)
+  // CR2-3: Throttled with rAF to prevent excessive re-renders on rapid mouse movement
   const handleNodeMouseMove = useCallback((event: MouseEvent) => {
-    setHoverState((prev) => ({
-      ...prev,
-      position: { x: event.clientX, y: event.clientY },
-    }))
+    if (rafRef.current !== null) return
+    rafRef.current = requestAnimationFrame(() => {
+      setHoverState((prev) => ({
+        ...prev,
+        position: { x: event.clientX, y: event.clientY },
+      }))
+      rafRef.current = null
+    })
   }, [])
 
   // Handler for mouse leaving a node (AC2)
@@ -110,7 +119,6 @@ export function useNodeHover({ links }: UseNodeHoverProps): UseNodeHoverResult {
   return {
     hoverState,
     connectedNodeIds,
-    connectedLinkIndices,
     handleNodeMouseEnter,
     handleNodeMouseLeave,
     handleNodeMouseMove,

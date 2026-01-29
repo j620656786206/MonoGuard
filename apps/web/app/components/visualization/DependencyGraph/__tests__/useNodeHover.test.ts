@@ -46,7 +46,6 @@ describe('useNodeHover', () => {
 
       // THEN: Connected sets should be empty
       expect(result.current.connectedNodeIds.size).toBe(0)
-      expect(result.current.connectedLinkIndices.size).toBe(0)
     })
   })
 
@@ -84,23 +83,6 @@ describe('useNodeHover', () => {
       expect(result.current.connectedNodeIds.has('C')).toBe(true)
       // D is not directly connected to A
       expect(result.current.connectedNodeIds.has('D')).toBe(false)
-    })
-
-    it('[P1] should compute connected link indices correctly', () => {
-      // GIVEN: useNodeHover hook with links [A->B, A->C, B->D]
-      const { result } = renderHook(() =>
-        useNodeHover({ nodes: createMockNodes(), links: createMockLinks() })
-      )
-
-      // WHEN: Hovering over node A
-      act(() => {
-        result.current.handleNodeMouseEnter('A', { clientX: 100, clientY: 200 } as MouseEvent)
-      })
-
-      // THEN: Should include links 0 (A->B) and 1 (A->C), not 2 (B->D)
-      expect(result.current.connectedLinkIndices.has(0)).toBe(true)
-      expect(result.current.connectedLinkIndices.has(1)).toBe(true)
-      expect(result.current.connectedLinkIndices.has(2)).toBe(false)
     })
   })
 
@@ -142,12 +124,18 @@ describe('useNodeHover', () => {
 
       // THEN: Connected sets should be empty
       expect(result.current.connectedNodeIds.size).toBe(0)
-      expect(result.current.connectedLinkIndices.size).toBe(0)
     })
   })
 
   describe('Mouse Move (AC2)', () => {
     it('[P1] should update position on mouse move', () => {
+      // CR2-3: handleNodeMouseMove uses rAF throttling - mock rAF to execute synchronously
+      const originalRAF = globalThis.requestAnimationFrame
+      globalThis.requestAnimationFrame = ((cb: (time: number) => void) => {
+        cb(0)
+        return 0
+      }) as typeof requestAnimationFrame
+
       // GIVEN: Hook with active hover state
       const { result } = renderHook(() =>
         useNodeHover({ nodes: createMockNodes(), links: createMockLinks() })
@@ -165,6 +153,9 @@ describe('useNodeHover', () => {
       // THEN: Position should update, node ID unchanged
       expect(result.current.hoverState.nodeId).toBe('A')
       expect(result.current.hoverState.position).toEqual({ x: 150, y: 250 })
+
+      // Restore original rAF
+      globalThis.requestAnimationFrame = originalRAF
     })
   })
 
@@ -180,10 +171,9 @@ describe('useNodeHover', () => {
         result.current.handleNodeMouseEnter('D', { clientX: 100, clientY: 200 } as MouseEvent)
       })
 
-      // THEN: Should include D, B (incoming), and link index 2 (B->D)
+      // THEN: Should include D and B (incoming connection)
       expect(result.current.connectedNodeIds.has('D')).toBe(true)
       expect(result.current.connectedNodeIds.has('B')).toBe(true)
-      expect(result.current.connectedLinkIndices.has(2)).toBe(true)
     })
 
     it('[P1] should include outgoing connections', () => {
@@ -229,7 +219,6 @@ describe('useNodeHover', () => {
       // THEN: Should only include the isolated node itself
       expect(result.current.connectedNodeIds.size).toBe(1)
       expect(result.current.connectedNodeIds.has('isolated')).toBe(true)
-      expect(result.current.connectedLinkIndices.size).toBe(0)
     })
   })
 
@@ -249,12 +238,10 @@ describe('useNodeHover', () => {
         result.current.handleNodeMouseEnter('A', { clientX: 100, clientY: 200 } as MouseEvent)
       })
 
-      // THEN: Should correctly identify connected nodes and links
+      // THEN: Should correctly identify connected nodes
       expect(result.current.connectedNodeIds.has('A')).toBe(true)
       expect(result.current.connectedNodeIds.has('B')).toBe(true)
       expect(result.current.connectedNodeIds.has('C')).toBe(true)
-      expect(result.current.connectedLinkIndices.has(0)).toBe(true)
-      expect(result.current.connectedLinkIndices.has(1)).toBe(true)
     })
   })
 

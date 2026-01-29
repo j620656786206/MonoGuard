@@ -144,7 +144,6 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
   const {
     hoverState,
     connectedNodeIds,
-    connectedLinkIndices,
     handleNodeMouseEnter,
     handleNodeMouseLeave,
     handleNodeMouseMove,
@@ -688,7 +687,12 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
     if (!nodeSelection || !normalLinkSelection || !cycleLinkSelection) return
 
     // Only apply hover highlighting if a cycle is NOT selected (cycle selection takes priority)
-    if (selectedCycleIndex !== null) return
+    // CR2-2: Reset hover-applied opacity before deferring to cycle selection styles
+    if (selectedCycleIndex !== null) {
+      nodeSelection.select('circle').attr('opacity', 1)
+      nodeSelection.select('text').attr('opacity', 1)
+      return
+    }
 
     const HOVER_TRANSITION_DURATION = 150 // ms, matches tooltip animation
 
@@ -706,22 +710,26 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
         .duration(HOVER_TRANSITION_DURATION)
         .attr('opacity', (d: D3Node) => (connectedNodeIds.has(d.id) ? 1 : 0.3))
 
+      // Helper to check if a link connects to the hovered node
+      // (CR-1: Fix index mismatch - use node ID comparison instead of indices)
+      const isLinkConnected = (d: D3Link): boolean => {
+        const sourceId = typeof d.source === 'string' ? d.source : d.source.id
+        const targetId = typeof d.target === 'string' ? d.target : d.target.id
+        return sourceId === hoverState.nodeId || targetId === hoverState.nodeId
+      }
+
       // Highlight connected links, dim others
       normalLinkSelection
         .transition()
         .duration(HOVER_TRANSITION_DURATION)
-        .attr('stroke-opacity', (_d: D3Link, i: number) =>
-          connectedLinkIndices.has(i) ? 0.8 : 0.1
-        )
-        .attr('stroke-width', (_d: D3Link, i: number) => (connectedLinkIndices.has(i) ? 2 : 1))
+        .attr('stroke-opacity', (d: D3Link) => (isLinkConnected(d) ? 0.8 : 0.1))
+        .attr('stroke-width', (d: D3Link) => (isLinkConnected(d) ? 2 : 1))
 
       cycleLinkSelection
         .transition()
         .duration(HOVER_TRANSITION_DURATION)
-        .attr('stroke-opacity', (_d: D3Link, i: number) =>
-          connectedLinkIndices.has(i) ? 0.8 : 0.1
-        )
-        .attr('stroke-width', (_d: D3Link, i: number) => (connectedLinkIndices.has(i) ? 3 : 1))
+        .attr('stroke-opacity', (d: D3Link) => (isLinkConnected(d) ? 0.8 : 0.1))
+        .attr('stroke-width', (d: D3Link) => (isLinkConnected(d) ? 3 : 1))
     } else {
       // Reset all elements to default state
       nodeSelection
@@ -748,7 +756,7 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
         .attr('stroke-opacity', EDGE_COLORS.cycle.opacity)
         .attr('stroke-width', EDGE_COLORS.cycle.width)
     }
-  }, [hoverState.nodeId, connectedNodeIds, connectedLinkIndices, selectedCycleIndex])
+  }, [hoverState.nodeId, connectedNodeIds, selectedCycleIndex])
 
   // Determine if there are any cycles to display in legend
   const hasCycles = circularDependencies && circularDependencies.length > 0
