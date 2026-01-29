@@ -18,6 +18,7 @@
 
 import * as d3 from 'd3'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { ExportMenu } from './ExportMenu'
 import { GraphControls } from './GraphControls'
 import { GraphLegend } from './GraphLegend'
 import { GraphMinimap } from './GraphMinimap'
@@ -34,6 +35,7 @@ import {
 import type { D3Link, D3Node, DependencyGraphProps } from './types'
 import { DEFAULT_SIMULATION_CONFIG } from './types'
 import { transformToD3Data, truncatePackageName } from './useForceSimulation'
+import { useGraphExport } from './useGraphExport'
 import { useNodeExpandCollapse } from './useNodeExpandCollapse'
 import { useNodeHover } from './useNodeHover'
 import { useZoomPan, ZOOM_CONFIG } from './useZoomPan'
@@ -65,6 +67,7 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
   const [selectedCycleIndex, setSelectedCycleIndex] = useState<number | null>(null)
   const [currentDepth, setCurrentDepth] = useState<number | 'all'>('all')
   const [graphBounds, setGraphBounds] = useState({ x: 0, y: 0, width: 0, height: 0 })
+  const [isExportMenuOpen, setIsExportMenuOpen] = useState(false)
 
   // Story 4.4: Zoom and pan state management
   const {
@@ -150,6 +153,13 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
   } = useNodeHover({
     nodes: visibleNodes,
     links: visibleLinks,
+  })
+
+  // Story 4.6: Graph export state management
+  const { exportProgress, startExport } = useGraphExport({
+    svgRef,
+    projectName: 'monoguard',
+    isDarkMode: false,
   })
 
   // Story 4.5: Compute tooltip data for hovered node
@@ -815,6 +825,41 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
           height: '100%',
         }}
       />
+      {/* Story 4.6: Export button and menu */}
+      {fullGraphData.nodes.length > 0 && (
+        <button
+          type="button"
+          onClick={() => setIsExportMenuOpen(true)}
+          className="absolute right-4 top-4 flex items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 text-gray-700 shadow-md transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+          aria-label="Export graph"
+        >
+          <svg
+            className="h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            role="img"
+            aria-label="Download icon"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+            />
+          </svg>
+          Export
+        </button>
+      )}
+
+      <ExportMenu
+        isOpen={isExportMenuOpen}
+        onClose={() => setIsExportMenuOpen(false)}
+        onExport={startExport}
+        exportProgress={exportProgress}
+        isDarkMode={false}
+      />
+
       {/* Story 4.3 AC3: Depth-based controls */}
       {fullGraphData.nodes.length > 0 && (
         <GraphControls
@@ -856,6 +901,8 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
   )
 })
 
+export type { ExportMenuProps } from './ExportMenu'
+export { ExportMenu } from './ExportMenu'
 export type { GraphControlsProps } from './GraphControls'
 export { GraphControls } from './GraphControls'
 export type { GraphLegendProps } from './GraphLegend'
@@ -865,10 +912,23 @@ export { GraphMinimap } from './GraphMinimap'
 export type { NodeTooltipProps } from './NodeTooltip'
 export { NodeTooltip } from './NodeTooltip'
 // Re-export types and utilities
-export type { D3GraphData, D3Link, D3Node, DependencyGraphProps } from './types'
+export type {
+  D3GraphData,
+  D3Link,
+  D3Node,
+  DependencyGraphProps,
+  ExportFormat,
+  ExportOptions,
+  ExportProgress,
+  ExportResolution,
+  ExportResult,
+  ExportScope,
+} from './types'
 export type { CycleHighlightResult } from './useCycleHighlight'
 export { useCycleHighlight } from './useCycleHighlight'
 export { transformToD3Data, truncatePackageName } from './useForceSimulation'
+export type { UseGraphExportProps, UseGraphExportResult } from './useGraphExport'
+export { useGraphExport } from './useGraphExport'
 export type { ExpandCollapseState, UseNodeExpandCollapseProps } from './useNodeExpandCollapse'
 export { useNodeExpandCollapse } from './useNodeExpandCollapse'
 export type { UseNodeHoverProps, UseNodeHoverResult } from './useNodeHover'
@@ -899,5 +959,10 @@ export {
   computeTooltipData,
 } from './utils/computeConnectedElements'
 export { computeVisibleNodes } from './utils/computeVisibleNodes'
+export type { ExportPngParams } from './utils/exportPng'
+export { exportPng } from './utils/exportPng'
+export type { ExportSvgParams } from './utils/exportSvg'
+export { exportSvg } from './utils/exportSvg'
+export { renderLegendSvg } from './utils/renderLegendForExport'
 export type { ZoomControlsProps } from './ZoomControls'
 export { ZoomControls } from './ZoomControls'

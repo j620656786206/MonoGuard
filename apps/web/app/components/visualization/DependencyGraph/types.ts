@@ -140,3 +140,62 @@ export interface HoverState {
   /** Mouse position for tooltip placement */
   position: { x: number; y: number } | null
 }
+
+/**
+ * ExportFormat - Supported export image formats (Story 4.6)
+ */
+export type ExportFormat = 'png' | 'svg'
+
+/**
+ * ExportScope - Determines which part of the graph to export (Story 4.6)
+ */
+export type ExportScope = 'viewport' | 'full' | 'selected'
+
+/**
+ * ExportResolution - DPI multiplier for PNG exports (Story 4.6)
+ */
+export type ExportResolution = 1 | 2 | 4
+
+/**
+ * ExportOptions - Configuration for graph export (Story 4.6)
+ */
+export interface ExportOptions {
+  /** Output format */
+  format: ExportFormat
+  /** Which part of the graph to include */
+  scope: ExportScope
+  /** DPI multiplier (PNG only) */
+  resolution: ExportResolution
+  /** Whether to include the graph legend */
+  includeLegend: boolean
+  /** Whether to include a MonoGuard watermark */
+  includeWatermark: boolean
+  /** Background color or 'transparent' */
+  backgroundColor: string | 'transparent'
+}
+
+/**
+ * ExportResult - Output from a completed export operation (Story 4.6)
+ */
+export interface ExportResult {
+  /** The exported image as a Blob */
+  blob: Blob
+  /** Suggested filename for download */
+  filename: string
+  /** Width of the exported image in pixels */
+  width: number
+  /** Height of the exported image in pixels */
+  height: number
+}
+
+/**
+ * ExportProgress - Tracks export operation state (Story 4.6)
+ */
+export interface ExportProgress {
+  /** Whether an export is currently in progress */
+  isExporting: boolean
+  /** Progress percentage 0-100 */
+  progress: number
+  /** Current stage of the export process */
+  stage: 'preparing' | 'rendering' | 'encoding' | 'complete'
+}
