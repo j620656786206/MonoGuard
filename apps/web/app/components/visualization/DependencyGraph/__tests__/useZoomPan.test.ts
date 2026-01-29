@@ -262,4 +262,175 @@ describe('useZoomPan', () => {
       }).not.toThrow()
     })
   })
+
+  describe('D3 zoom integration (AC1, AC2, AC3, AC4)', () => {
+    const mockScaleTo = vi.fn()
+    const mockTransform = vi.fn()
+    const mockCallFn = vi.fn().mockReturnThis()
+    const mockZoomBehavior = {
+      scaleExtent: vi.fn().mockReturnThis(),
+      on: vi.fn().mockReturnThis(),
+      scaleTo: mockScaleTo,
+      transform: mockTransform,
+    }
+
+    beforeEach(async () => {
+      vi.clearAllMocks()
+      // Reset d3.select to return a chainable mock with `.call()` captured
+      const d3 = await import('d3')
+      vi.mocked(d3.select).mockReturnValue({
+        transition: vi.fn().mockReturnValue({
+          duration: vi.fn().mockReturnValue({
+            call: mockCallFn,
+          }),
+        }),
+      } as never)
+    })
+
+    it('should call d3 scaleTo on zoomIn when zoomBehavior is set (AC3)', async () => {
+      const d3 = await import('d3')
+      const { result } = renderHook(() => useZoomPan(createProps()))
+
+      act(() => {
+        result.current.setZoomBehavior(mockZoomBehavior as never)
+      })
+
+      act(() => {
+        result.current.zoomIn()
+      })
+
+      expect(d3.select).toHaveBeenCalledWith(mockSvgElement)
+      expect(mockCallFn).toHaveBeenCalledWith(mockScaleTo, expect.any(Number))
+    })
+
+    it('should clamp zoomIn to maxScale (AC7)', async () => {
+      const { result } = renderHook(() => useZoomPan(createProps({ maxScale: 2 })))
+
+      act(() => {
+        result.current.handleZoomChange({ k: 1.9, x: 0, y: 0 })
+      })
+
+      act(() => {
+        result.current.setZoomBehavior(mockZoomBehavior as never)
+      })
+
+      act(() => {
+        result.current.zoomIn()
+      })
+
+      expect(mockCallFn).toHaveBeenCalledWith(mockScaleTo, 2)
+    })
+
+    it('should call d3 scaleTo on zoomOut when zoomBehavior is set (AC3)', async () => {
+      const d3 = await import('d3')
+      const { result } = renderHook(() => useZoomPan(createProps()))
+
+      act(() => {
+        result.current.setZoomBehavior(mockZoomBehavior as never)
+      })
+
+      act(() => {
+        result.current.zoomOut()
+      })
+
+      expect(d3.select).toHaveBeenCalledWith(mockSvgElement)
+      expect(mockCallFn).toHaveBeenCalledWith(mockScaleTo, expect.any(Number))
+    })
+
+    it('should clamp zoomOut to minScale (AC7)', async () => {
+      const { result } = renderHook(() => useZoomPan(createProps({ minScale: 0.1 })))
+
+      act(() => {
+        result.current.handleZoomChange({ k: 0.2, x: 0, y: 0 })
+      })
+
+      act(() => {
+        result.current.setZoomBehavior(mockZoomBehavior as never)
+      })
+
+      act(() => {
+        result.current.zoomOut()
+      })
+
+      expect(mockCallFn).toHaveBeenCalledWith(mockScaleTo, 0.1)
+    })
+
+    it('should call d3 zoomIdentity on resetZoom (AC3)', async () => {
+      const d3 = await import('d3')
+      const { result } = renderHook(() => useZoomPan(createProps()))
+
+      act(() => {
+        result.current.setZoomBehavior(mockZoomBehavior as never)
+      })
+
+      act(() => {
+        result.current.resetZoom()
+      })
+
+      expect(d3.select).toHaveBeenCalledWith(mockSvgElement)
+      expect(mockCallFn).toHaveBeenCalledWith(mockTransform, d3.zoomIdentity)
+    })
+
+    it('should calculate fit transform on fitToScreen (AC4)', async () => {
+      const d3 = await import('d3')
+      const { result } = renderHook(() => useZoomPan(createProps()))
+
+      act(() => {
+        result.current.setZoomBehavior(mockZoomBehavior as never)
+      })
+
+      act(() => {
+        result.current.fitToScreen()
+      })
+
+      expect(d3.select).toHaveBeenCalledWith(mockSvgElement)
+      expect(mockCallFn).toHaveBeenCalled()
+    })
+
+    it('should early-return fitToScreen when bounds are zero', async () => {
+      const d3 = await import('d3')
+      mockContainerElement.getBBox = vi.fn(() => ({
+        x: 0,
+        y: 0,
+        width: 0,
+        height: 0,
+        toJSON: () => ({}),
+      }))
+
+      const { result } = renderHook(() => useZoomPan(createProps()))
+
+      act(() => {
+        result.current.setZoomBehavior(mockZoomBehavior as never)
+      })
+
+      act(() => {
+        result.current.fitToScreen()
+      })
+
+      expect(d3.select).toHaveBeenCalledWith(mockSvgElement)
+      expect(mockCallFn).not.toHaveBeenCalled()
+    })
+
+    it('should not execute zoomOut when zoomBehavior is not set', async () => {
+      const d3 = await import('d3')
+      const { result } = renderHook(() => useZoomPan(createProps()))
+
+      act(() => {
+        result.current.zoomOut()
+      })
+
+      expect(d3.select).not.toHaveBeenCalled()
+    })
+
+    it('should not execute resetZoom when zoomBehavior is not set', async () => {
+      const d3 = await import('d3')
+      const { result } = renderHook(() => useZoomPan(createProps()))
+
+      act(() => {
+        result.current.resetZoom()
+      })
+
+      expect(d3.select).not.toHaveBeenCalled()
+    })
+  })
 })

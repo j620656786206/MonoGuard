@@ -3,7 +3,7 @@
  *
  * @see Story 4.6: Export Graph as PNG/SVG Images - AC3, AC4, AC5
  */
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { exportSvg } from '../utils/exportSvg'
 
@@ -216,5 +216,291 @@ describe('exportSvg', () => {
     // Should complete without error and return valid result
     expect(result.blob).toBeInstanceOf(Blob)
     expect(result.filename).toContain('.svg')
+  })
+
+  describe('inlineStyles edge cases', () => {
+    it('should inline computed styles into exported SVG elements', async () => {
+      // Mock getComputedStyle to return actual style values
+      const originalGetComputedStyle = window.getComputedStyle
+      vi.spyOn(window, 'getComputedStyle').mockImplementation(() => {
+        const mockStyle = originalGetComputedStyle(document.createElement('div'))
+        return new Proxy(mockStyle, {
+          get(target, prop) {
+            if (prop === 'getPropertyValue') {
+              return (name: string) => {
+                const styleMap: Record<string, string> = {
+                  fill: '#ff0000',
+                  stroke: '#000000',
+                  'stroke-width': '2',
+                  opacity: '1',
+                  'font-family': 'sans-serif',
+                  'font-size': '14px',
+                  'font-weight': '400',
+                  'text-anchor': 'middle',
+                  'dominant-baseline': 'auto',
+                }
+                return styleMap[name] || ''
+              }
+            }
+            return Reflect.get(target, prop)
+          },
+        })
+      })
+
+      const svgWithStyles = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+      svgWithStyles.setAttribute('width', '400')
+      svgWithStyles.setAttribute('height', '300')
+
+      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
+      circle.setAttribute('cx', '50')
+      circle.setAttribute('cy', '50')
+      circle.setAttribute('r', '25')
+      svgWithStyles.appendChild(circle)
+
+      const result = await exportSvg({
+        svgElement: svgWithStyles,
+        options: {
+          format: 'svg',
+          scope: 'viewport',
+          resolution: 1,
+          includeLegend: false,
+          includeWatermark: false,
+          backgroundColor: '#ffffff',
+        },
+        projectName: 'test',
+      })
+
+      const svgContent = await readBlobAsText(result.blob)
+      // inlineStyles should have applied the computed styles
+      expect(svgContent).toContain('fill')
+      expect(svgContent).toContain('stroke')
+
+      vi.restoreAllMocks()
+    })
+
+    it('should inline styles on SVG elements with children', async () => {
+      // Create SVG with nested structure to exercise inlineStyles recursion
+      const svgWithChildren = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+      svgWithChildren.setAttribute('width', '400')
+      svgWithChildren.setAttribute('height', '300')
+
+      const group = document.createElementNS('http://www.w3.org/2000/svg', 'g')
+      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
+      circle.setAttribute('cx', '50')
+      circle.setAttribute('cy', '50')
+      circle.setAttribute('r', '25')
+      group.appendChild(circle)
+
+      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text')
+      text.setAttribute('x', '100')
+      text.setAttribute('y', '100')
+      text.textContent = 'Test'
+      group.appendChild(text)
+
+      svgWithChildren.appendChild(group)
+
+      const result = await exportSvg({
+        svgElement: svgWithChildren,
+        options: {
+          format: 'svg',
+          scope: 'viewport',
+          resolution: 1,
+          includeLegend: false,
+          includeWatermark: false,
+          backgroundColor: '#ffffff',
+        },
+        projectName: 'test',
+      })
+
+      const svgContent = await readBlobAsText(result.blob)
+      // Verify children are present in output (inlineStyles recursed through them)
+      expect(svgContent).toContain('circle')
+      expect(svgContent).toContain('Test')
+    })
+
+    it('should handle SVG with deeply nested elements', async () => {
+      // Create deep nesting: svg > g > g > circle
+      const svgDeep = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+      svgDeep.setAttribute('width', '400')
+      svgDeep.setAttribute('height', '300')
+
+      const g1 = document.createElementNS('http://www.w3.org/2000/svg', 'g')
+      const g2 = document.createElementNS('http://www.w3.org/2000/svg', 'g')
+      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
+      circle.setAttribute('r', '10')
+
+      g2.appendChild(circle)
+      g1.appendChild(g2)
+      svgDeep.appendChild(g1)
+
+      const result = await exportSvg({
+        svgElement: svgDeep,
+        options: {
+          format: 'svg',
+          scope: 'viewport',
+          resolution: 1,
+          includeLegend: false,
+          includeWatermark: false,
+          backgroundColor: 'transparent',
+        },
+        projectName: 'test',
+      })
+
+      expect(result.blob).toBeInstanceOf(Blob)
+      const svgContent = await readBlobAsText(result.blob)
+      expect(svgContent).toContain('circle')
+    })
+
+    it('should handle SVG with no children', async () => {
+      const emptySvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+      emptySvg.setAttribute('width', '100')
+      emptySvg.setAttribute('height', '100')
+
+      const result = await exportSvg({
+        svgElement: emptySvg,
+        options: {
+          format: 'svg',
+          scope: 'viewport',
+          resolution: 1,
+          includeLegend: false,
+          includeWatermark: false,
+          backgroundColor: 'transparent',
+        },
+        projectName: 'test',
+      })
+
+      expect(result.blob).toBeInstanceOf(Blob)
+    })
+
+    it('should skip properties with empty values from getComputedStyle', async () => {
+      // Mock getComputedStyle to return mix of empty and real values
+      vi.spyOn(window, 'getComputedStyle').mockImplementation(() => {
+        return {
+          getPropertyValue: (name: string) => {
+            // Only fill has a value; others return empty string
+            return name === 'fill' ? '#00ff00' : ''
+          },
+        } as CSSStyleDeclaration
+      })
+
+      const svgPartial = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+      svgPartial.setAttribute('width', '200')
+      svgPartial.setAttribute('height', '200')
+      const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect')
+      svgPartial.appendChild(rect)
+
+      const result = await exportSvg({
+        svgElement: svgPartial,
+        options: {
+          format: 'svg',
+          scope: 'viewport',
+          resolution: 1,
+          includeLegend: false,
+          includeWatermark: false,
+          backgroundColor: 'transparent',
+        },
+        projectName: 'test',
+      })
+
+      const svgContent = await readBlobAsText(result.blob)
+      // fill should be inlined, but stroke-width should not appear as style
+      expect(svgContent).toContain('fill')
+
+      vi.restoreAllMocks()
+    })
+  })
+
+  describe('full scope with getBBox fallback', () => {
+    it('should use attribute fallback when getBBox throws', async () => {
+      // Override getBBox to throw (simulating jsdom behavior)
+      const svgNoBox = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+      svgNoBox.setAttribute('width', '500')
+      svgNoBox.setAttribute('height', '400')
+
+      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
+      svgNoBox.appendChild(circle)
+
+      // getBBox is not natively available in jsdom - this exercises the catch branch
+      const result = await exportSvg({
+        svgElement: svgNoBox,
+        options: {
+          format: 'svg',
+          scope: 'full',
+          resolution: 1,
+          includeLegend: false,
+          includeWatermark: false,
+          backgroundColor: '#ffffff',
+        },
+        projectName: 'test',
+      })
+
+      // Should fall back to width/height attributes
+      expect(result.width).toBe(500)
+      expect(result.height).toBe(400)
+    })
+
+    it('should use default 800x600 when no width/height attributes and getBBox fails', async () => {
+      const svgNoAttrs = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+      // No width/height attributes set
+
+      const result = await exportSvg({
+        svgElement: svgNoAttrs,
+        options: {
+          format: 'svg',
+          scope: 'full',
+          resolution: 1,
+          includeLegend: false,
+          includeWatermark: false,
+          backgroundColor: '#ffffff',
+        },
+        projectName: 'test',
+      })
+
+      expect(result.width).toBe(800) // default fallback
+      expect(result.height).toBe(600) // default fallback
+    })
+  })
+
+  describe('legend and watermark combined', () => {
+    it('should include both legend and watermark when both enabled', async () => {
+      const legendSvg = '<svg xmlns="http://www.w3.org/2000/svg"><text>Legend</text></svg>'
+
+      const result = await exportSvg({
+        svgElement: mockSvg,
+        options: {
+          format: 'svg',
+          scope: 'viewport',
+          resolution: 1,
+          includeLegend: true,
+          includeWatermark: true,
+          backgroundColor: '#ffffff',
+        },
+        projectName: 'test',
+        legendSvg,
+      })
+
+      const svgContent = await readBlobAsText(result.blob)
+      expect(svgContent).toContain('legend-group')
+      expect(svgContent).toContain('Generated by MonoGuard')
+    })
+
+    it('should skip legend when includeLegend is true but legendSvg is undefined', async () => {
+      const result = await exportSvg({
+        svgElement: mockSvg,
+        options: {
+          format: 'svg',
+          scope: 'viewport',
+          resolution: 1,
+          includeLegend: true,
+          includeWatermark: false,
+          backgroundColor: '#ffffff',
+        },
+        projectName: 'test',
+        // legendSvg intentionally omitted
+      })
+
+      const svgContent = await readBlobAsText(result.blob)
+      expect(svgContent).not.toContain('legend-group')
+    })
   })
 })

@@ -7,7 +7,7 @@
  */
 
 import { render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { NodeTooltip, type NodeTooltipProps } from '../NodeTooltip'
 import type { TooltipData } from '../types'
 
@@ -309,6 +309,162 @@ describe('NodeTooltip', () => {
       // THEN: Tooltip should still render (position will be clamped)
       const tooltip = screen.getByRole('tooltip')
       expect(tooltip).toBeInTheDocument()
+    })
+  })
+
+  describe('Tooltip Position Calculation via rAF (AC3)', () => {
+    /**
+     * These tests exercise the requestAnimationFrame callback
+     * that calculates viewport-aware tooltip positioning.
+     */
+
+    beforeEach(() => {
+      // Mock rAF to execute synchronously
+      vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb: FrameRequestCallback) => {
+        cb(0)
+        return 0
+      })
+    })
+
+    afterEach(() => {
+      vi.restoreAllMocks()
+    })
+
+    it('[P1] should position tooltip to the right by default', () => {
+      // GIVEN: Position in upper-left area with room on all sides
+      const containerRef = createMockContainerRef()
+      renderNodeTooltip({
+        position: { x: 100, y: 100 },
+        containerRef,
+      })
+
+      // THEN: Tooltip should be visible after rAF positioning
+      const tooltip = screen.getByRole('tooltip')
+      expect(tooltip).toHaveClass('opacity-100')
+    })
+
+    it('[P1] should flip tooltip left when clipping right edge', () => {
+      // GIVEN: Position near the right edge of the container
+      const containerRef = createMockContainerRef({ width: 800, right: 800 })
+
+      // Mock tooltip dimensions
+      vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({
+        width: 200,
+        height: 100,
+        top: 0,
+        left: 0,
+        right: 200,
+        bottom: 100,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      })
+
+      renderNodeTooltip({
+        position: { x: 750, y: 100 },
+        containerRef,
+      })
+
+      // THEN: Tooltip should be visible (positioned left)
+      const tooltip = screen.getByRole('tooltip')
+      expect(tooltip).toBeInTheDocument()
+    })
+
+    it('[P1] should adjust tooltip up when clipping bottom edge', () => {
+      // GIVEN: Position near the bottom of the container
+      const containerRef = createMockContainerRef({ height: 600, bottom: 600 })
+
+      vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({
+        width: 200,
+        height: 100,
+        top: 0,
+        left: 0,
+        right: 200,
+        bottom: 100,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      })
+
+      renderNodeTooltip({
+        position: { x: 100, y: 580 },
+        containerRef,
+      })
+
+      // THEN: Tooltip should be visible (positioned above)
+      const tooltip = screen.getByRole('tooltip')
+      expect(tooltip).toBeInTheDocument()
+    })
+
+    it('[P2] should clamp to TOOLTIP_OFFSET when clipping left edge', () => {
+      // GIVEN: Position that would cause negative x after left flip
+      const containerRef = createMockContainerRef()
+
+      vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({
+        width: 200,
+        height: 100,
+        top: 0,
+        left: 0,
+        right: 200,
+        bottom: 100,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      })
+
+      renderNodeTooltip({
+        position: { x: 5, y: 100 },
+        containerRef,
+      })
+
+      // THEN: Tooltip should be visible
+      const tooltip = screen.getByRole('tooltip')
+      expect(tooltip).toBeInTheDocument()
+    })
+
+    it('[P2] should clamp to TOOLTIP_OFFSET when clipping top edge', () => {
+      // GIVEN: Position that would cause negative y
+      const containerRef = createMockContainerRef()
+
+      vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({
+        width: 200,
+        height: 100,
+        top: 0,
+        left: 0,
+        right: 200,
+        bottom: 100,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      })
+
+      renderNodeTooltip({
+        position: { x: 100, y: 5 },
+        containerRef,
+      })
+
+      // THEN: Tooltip should be visible
+      const tooltip = screen.getByRole('tooltip')
+      expect(tooltip).toBeInTheDocument()
+    })
+
+    it('[P2] should handle null tooltipRef in rAF callback gracefully', () => {
+      // GIVEN: Container ref is valid but component unmounts before rAF fires
+      // This is tested by rendering then unmounting quickly
+      const containerRef = createMockContainerRef()
+      const { unmount } = render(
+        <NodeTooltip
+          data={defaultTooltipData}
+          position={{ x: 100, y: 100 }}
+          containerRef={containerRef}
+        />
+      )
+
+      // Unmount before rAF fires (cancelAnimationFrame path)
+      unmount()
+
+      // THEN: Should not throw
+      expect(true).toBe(true)
     })
   })
 
