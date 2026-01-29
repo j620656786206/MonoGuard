@@ -380,7 +380,7 @@ describe('exportSvg', () => {
             // Only fill has a value; others return empty string
             return name === 'fill' ? '#00ff00' : ''
           },
-        } as CSSStyleDeclaration
+        } as unknown as ReturnType<typeof window.getComputedStyle>
       })
 
       const svgPartial = document.createElementNS('http://www.w3.org/2000/svg', 'svg')

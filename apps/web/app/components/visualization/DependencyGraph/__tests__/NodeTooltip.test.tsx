@@ -320,7 +320,7 @@ describe('NodeTooltip', () => {
 
     beforeEach(() => {
       // Mock rAF to execute synchronously
-      vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb: FrameRequestCallback) => {
+      vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb: (time: number) => void) => {
         cb(0)
         return 0
       })
