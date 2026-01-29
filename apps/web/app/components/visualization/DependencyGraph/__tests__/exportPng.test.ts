@@ -202,4 +202,172 @@ describe('exportPng', () => {
 
     expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:test-url')
   })
+
+  it('should reject when canvas context is unavailable', async () => {
+    // Override createElement to return canvas with null context
+    vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
+      if (tag === 'canvas') {
+        return {
+          width: 0,
+          height: 0,
+          getContext: vi.fn().mockReturnValue(null),
+          toBlob: vi.fn(),
+        } as unknown as HTMLCanvasElement
+      }
+      if (tag === 'a') {
+        return {
+          href: '',
+          download: '',
+          click: vi.fn(),
+          style: {},
+        } as unknown as HTMLAnchorElement
+      }
+      return document.createElementNS('http://www.w3.org/1999/xhtml', tag)
+    })
+
+    await expect(
+      exportPng({
+        svgElement: mockSvg,
+        options: {
+          format: 'png',
+          scope: 'viewport',
+          resolution: 1,
+          includeLegend: false,
+          includeWatermark: false,
+          backgroundColor: '#ffffff',
+        },
+        projectName: 'test',
+      })
+    ).rejects.toThrow('Failed to get canvas context')
+  })
+
+  it('should reject when toBlob returns null', async () => {
+    // Override createElement to return canvas where toBlob yields null
+    vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
+      if (tag === 'canvas') {
+        return {
+          width: 0,
+          height: 0,
+          getContext: vi.fn().mockReturnValue({
+            fillStyle: '',
+            fillRect: vi.fn(),
+            scale: vi.fn(),
+            drawImage: vi.fn(),
+          }),
+          toBlob: vi.fn().mockImplementation((callback: (blob: Blob | null) => void) => {
+            callback(null)
+          }),
+        } as unknown as HTMLCanvasElement
+      }
+      if (tag === 'a') {
+        return {
+          href: '',
+          download: '',
+          click: vi.fn(),
+          style: {},
+        } as unknown as HTMLAnchorElement
+      }
+      return document.createElementNS('http://www.w3.org/1999/xhtml', tag)
+    })
+
+    await expect(
+      exportPng({
+        svgElement: mockSvg,
+        options: {
+          format: 'png',
+          scope: 'viewport',
+          resolution: 1,
+          includeLegend: false,
+          includeWatermark: false,
+          backgroundColor: '#ffffff',
+        },
+        projectName: 'test',
+      })
+    ).rejects.toThrow('Failed to create PNG blob')
+  })
+
+  it('should reject when image fails to load', async () => {
+    // Override Image to trigger onerror
+    vi.spyOn(globalThis, 'Image').mockImplementation(() => {
+      const img = {
+        onload: null as (() => void) | null,
+        onerror: null as (() => void) | null,
+        src: '',
+      }
+
+      Object.defineProperty(img, 'src', {
+        set() {
+          setTimeout(() => {
+            if (img.onerror) img.onerror()
+          }, 0)
+        },
+        get() {
+          return ''
+        },
+      })
+
+      return img as unknown as HTMLImageElement
+    })
+
+    await expect(
+      exportPng({
+        svgElement: mockSvg,
+        options: {
+          format: 'png',
+          scope: 'viewport',
+          resolution: 1,
+          includeLegend: false,
+          includeWatermark: false,
+          backgroundColor: '#ffffff',
+        },
+        projectName: 'test',
+      })
+    ).rejects.toThrow('Failed to load SVG for PNG conversion')
+  })
+
+  it('should not fill background when transparent is specified', async () => {
+    const fillRectSpy = vi.fn()
+
+    vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
+      if (tag === 'canvas') {
+        return {
+          width: 0,
+          height: 0,
+          getContext: vi.fn().mockReturnValue({
+            fillStyle: '',
+            fillRect: fillRectSpy,
+            scale: vi.fn(),
+            drawImage: vi.fn(),
+          }),
+          toBlob: vi.fn().mockImplementation((callback: (blob: Blob | null) => void) => {
+            callback(new Blob(['png-data'], { type: 'image/png' }))
+          }),
+        } as unknown as HTMLCanvasElement
+      }
+      if (tag === 'a') {
+        return {
+          href: '',
+          download: '',
+          click: vi.fn(),
+          style: {},
+        } as unknown as HTMLAnchorElement
+      }
+      return document.createElementNS('http://www.w3.org/1999/xhtml', tag)
+    })
+
+    await exportPng({
+      svgElement: mockSvg,
+      options: {
+        format: 'png',
+        scope: 'viewport',
+        resolution: 1,
+        includeLegend: false,
+        includeWatermark: false,
+        backgroundColor: 'transparent',
+      },
+      projectName: 'test',
+    })
+
+    expect(fillRectSpy).not.toHaveBeenCalled()
+  })
 })
