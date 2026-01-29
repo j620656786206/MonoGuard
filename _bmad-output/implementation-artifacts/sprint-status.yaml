@@ -81,7 +81,7 @@ development_status:
   4-4-add-zoom-pan-and-navigation-controls: done
   4-5-implement-hover-details-and-tooltips: done
   4-6-export-graph-as-png-svg-images: done
-  4-7-export-analysis-reports-in-multiple-formats: ready-for-dev
+  4-7-export-analysis-reports-in-multiple-formats: done
   4-8-create-detailed-diagnostic-reports: ready-for-dev
   4-9-implement-hybrid-svg-canvas-rendering: ready-for-dev
   epic-4-retrospective: optional

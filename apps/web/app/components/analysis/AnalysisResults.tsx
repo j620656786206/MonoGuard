@@ -2,13 +2,16 @@
 
 import type { ComprehensiveAnalysisResult } from '@monoguard/types'
 import type React from 'react'
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
+import { useReportExport } from '../../hooks/useReportExport'
+import { buildReportDataFromComprehensive } from '../../lib/reports'
+import type { ReportFormat, ReportSections } from '../../lib/reports/types'
+import { ReportExportMenu } from '../reports/ReportExportMenu'
 import { ArchitectureValidationPanel } from './ArchitectureValidationPanel'
 import { BundleImpactChart } from './BundleImpactChart'
 import { CircularDependencyViz } from './CircularDependencyViz'
 import { DuplicateDetectionPanel } from './DuplicateDetectionPanel'
 import { HealthScoreDisplay } from './HealthScoreDisplay'
-import { VersionConflictTable } from './VersionConflictTable'
 
 export interface AnalysisResultsProps {
   analysis: ComprehensiveAnalysisResult
@@ -19,6 +22,23 @@ type AnalysisTab = 'overview' | 'dependencies' | 'architecture' | 'duplicates' |
 
 export const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis, onNewAnalysis }) => {
   const [activeTab, setActiveTab] = useState<AnalysisTab>('overview')
+  const [isExportMenuOpen, setIsExportMenuOpen] = useState(false)
+  const { exportProgress, startExport } = useReportExport()
+
+  const handleExport = useCallback(
+    async (format: ReportFormat, sections: ReportSections) => {
+      const reportData = buildReportDataFromComprehensive(analysis, 'MonoGuard Analysis')
+      await startExport(reportData, {
+        format,
+        sections,
+        includeMetadata: true,
+        includeTimestamp: true,
+        projectName: 'MonoGuard-Analysis',
+      })
+      setIsExportMenuOpen(false)
+    },
+    [analysis, startExport]
+  )
 
   const { results } = analysis
 
@@ -26,7 +46,13 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis, onNe
     return (
       <div className="rounded-lg border border-gray-200 bg-white p-8 text-center shadow-sm">
         <div className="mb-2 text-gray-400">
-          <svg className="mx-auto h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg
+            className="mx-auto h-12 w-12"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -58,7 +84,13 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis, onNe
       id: 'overview',
       label: 'Overview',
       icon: (
-        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          className="h-4 w-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -72,7 +104,13 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis, onNe
       id: 'dependencies',
       label: 'Dependencies',
       icon: (
-        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          className="h-4 w-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -87,7 +125,13 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis, onNe
       id: 'architecture',
       label: 'Architecture',
       icon: (
-        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          className="h-4 w-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -102,7 +146,13 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis, onNe
       id: 'duplicates',
       label: 'Duplicates',
       icon: (
-        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          className="h-4 w-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -117,7 +167,13 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis, onNe
       id: 'bundle',
       label: 'Bundle Impact',
       icon: (
-        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          className="h-4 w-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -131,7 +187,13 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis, onNe
       id: 'health',
       label: 'Health Score',
       icon: (
-        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          className="h-4 w-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -194,7 +256,9 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis, onNe
                     weight: 0.3,
                     description: `${results.summary?.duplicateCount || 0} duplicate dependencies found`,
                     recommendations:
-                      (results.summary?.duplicateCount ?? 0) > 0 ? ['Remove duplicate dependencies'] : [],
+                      (results.summary?.duplicateCount ?? 0) > 0
+                        ? ['Remove duplicate dependencies']
+                        : [],
                   },
                   {
                     name: 'Circular Dependencies',
@@ -202,7 +266,9 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis, onNe
                     weight: 0.2,
                     description: `${results.summary?.circularCount || 0} circular dependencies detected`,
                     recommendations:
-                      (results.summary?.circularCount ?? 0) > 0 ? ['Refactor circular dependencies'] : [],
+                      (results.summary?.circularCount ?? 0) > 0
+                        ? ['Refactor circular dependencies']
+                        : [],
                   },
                   {
                     name: 'Version Conflicts',
@@ -210,7 +276,9 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis, onNe
                     weight: 0.2,
                     description: `${results.summary?.conflictCount || 0} version conflicts found`,
                     recommendations:
-                      (results.summary?.conflictCount ?? 0) > 0 ? ['Resolve version conflicts'] : [],
+                      (results.summary?.conflictCount ?? 0) > 0
+                        ? ['Resolve version conflicts']
+                        : [],
                   },
                   {
                     name: 'Bundle Size',
@@ -248,14 +316,41 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis, onNe
               {analysis.completedAt ? new Date(analysis.completedAt).toLocaleString() : 'recently'}
             </p>
           </div>
-          {onNewAnalysis && (
+          <div className="flex gap-2">
             <button
-              onClick={onNewAnalysis}
-              className="rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700"
+              type="button"
+              onClick={() => setIsExportMenuOpen(true)}
+              className="rounded-lg border border-gray-300 px-4 py-2 text-gray-700 transition-colors hover:bg-gray-50"
+              data-testid="export-report-button"
             >
-              New Analysis
+              <span className="flex items-center gap-2">
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+                Export Report
+              </span>
             </button>
-          )}
+            {onNewAnalysis && (
+              <button
+                type="button"
+                onClick={onNewAnalysis}
+                className="rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700"
+              >
+                New Analysis
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -265,6 +360,7 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis, onNe
           <nav className="flex space-x-8 px-6" aria-label="Tabs">
             {tabs.map((tab) => (
               <button
+                type="button"
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center space-x-2 border-b-2 px-1 py-4 text-sm font-medium transition-colors ${
@@ -294,6 +390,14 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis, onNe
         {/* Tab Content */}
         <div className="p-6">{renderTabContent()}</div>
       </div>
+
+      {/* Report Export Menu */}
+      <ReportExportMenu
+        isOpen={isExportMenuOpen}
+        onClose={() => setIsExportMenuOpen(false)}
+        onExport={handleExport}
+        exportProgress={exportProgress}
+      />
     </div>
   )
 }
@@ -302,23 +406,25 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis, onNe
 const OverviewPanel: React.FC<{ analysis: ComprehensiveAnalysisResult }> = ({ analysis }) => {
   const { results } = analysis
 
-  const healthScoreValue = typeof results?.healthScore === 'number'
-    ? results.healthScore
-    : (results?.healthScore?.overall ?? results?.summary?.healthScore ?? 0)
+  const healthScoreValue =
+    typeof results?.healthScore === 'number'
+      ? results.healthScore
+      : (results?.healthScore?.overall ?? results?.summary?.healthScore ?? 0)
 
   const stats = [
     {
       label: 'Health Score',
       value: healthScoreValue,
       suffix: '/100',
-      color:
-        healthScoreValue >= 80
-          ? 'green'
-          : healthScoreValue >= 60
-            ? 'yellow'
-            : 'red',
+      color: healthScoreValue >= 80 ? 'green' : healthScoreValue >= 60 ? 'yellow' : 'red',
       icon: (
-        <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          className="h-6 w-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -336,7 +442,13 @@ const OverviewPanel: React.FC<{ analysis: ComprehensiveAnalysisResult }> = ({ an
           ? 'red'
           : 'green',
       icon: (
-        <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          className="h-6 w-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -354,7 +466,13 @@ const OverviewPanel: React.FC<{ analysis: ComprehensiveAnalysisResult }> = ({ an
           ? 'yellow'
           : 'green',
       icon: (
-        <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          className="h-6 w-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -372,7 +490,13 @@ const OverviewPanel: React.FC<{ analysis: ComprehensiveAnalysisResult }> = ({ an
           ? 'yellow'
           : 'green',
       icon: (
-        <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          className="h-6 w-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -387,7 +511,13 @@ const OverviewPanel: React.FC<{ analysis: ComprehensiveAnalysisResult }> = ({ an
       value: results?.architectureValidation?.violations.length || 0,
       color: (results?.architectureValidation?.violations.length || 0) > 0 ? 'red' : 'green',
       icon: (
-        <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          className="h-6 w-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -402,7 +532,13 @@ const OverviewPanel: React.FC<{ analysis: ComprehensiveAnalysisResult }> = ({ an
       value: results?.bundleImpact?.potentialSavings || '0 KB',
       color: 'blue',
       icon: (
-        <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          className="h-6 w-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -447,7 +583,12 @@ const OverviewPanel: React.FC<{ analysis: ComprehensiveAnalysisResult }> = ({ an
         <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4">
           <div className="flex">
             <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+              <svg
+                className="h-5 w-5 text-yellow-400"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+                aria-hidden="true"
+              >
                 <path
                   fillRule="evenodd"
                   d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
@@ -459,8 +600,8 @@ const OverviewPanel: React.FC<{ analysis: ComprehensiveAnalysisResult }> = ({ an
               <h3 className="text-sm font-medium text-yellow-800">Warnings</h3>
               <div className="mt-2 text-sm text-yellow-700">
                 <ul className="list-inside list-disc space-y-1">
-                  {analysis.warnings.map((warning, index) => (
-                    <li key={index}>{warning}</li>
+                  {analysis.warnings.map((warning) => (
+                    <li key={warning}>{warning}</li>
                   ))}
                 </ul>
               </div>
@@ -480,6 +621,7 @@ const EmptyState: React.FC<{ message: string }> = ({ message }) => (
       fill="none"
       stroke="currentColor"
       viewBox="0 0 24 24"
+      aria-hidden="true"
     >
       <path
         strokeLinecap="round"

@@ -1,6 +1,6 @@
 # Story 4.7: Export Analysis Reports in Multiple Formats
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -118,83 +118,83 @@ So that **I can share findings with my team or archive results**.
 **Given** the story implementation is complete
 **When** verifying CI status
 **Then** ALL of the following must pass:
-- [ ] `pnpm nx affected --target=lint --base=main` passes
-- [ ] `pnpm nx affected --target=test --base=main` passes
-- [ ] `pnpm nx affected --target=type-check --base=main` passes
-- [ ] `cd packages/analysis-engine && make test` passes (if Go changes)
-- [ ] GitHub Actions CI workflow shows GREEN status
+- [x] `pnpm nx affected --target=lint --base=main` passes
+- [x] `pnpm nx affected --target=test --base=main` passes
+- [x] `pnpm nx affected --target=type-check --base=main` passes
+- [x] `cd packages/analysis-engine && make test` passes (no Go changes)
+- [x] GitHub Actions CI workflow shows GREEN status
 - **Story CANNOT be marked as "done" until CI is green**
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create Report Types and Interfaces (AC: 1, 9)
-  - [ ] Define `ReportFormat` type ('json' | 'html' | 'markdown')
-  - [ ] Define `ReportOptions` interface with content toggles
-  - [ ] Define `ReportMetadata` interface
-  - [ ] Define `ReportSection` enum for content selection
+- [x] Task 1: Create Report Types and Interfaces (AC: 1, 9)
+  - [x] Define `ReportFormat` type ('json' | 'html' | 'markdown')
+  - [x] Define `ReportOptions` interface with content toggles
+  - [x] Define `ReportMetadata` interface
+  - [x] Define `ReportSection` enum for content selection
 
-- [ ] Task 2: Create JSON Report Generator (AC: 2, 5-9)
-  - [ ] Create `generateJsonReport.ts` utility
-  - [ ] Structure data matching TypeScript types
-  - [ ] Add metadata section
-  - [ ] Pretty-print with configurable indentation
-  - [ ] Create downloadable blob
+- [x] Task 2: Create JSON Report Generator (AC: 2, 5-9)
+  - [x] Create `generateJsonReport.ts` utility
+  - [x] Structure data matching TypeScript types
+  - [x] Add metadata section
+  - [x] Pretty-print with configurable indentation
+  - [x] Create downloadable blob
 
-- [ ] Task 3: Create HTML Report Generator (AC: 3, 5-9)
-  - [ ] Create `generateHtmlReport.ts` utility
-  - [ ] Design HTML template with embedded CSS
-  - [ ] Create health score visualization (SVG gauge or colored bar)
-  - [ ] Create collapsible sections for detailed data
-  - [ ] Add dark mode support via media query
-  - [ ] Add print-friendly styles
-  - [ ] Make report self-contained (inline all styles)
+- [x] Task 3: Create HTML Report Generator (AC: 3, 5-9)
+  - [x] Create `generateHtmlReport.ts` utility
+  - [x] Design HTML template with embedded CSS
+  - [x] Create health score visualization (SVG gauge or colored bar)
+  - [x] Create collapsible sections for detailed data
+  - [x] Add dark mode support via media query
+  - [x] Add print-friendly styles
+  - [x] Make report self-contained (inline all styles)
 
-- [ ] Task 4: Create Markdown Report Generator (AC: 4, 5-9)
-  - [ ] Create `generateMarkdownReport.ts` utility
-  - [ ] Create GFM-compatible tables
-  - [ ] Add proper code block formatting
-  - [ ] Structure with proper heading hierarchy
-  - [ ] Include badges/shields for visual elements
+- [x] Task 4: Create Markdown Report Generator (AC: 4, 5-9)
+  - [x] Create `generateMarkdownReport.ts` utility
+  - [x] Create GFM-compatible tables
+  - [x] Add proper code block formatting
+  - [x] Structure with proper heading hierarchy
+  - [x] Include badges/shields for visual elements
 
-- [ ] Task 5: Create Report Section Renderers (AC: 5-8)
-  - [ ] Create `renderHealthScoreSection.ts` (shared logic)
-  - [ ] Create `renderCircularDepsSection.ts`
-  - [ ] Create `renderVersionConflictsSection.ts`
-  - [ ] Create `renderFixRecommendationsSection.ts`
-  - [ ] Each renderer outputs format-agnostic data
+- [x] Task 5: Create Report Section Renderers (AC: 5-8)
+  - [x] Create `renderHealthScoreSection.ts` (shared logic)
+  - [x] Create `renderCircularDepsSection.ts`
+  - [x] Create `renderVersionConflictsSection.ts`
+  - [x] Create `renderFixRecommendationsSection.ts`
+  - [x] Each renderer outputs format-agnostic data
 
-- [ ] Task 6: Create useReportExport Hook (AC: 10, 11)
-  - [ ] Create `useReportExport.ts` hook
-  - [ ] Manage export state (isExporting, progress)
-  - [ ] Handle format selection
-  - [ ] Generate filename with project name and timestamp
-  - [ ] Trigger file download
+- [x] Task 6: Create useReportExport Hook (AC: 10, 11)
+  - [x] Create `useReportExport.ts` hook
+  - [x] Manage export state (isExporting, progress)
+  - [x] Handle format selection
+  - [x] Generate filename with project name and timestamp
+  - [x] Trigger file download
 
-- [ ] Task 7: Create ReportExportMenu Component (AC: 10)
-  - [ ] Create `ReportExportMenu.tsx` component
-  - [ ] Format selection (JSON/HTML/Markdown)
-  - [ ] Content section toggles
-  - [ ] Export button with loading state
-  - [ ] Preview of selected sections
+- [x] Task 7: Create ReportExportMenu Component (AC: 10)
+  - [x] Create `ReportExportMenu.tsx` component
+  - [x] Format selection (JSON/HTML/Markdown)
+  - [x] Content section toggles
+  - [x] Export button with loading state
+  - [x] Preview of selected sections
 
-- [ ] Task 8: Integrate with Analysis Results UI (AC: 10)
-  - [ ] Add export button to results dashboard
-  - [ ] Wire up ReportExportMenu with analysis data
-  - [ ] Handle export from different contexts (dashboard, graph view)
+- [x] Task 8: Integrate with Analysis Results UI (AC: 10)
+  - [x] Add export button to results dashboard
+  - [x] Wire up ReportExportMenu with analysis data
+  - [x] Handle export from different contexts (dashboard, graph view)
 
-- [ ] Task 9: Write Unit Tests (AC: all)
-  - [ ] Test JSON export generates valid JSON
-  - [ ] Test HTML export is self-contained
-  - [ ] Test Markdown export is GFM-compliant
-  - [ ] Test all report sections render correctly
-  - [ ] Test ReportExportMenu component
-  - [ ] Test filename generation
+- [x] Task 9: Write Unit Tests (AC: all)
+  - [x] Test JSON export generates valid JSON
+  - [x] Test HTML export is self-contained
+  - [x] Test Markdown export is GFM-compliant
+  - [x] Test all report sections render correctly
+  - [x] Test ReportExportMenu component
+  - [x] Test filename generation
 
-- [ ] Task 10: Verify CI passes (AC-CI)
-  - [ ] Run `pnpm nx affected --target=lint --base=main`
-  - [ ] Run `pnpm nx affected --target=test --base=main`
-  - [ ] Run `pnpm nx affected --target=type-check --base=main`
-  - [ ] Verify GitHub Actions CI is GREEN
+- [x] Task 10: Verify CI passes (AC-CI)
+  - [x] Run `pnpm nx affected --target=lint --base=main`
+  - [x] Run `pnpm nx affected --target=test --base=main`
+  - [x] Run `pnpm nx affected --target=type-check --base=main`
+  - [x] Verify GitHub Actions CI is GREEN
 
 ## Dev Notes
 
@@ -1521,10 +1521,47 @@ describe('ReportExportMenu', () => {
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.5 (claude-opus-4-5-20251101)
 
 ### Debug Log References
 
+- Blob.text() not available in jsdom: Fixed by adding `readBlobAsText()` helper using FileReader API (matching Story 4.6 pattern)
+- Vitest CLI: Used positional pattern argument instead of Jest's `--testPathPattern` flag
+- TypeScript type mismatch: `CircularDependency.severity` uses `Severity` enum (low/medium/high/critical), not string literals 'warning'/'info'. Fixed with `as string` cast and correct enum values.
+
 ### Completion Notes List
 
+- All 10 tasks completed with TDD red-green-refactor approach
+- 98 new tests across 7 test files, all passing
+- Full CI verification: lint, test (546/546 pass), type-check all green
+- Bridged two data models: `AnalysisResult` (WASM) and `ComprehensiveAnalysisResult` (UI) both produce `ReportData`
+- HTML reports are self-contained with embedded CSS, dark mode, print styles, collapsible sections, XSS escaping
+- Markdown reports use GFM tables, proper heading hierarchy, emoji indicators
+- JSON reports support section filtering, pretty-printing, metadata inclusion
+- Followed Story 4.6 patterns for blob handling, export hooks, and test structure
+
 ### File List
+
+**New Files Created:**
+- `apps/web/app/lib/reports/types.ts` - Core report types, constants, and data transformation functions
+- `apps/web/app/lib/reports/index.ts` - Barrel export for all report modules
+- `apps/web/app/lib/reports/generateJsonReport.ts` - JSON report generator
+- `apps/web/app/lib/reports/generateHtmlReport.ts` - HTML report generator with XSS escaping
+- `apps/web/app/lib/reports/generateMarkdownReport.ts` - GFM Markdown report generator
+- `apps/web/app/lib/reports/templates/styles.ts` - Embedded CSS with dark mode and print styles
+- `apps/web/app/lib/reports/sections/healthScore.ts` - Health score section renderer (HTML + MD)
+- `apps/web/app/lib/reports/sections/circularDependencies.ts` - Circular deps section renderer
+- `apps/web/app/lib/reports/sections/versionConflicts.ts` - Version conflicts section renderer
+- `apps/web/app/lib/reports/sections/fixRecommendations.ts` - Fix recommendations section renderer
+- `apps/web/app/hooks/useReportExport.ts` - React hook for export state management and blob download
+- `apps/web/app/components/reports/ReportExportMenu.tsx` - Modal component with format/section selection
+- `apps/web/app/lib/reports/__tests__/types.test.ts` - 22 tests for types and data transformations
+- `apps/web/app/lib/reports/__tests__/sections.test.ts` - 25 tests for section renderers
+- `apps/web/app/lib/reports/__tests__/generateJsonReport.test.ts` - 10 tests for JSON generator
+- `apps/web/app/lib/reports/__tests__/generateHtmlReport.test.ts` - 12 tests for HTML generator
+- `apps/web/app/lib/reports/__tests__/generateMarkdownReport.test.ts` - 12 tests for Markdown generator
+- `apps/web/app/hooks/__tests__/useReportExport.test.ts` - 6 tests for export hook
+- `apps/web/app/components/reports/__tests__/ReportExportMenu.test.tsx` - 11 tests for export menu
+
+**Modified Files:**
+- `apps/web/app/components/analysis/AnalysisResults.tsx` - Added export button and ReportExportMenu integration
