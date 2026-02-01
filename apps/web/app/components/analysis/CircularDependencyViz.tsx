@@ -2,16 +2,18 @@
 
 import type { CircularDependency, VersionConflict } from '@monoguard/types'
 import React, { useState } from 'react'
-import { VirtualizedList } from '@/components/ui/VirtualizedList'
 
 export interface CircularDependencyVizProps {
   circularDependencies: CircularDependency[]
   versionConflicts: VersionConflict[]
+  /** Callback when user requests a diagnostic report for a specific cycle */
+  onDiagnosticReport?: (cycleIndex: number) => void
 }
 
 export const CircularDependencyViz: React.FC<CircularDependencyVizProps> = ({
   circularDependencies,
   versionConflicts,
+  onDiagnosticReport,
 }) => {
   const [activeView, setActiveView] = useState<'circular' | 'conflicts'>('circular')
 
@@ -22,6 +24,7 @@ export const CircularDependencyViz: React.FC<CircularDependencyVizProps> = ({
         <h3 className="text-lg font-semibold text-gray-900">Dependency Analysis</h3>
         <div className="flex rounded-lg bg-gray-100 p-1">
           <button
+            type="button"
             onClick={() => setActiveView('circular')}
             className={`rounded-md px-3 py-1 text-sm font-medium transition-colors ${
               activeView === 'circular'
@@ -32,6 +35,7 @@ export const CircularDependencyViz: React.FC<CircularDependencyVizProps> = ({
             Circular ({circularDependencies.length})
           </button>
           <button
+            type="button"
             onClick={() => setActiveView('conflicts')}
             className={`rounded-md px-3 py-1 text-sm font-medium transition-colors ${
               activeView === 'conflicts'
@@ -45,7 +49,10 @@ export const CircularDependencyViz: React.FC<CircularDependencyVizProps> = ({
       </div>
 
       {activeView === 'circular' ? (
-        <CircularDependenciesPanel dependencies={circularDependencies} />
+        <CircularDependenciesPanel
+          dependencies={circularDependencies}
+          onDiagnosticReport={onDiagnosticReport}
+        />
       ) : (
         <VersionConflictsPanel conflicts={versionConflicts} />
       )}
@@ -56,12 +63,18 @@ export const CircularDependencyViz: React.FC<CircularDependencyVizProps> = ({
 // Circular Dependencies Panel
 const CircularDependenciesPanel: React.FC<{
   dependencies: CircularDependency[]
-}> = ({ dependencies }) => {
+  onDiagnosticReport?: (cycleIndex: number) => void
+}> = ({ dependencies, onDiagnosticReport }) => {
   if (dependencies.length === 0) {
     return (
       <div className="rounded-lg border border-green-200 bg-green-50 p-8 text-center">
         <div className="mb-2 text-green-600">
-          <svg className="mx-auto h-12 w-12" fill="currentColor" viewBox="0 0 20 20">
+          <svg
+            className="mx-auto h-12 w-12"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+            aria-hidden="true"
+          >
             <path
               fillRule="evenodd"
               d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
@@ -78,7 +91,11 @@ const CircularDependenciesPanel: React.FC<{
   return (
     <div className="space-y-4">
       {dependencies.map((dependency, index) => (
-        <CircularDependencyCard key={index} dependency={dependency} />
+        <CircularDependencyCard
+          key={dependency.cycle.join('-')}
+          dependency={dependency}
+          onDiagnosticReport={onDiagnosticReport ? () => onDiagnosticReport(index) : undefined}
+        />
       ))}
     </div>
   )
@@ -90,7 +107,12 @@ const VersionConflictsPanel: React.FC<{ conflicts: VersionConflict[] }> = ({ con
     return (
       <div className="rounded-lg border border-green-200 bg-green-50 p-8 text-center">
         <div className="mb-2 text-green-600">
-          <svg className="mx-auto h-12 w-12" fill="currentColor" viewBox="0 0 20 20">
+          <svg
+            className="mx-auto h-12 w-12"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+            aria-hidden="true"
+          >
             <path
               fillRule="evenodd"
               d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
@@ -106,15 +128,18 @@ const VersionConflictsPanel: React.FC<{ conflicts: VersionConflict[] }> = ({ con
 
   return (
     <div className="space-y-4">
-      {conflicts.map((conflict, index) => (
-        <VersionConflictCard key={index} conflict={conflict} />
+      {conflicts.map((conflict) => (
+        <VersionConflictCard key={conflict.packageName} conflict={conflict} />
       ))}
     </div>
   )
 }
 
 // Circular Dependency Card
-const CircularDependencyCard: React.FC<{ dependency: CircularDependency }> = ({ dependency }) => {
+const CircularDependencyCard: React.FC<{
+  dependency: CircularDependency
+  onDiagnosticReport?: () => void
+}> = ({ dependency, onDiagnosticReport }) => {
   const [isExpanded, setIsExpanded] = useState(false)
 
   const severityColors = {
@@ -151,10 +176,16 @@ const CircularDependencyCard: React.FC<{ dependency: CircularDependency }> = ({ 
             <h4 className="mb-1 font-medium">Dependency Cycle</h4>
             <div className="flex items-center space-x-2 font-mono text-sm">
               {dependency.cycle.map((dep, index) => (
-                <React.Fragment key={index}>
+                <React.Fragment key={dep}>
                   <span className="rounded bg-white bg-opacity-50 px-2 py-1">{dep}</span>
                   {index < dependency.cycle.length - 1 && (
-                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                    >
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -164,7 +195,13 @@ const CircularDependencyCard: React.FC<{ dependency: CircularDependency }> = ({ 
                     </svg>
                   )}
                   {index === dependency.cycle.length - 1 && (
-                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                    >
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -193,12 +230,25 @@ const CircularDependencyCard: React.FC<{ dependency: CircularDependency }> = ({ 
           )}
         </div>
 
-        <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="ml-4 text-sm opacity-60 transition-opacity hover:opacity-80"
-        >
-          {isExpanded ? 'Less' : 'More'}
-        </button>
+        <div className="ml-4 flex flex-col items-end space-y-2">
+          {onDiagnosticReport && (
+            <button
+              type="button"
+              onClick={onDiagnosticReport}
+              className="rounded-md bg-blue-100 px-2.5 py-1 text-xs font-medium text-blue-700 transition-colors hover:bg-blue-200"
+              data-testid="diagnostic-report-button"
+            >
+              Diagnostic Report
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="text-sm opacity-60 transition-opacity hover:opacity-80"
+          >
+            {isExpanded ? 'Less' : 'More'}
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -234,8 +284,8 @@ const VersionConflictCard: React.FC<{ conflict: VersionConflict }> = ({ conflict
             <p className="mb-2 text-sm opacity-80">{conflict.impact}</p>
 
             <div className="space-y-2">
-              {conflict.conflictingVersions.map((version, index) => (
-                <div key={index} className="flex items-center space-x-2">
+              {conflict.conflictingVersions.map((version) => (
+                <div key={version.version} className="flex items-center space-x-2">
                   <span
                     className={`inline-flex items-center rounded px-2 py-1 font-mono text-xs ${
                       version.isBreaking
@@ -264,14 +314,14 @@ const VersionConflictCard: React.FC<{ conflict: VersionConflict }> = ({ conflict
 
               <h5 className="mb-2 font-medium">Affected Packages</h5>
               <div className="max-h-32 overflow-y-auto">
-                {conflict.conflictingVersions.map((version, vIndex) => (
-                  <div key={vIndex} className="mb-2">
+                {conflict.conflictingVersions.map((version) => (
+                  <div key={version.version} className="mb-2">
                     <div className="mb-1 text-xs font-medium opacity-80">
                       Version {version.version}:
                     </div>
                     <div className="ml-2 space-y-1">
-                      {version.packages.map((pkg, pIndex) => (
-                        <div key={pIndex} className="font-mono text-xs opacity-60">
+                      {version.packages.map((pkg) => (
+                        <div key={pkg} className="font-mono text-xs opacity-60">
                           {pkg}
                         </div>
                       ))}
@@ -284,6 +334,7 @@ const VersionConflictCard: React.FC<{ conflict: VersionConflict }> = ({ conflict
         </div>
 
         <button
+          type="button"
           onClick={() => setIsExpanded(!isExpanded)}
           className="ml-4 text-sm opacity-60 transition-opacity hover:opacity-80"
         >

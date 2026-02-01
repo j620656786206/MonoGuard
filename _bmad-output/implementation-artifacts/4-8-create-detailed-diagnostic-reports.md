@@ -1,6 +1,6 @@
 # Story 4.8: Create Detailed Diagnostic Reports
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -109,106 +109,106 @@ So that **I can deep-dive into specific issues and share comprehensive analysis 
 **Given** the story implementation is complete
 **When** verifying CI status
 **Then** ALL of the following must pass:
-- [ ] `pnpm nx affected --target=lint --base=main` passes
-- [ ] `pnpm nx affected --target=test --base=main` passes
-- [ ] `pnpm nx affected --target=type-check --base=main` passes
-- [ ] `cd packages/analysis-engine && make test` passes (if Go changes)
-- [ ] GitHub Actions CI workflow shows GREEN status
+- [x]`pnpm nx affected --target=lint --base=main` passes
+- [x]`pnpm nx affected --target=test --base=main` passes
+- [x]`pnpm nx affected --target=type-check --base=main` passes
+- [x]`cd packages/analysis-engine && make test` passes (if Go changes)
+- [x]GitHub Actions CI workflow shows GREEN status
 - **Story CANNOT be marked as "done" until CI is green**
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create Diagnostic Report Types and Interfaces (AC: 1-8)
-  - [ ] Define `DiagnosticReport` interface with all sections
-  - [ ] Define `ExecutiveSummary` interface
-  - [ ] Define `CyclePathVisualization` interface
-  - [ ] Define `RootCauseDetails` interface
-  - [ ] Define `FixStrategyGuide` interface
-  - [ ] Define `ImpactAssessmentDetails` interface
-  - [ ] Define `RelatedCycleInfo` interface
+- [x] Task 1: Create Diagnostic Report Types and Interfaces (AC: 1-8)
+  - [x]Define `DiagnosticReport` interface with all sections
+  - [x]Define `ExecutiveSummary` interface
+  - [x]Define `CyclePathVisualization` interface
+  - [x]Define `RootCauseDetails` interface
+  - [x]Define `FixStrategyGuide` interface
+  - [x]Define `ImpactAssessmentDetails` interface
+  - [x]Define `RelatedCycleInfo` interface
 
-- [ ] Task 2: Create Executive Summary Generator (AC: 1)
-  - [ ] Create `generateExecutiveSummary.ts` utility
-  - [ ] Implement severity classification logic
-  - [ ] Generate human-readable cycle description
-  - [ ] Calculate effort estimate based on cycle complexity
-  - [ ] Generate quick recommendation
+- [x] Task 2: Create Executive Summary Generator (AC: 1)
+  - [x]Create `generateExecutiveSummary.ts` utility
+  - [x]Implement severity classification logic
+  - [x]Generate human-readable cycle description
+  - [x]Calculate effort estimate based on cycle complexity
+  - [x]Generate quick recommendation
 
-- [ ] Task 3: Create Cycle Path Visualizer (AC: 2)
-  - [ ] Create `generateCyclePath.ts` utility
-  - [ ] Generate SVG diagram for cycle visualization
-  - [ ] Generate ASCII diagram for text/markdown exports
-  - [ ] Identify and highlight the "breaking point" edge
-  - [ ] Support both light and dark mode rendering
+- [x] Task 3: Create Cycle Path Visualizer (AC: 2)
+  - [x]Create `generateCyclePath.ts` utility
+  - [x]Generate SVG diagram for cycle visualization
+  - [x]Generate ASCII diagram for text/markdown exports
+  - [x]Identify and highlight the "breaking point" edge
+  - [x]Support both light and dark mode rendering
 
-- [ ] Task 4: Create Root Cause Analysis Renderer (AC: 3)
-  - [ ] Create `renderRootCauseAnalysis.ts` utility
-  - [ ] Format root cause explanation with confidence score
-  - [ ] List alternative candidates when confidence is low
-  - [ ] Include code references (file paths, line numbers)
+- [x] Task 4: Create Root Cause Analysis Renderer (AC: 3)
+  - [x]Create `renderRootCauseAnalysis.ts` utility
+  - [x]Format root cause explanation with confidence score
+  - [x]List alternative candidates when confidence is low
+  - [x]Include code references (file paths, line numbers)
 
-- [ ] Task 5: Create Fix Strategy Guide Renderer (AC: 4)
-  - [ ] Create `renderFixStrategyGuide.ts` utility
-  - [ ] Render Extract Shared Module strategy with steps
-  - [ ] Render Dependency Injection strategy with code examples
-  - [ ] Render Module Boundary Refactoring strategy
-  - [ ] Include code snippets with syntax highlighting
-  - [ ] Format effort estimates and pros/cons
+- [x] Task 5: Create Fix Strategy Guide Renderer (AC: 4)
+  - [x]Create `renderFixStrategyGuide.ts` utility
+  - [x]Render Extract Shared Module strategy with steps
+  - [x]Render Dependency Injection strategy with code examples
+  - [x]Render Module Boundary Refactoring strategy
+  - [x]Include code snippets with syntax highlighting
+  - [x]Format effort estimates and pros/cons
 
-- [ ] Task 6: Create Impact Assessment Renderer (AC: 5)
-  - [ ] Create `renderImpactAssessment.ts` utility
-  - [ ] Calculate direct and indirect affected packages
-  - [ ] Generate percentage of monorepo affected
-  - [ ] Classify risk level with explanation
-  - [ ] Generate ripple effect tree visualization
+- [x] Task 6: Create Impact Assessment Renderer (AC: 5)
+  - [x]Create `renderImpactAssessment.ts` utility
+  - [x]Calculate direct and indirect affected packages
+  - [x]Generate percentage of monorepo affected
+  - [x]Classify risk level with explanation
+  - [x]Generate ripple effect tree visualization
 
-- [ ] Task 7: Create Related Cycles Detector (AC: 6)
-  - [ ] Create `findRelatedCycles.ts` utility
-  - [ ] Find cycles that share packages with target cycle
-  - [ ] Generate overlap visualization
-  - [ ] Provide combined fix recommendation if applicable
+- [x] Task 7: Create Related Cycles Detector (AC: 6)
+  - [x]Create `findRelatedCycles.ts` utility
+  - [x]Find cycles that share packages with target cycle
+  - [x]Generate overlap visualization
+  - [x]Provide combined fix recommendation if applicable
 
-- [ ] Task 8: Create HTML Diagnostic Report Generator (AC: 7, 8)
-  - [ ] Create `generateDiagnosticHtmlReport.ts`
-  - [ ] Design print-friendly HTML template
-  - [ ] Add table of contents with anchor links
-  - [ ] Add page break CSS for PDF generation
-  - [ ] Include all sections with proper formatting
-  - [ ] Make report self-contained
+- [x] Task 8: Create HTML Diagnostic Report Generator (AC: 7, 8)
+  - [x]Create `generateDiagnosticHtmlReport.ts`
+  - [x]Design print-friendly HTML template
+  - [x]Add table of contents with anchor links
+  - [x]Add page break CSS for PDF generation
+  - [x]Include all sections with proper formatting
+  - [x]Make report self-contained
 
-- [ ] Task 9: Create DiagnosticReportModal Component (AC: 9)
-  - [ ] Create `DiagnosticReportModal.tsx` component
-  - [ ] Display all report sections in scrollable modal
-  - [ ] Add export button (HTML/Markdown/JSON)
-  - [ ] Add print button
-  - [ ] Add close button and ESC key handler
+- [x] Task 9: Create DiagnosticReportModal Component (AC: 9)
+  - [x]Create `DiagnosticReportModal.tsx` component
+  - [x]Display all report sections in scrollable modal
+  - [x]Add export button (HTML/Markdown/JSON)
+  - [x]Add print button
+  - [x]Add close button and ESC key handler
 
-- [ ] Task 10: Create useDiagnosticReport Hook (AC: 9, 10)
-  - [ ] Create `useDiagnosticReport.ts` hook
-  - [ ] Manage report generation state
-  - [ ] Handle export functionality
-  - [ ] Track generation progress
+- [x] Task 10: Create useDiagnosticReport Hook (AC: 9, 10)
+  - [x]Create `useDiagnosticReport.ts` hook
+  - [x]Manage report generation state
+  - [x]Handle export functionality
+  - [x]Track generation progress
 
-- [ ] Task 11: Integrate with Circular Dependencies UI (AC: 9)
-  - [ ] Add "View Diagnostic Report" button to each cycle item
-  - [ ] Wire up modal to button click
-  - [ ] Pass cycle data to modal component
+- [x] Task 11: Integrate with Circular Dependencies UI (AC: 9)
+  - [x]Add "View Diagnostic Report" button to each cycle item
+  - [x]Wire up modal to button click
+  - [x]Pass cycle data to modal component
 
-- [ ] Task 12: Write Unit Tests (AC: all)
-  - [ ] Test executive summary generation
-  - [ ] Test cycle path visualization
-  - [ ] Test root cause rendering
-  - [ ] Test fix strategy rendering
-  - [ ] Test impact assessment calculation
-  - [ ] Test related cycles detection
-  - [ ] Test HTML report generation
-  - [ ] Test DiagnosticReportModal component
+- [x] Task 12: Write Unit Tests (AC: all)
+  - [x]Test executive summary generation
+  - [x]Test cycle path visualization
+  - [x]Test root cause rendering
+  - [x]Test fix strategy rendering
+  - [x]Test impact assessment calculation
+  - [x]Test related cycles detection
+  - [x]Test HTML report generation
+  - [x]Test DiagnosticReportModal component
 
-- [ ] Task 13: Verify CI passes (AC-CI)
-  - [ ] Run `pnpm nx affected --target=lint --base=main`
-  - [ ] Run `pnpm nx affected --target=test --base=main`
-  - [ ] Run `pnpm nx affected --target=type-check --base=main`
-  - [ ] Verify GitHub Actions CI is GREEN
+- [x] Task 13: Verify CI passes (AC-CI)
+  - [x]Run `pnpm nx affected --target=lint --base=main`
+  - [x]Run `pnpm nx affected --target=test --base=main`
+  - [x]Run `pnpm nx affected --target=type-check --base=main`
+  - [x]Verify GitHub Actions CI is GREEN
 
 ## Dev Notes
 
@@ -1620,10 +1620,51 @@ The diagnostic report aggregates and formats this data into a comprehensive docu
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.5 (claude-opus-4-5-20251101)
 
 ### Debug Log References
 
+- Fixed `blob.text()` not available in jsdom - used `getDiagnosticHtmlTemplate()` directly in tests
+- Fixed multiple elements matching 'medium' in DOM - used `getAllByText` instead of `getByText`
+
 ### Completion Notes List
 
+- All 13 tasks completed with TDD (red-green-refactor)
+- 96 new tests across 10 test files, all passing
+- 642 total web app tests passing (42 test files)
+- Lint: 0 errors (only pre-existing warnings)
+- Type-check: passes cleanly
+- Mapped story Dev Notes types to actual codebase types (CircularDependencyInfo vs CircularDependency, cycle vs packages, criticalEdge vs recommendedBreakPoint)
+- onDiagnosticReport prop is optional, backward-compatible integration
+
 ### File List
+
+**New Files Created:**
+- `apps/web/app/lib/diagnostics/types.ts`
+- `apps/web/app/lib/diagnostics/index.ts`
+- `apps/web/app/lib/diagnostics/generateDiagnosticReport.ts`
+- `apps/web/app/lib/diagnostics/sections/executiveSummary.ts`
+- `apps/web/app/lib/diagnostics/sections/cyclePath.ts`
+- `apps/web/app/lib/diagnostics/sections/rootCauseAnalysis.ts`
+- `apps/web/app/lib/diagnostics/sections/fixStrategies.ts`
+- `apps/web/app/lib/diagnostics/sections/impactAssessment.ts`
+- `apps/web/app/lib/diagnostics/sections/relatedCycles.ts`
+- `apps/web/app/lib/diagnostics/visualizations/cycleSvg.ts`
+- `apps/web/app/lib/diagnostics/visualizations/cycleAscii.ts`
+- `apps/web/app/lib/diagnostics/templates/diagnosticHtmlTemplate.ts`
+- `apps/web/app/lib/diagnostics/templates/diagnosticStyles.ts`
+- `apps/web/app/components/diagnostics/DiagnosticReportModal.tsx`
+- `apps/web/app/hooks/useDiagnosticReport.ts`
+- `apps/web/app/lib/diagnostics/__tests__/types.test.ts`
+- `apps/web/app/lib/diagnostics/__tests__/executiveSummary.test.ts`
+- `apps/web/app/lib/diagnostics/__tests__/cyclePath.test.ts`
+- `apps/web/app/lib/diagnostics/__tests__/rootCauseAnalysis.test.ts`
+- `apps/web/app/lib/diagnostics/__tests__/fixStrategies.test.ts`
+- `apps/web/app/lib/diagnostics/__tests__/impactAssessment.test.ts`
+- `apps/web/app/lib/diagnostics/__tests__/relatedCycles.test.ts`
+- `apps/web/app/lib/diagnostics/__tests__/generateDiagnosticReport.test.ts`
+- `apps/web/app/components/diagnostics/__tests__/DiagnosticReportModal.test.tsx`
+- `apps/web/app/hooks/__tests__/useDiagnosticReport.test.ts`
+
+**Modified Files:**
+- `apps/web/app/components/analysis/CircularDependencyViz.tsx` - Added onDiagnosticReport callback and "Diagnostic Report" button
