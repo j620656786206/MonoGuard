@@ -53,4 +53,26 @@ describe('RenderModeIndicator', () => {
     const indicator = screen.getByLabelText('100 nodes, SVG rendering mode')
     expect(indicator).toBeTruthy()
   })
+
+  it('should display performance warning when warningMessage is provided (AC3)', () => {
+    render(
+      <RenderModeIndicator
+        mode="svg"
+        nodeCount={600}
+        isForced={true}
+        warningMessage="SVG mode may be slow with 600 nodes"
+      />
+    )
+
+    expect(screen.getByRole('alert')).toBeTruthy()
+    expect(screen.getByText('SVG mode may be slow with 600 nodes')).toBeTruthy()
+  })
+
+  it('should not display warning when warningMessage is null', () => {
+    render(
+      <RenderModeIndicator mode="svg" nodeCount={100} isForced={false} warningMessage={null} />
+    )
+
+    expect(screen.queryByRole('alert')).toBeNull()
+  })
 })

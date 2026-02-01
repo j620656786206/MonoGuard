@@ -158,6 +158,23 @@ describe('Hybrid Rendering Integration (Story 4.9)', () => {
       // The main graph SVG (h-full w-full) should not exist; icon SVGs in overlays are expected
       expect(container.querySelector('svg.h-full')).toBeNull()
     })
+
+    it('should display visible performance warning for forced SVG on large graphs (AC3)', () => {
+      useSettingsStore.setState({ visualizationMode: 'force-svg' })
+      const data = createMockData(500) // >= threshold, forced SVG
+      render(<DependencyGraphViz data={data} />)
+
+      expect(screen.getByRole('alert')).toBeTruthy()
+      expect(screen.getByText(/SVG mode may be slow/)).toBeTruthy()
+    })
+
+    it('should not display warning in auto mode', () => {
+      useSettingsStore.setState({ visualizationMode: 'auto' })
+      const data = createMockData(10)
+      render(<DependencyGraphViz data={data} />)
+
+      expect(screen.queryByRole('alert')).toBeNull()
+    })
   })
 
   describe('AC8: Feature Parity - Shared Overlay Components', () => {

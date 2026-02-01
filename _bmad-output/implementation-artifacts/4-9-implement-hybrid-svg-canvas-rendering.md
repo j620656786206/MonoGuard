@@ -171,15 +171,19 @@ apps/web/app/components/visualization/DependencyGraph/
 ├── SVGRenderer.tsx              # SVG rendering (from Story 4.1, refactored)
 ├── CanvasRenderer.tsx           # NEW: Canvas rendering for large graphs
 ├── RenderModeIndicator.tsx      # NEW: Mode indicator component
-├── hooks/
-│   ├── useForceSimulation.ts    # Existing: D3 force simulation
-│   ├── useCanvasInteraction.ts  # NEW: Canvas mouse event handling
-│   ├── useRenderMode.ts         # NEW: Mode selection logic
-│   └── useViewportState.ts      # NEW: Shared viewport state
+├── useCanvasInteraction.ts      # NEW: Canvas mouse event handling
+├── useRenderMode.ts             # NEW: Mode selection logic
+├── useViewportState.ts          # NEW: Shared viewport state
 └── __tests__/
     ├── DependencyGraph.test.tsx
-    ├── CanvasRenderer.test.tsx  # NEW
-    └── useRenderMode.test.tsx   # NEW
+    ├── CanvasRenderer.test.tsx          # NEW
+    ├── canvasRendering.test.tsx         # NEW: Canvas drawing logic tests
+    ├── useCanvasInteraction.test.ts     # NEW: Hit detection & interaction tests
+    ├── useRenderMode.test.ts            # NEW
+    ├── useViewportState.test.ts         # NEW
+    ├── RenderModeIndicator.test.tsx     # NEW
+    ├── settingsStore.test.ts            # NEW
+    └── hybridRendering.test.tsx         # NEW: Integration tests
 ```
 
 **Key Architecture Requirements (from architecture.md):**
@@ -197,7 +201,7 @@ apps/web/app/components/visualization/DependencyGraph/
 import * as d3 from 'd3';
 import React, { useEffect, useRef, useCallback } from 'react';
 import type { D3Node, D3Link, ViewportState } from './types';
-import { useCanvasInteraction } from './hooks/useCanvasInteraction';
+import { useCanvasInteraction } from './useCanvasInteraction';
 
 interface CanvasRendererProps {
   nodes: D3Node[];
@@ -1017,8 +1021,8 @@ Claude Opus 4.5 (claude-opus-4-5-20251101)
 - Settings store uses Zustand with devtools + persist middleware for cross-session preference persistence
 - All overlay components (GraphControls, ZoomControls, GraphLegend, Export, NodeTooltip) shared across both modes
 - RenderModeIndicator shows mode, node count, and "Forced" badge with ARIA accessibility
-- Performance warning logged when forcing SVG for large graphs
-- 48 new tests added (32 unit + 16 integration), all 371 DependencyGraph tests passing
+- Performance warning displayed inline via RenderModeIndicator when forcing SVG for large graphs (AC3)
+- 91 new tests added (73 unit + 18 integration), all passing (790 total web tests)
 
 ### File List
 
@@ -1030,13 +1034,28 @@ Claude Opus 4.5 (claude-opus-4-5-20251101)
 - `apps/web/app/components/visualization/DependencyGraph/RenderModeIndicator.tsx` - Mode indicator component
 - `apps/web/app/stores/settings.ts` - Zustand settings store with devtools + persist
 - `apps/web/app/components/visualization/DependencyGraph/__tests__/CanvasRenderer.test.tsx` - 5 unit tests
+- `apps/web/app/components/visualization/DependencyGraph/__tests__/canvasRendering.test.tsx` - 21 canvas drawing logic tests
+- `apps/web/app/components/visualization/DependencyGraph/__tests__/useCanvasInteraction.test.ts` - 18 hit detection & interaction tests
 - `apps/web/app/components/visualization/DependencyGraph/__tests__/useRenderMode.test.ts` - 9 unit tests
 - `apps/web/app/components/visualization/DependencyGraph/__tests__/useViewportState.test.ts` - 7 unit tests
-- `apps/web/app/components/visualization/DependencyGraph/__tests__/RenderModeIndicator.test.tsx` - 7 unit tests
+- `apps/web/app/components/visualization/DependencyGraph/__tests__/RenderModeIndicator.test.tsx` - 9 unit tests
 - `apps/web/app/components/visualization/DependencyGraph/__tests__/settingsStore.test.ts` - 4 unit tests
-- `apps/web/app/components/visualization/DependencyGraph/__tests__/hybridRendering.test.tsx` - 16 integration tests
+- `apps/web/app/components/visualization/DependencyGraph/__tests__/hybridRendering.test.tsx` - 18 integration tests
 
 **Modified files:**
 - `apps/web/app/components/visualization/DependencyGraph/types.ts` - Added ViewportState, RenderMode, RenderModePreference, NODE_THRESHOLD, CanvasRendererProps, DEFAULT_VIEWPORT
 - `apps/web/app/components/visualization/DependencyGraph/index.tsx` - Major refactor for hybrid rendering with conditional SVG/Canvas and shared overlays
 - `apps/web/eslint.config.mjs` - Added CanvasRenderingContext2D and WheelEvent globals
+
+### Code Review Fixes Applied
+
+**Reviewed by:** Claude Opus 4.5 (code-review workflow)
+
+**Fixes:**
+- **M2 (viewport ref):** Wheel and pan handlers in `CanvasRenderer.tsx` now read from `viewportRef` instead of stale `viewport` closure. Removed `viewport` from effect deps to eliminate listener churn.
+- **M3 (pan/click conflict):** Added `isPanningRef` to suppress React click events that fire after a pan drag. Prevents accidental node deselection during panning.
+- **M4 (visible warning):** Performance warning for forced SVG on large graphs now displays inline via `RenderModeIndicator` (role="alert") instead of console.warn only. Fully satisfies AC3.
+- **L1 (semantic HTML):** Changed `<output>` to `<div role="status">` in RenderModeIndicator for correct ARIA semantics.
+- **H1 (docs):** Fixed story file path documentation (hooks were in root dir, not hooks/ subdirectory).
+- **M1 (docs):** Added missing test files (canvasRendering.test.tsx, useCanvasInteraction.test.ts) to File List and corrected test counts.
+- **H2 (noted):** Added optimization note to simulation effect about potential split into lifecycle + data-update effects for future improvement.

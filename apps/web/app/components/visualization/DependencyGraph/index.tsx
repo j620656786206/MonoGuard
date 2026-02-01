@@ -299,12 +299,7 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
     }
   }, [height])
 
-  // Story 4.9: Performance warning for forced SVG on large graphs
-  useEffect(() => {
-    if (shouldShowWarning && warningMessage) {
-      console.warn(`[MonoGuard] ${warningMessage}`)
-    }
-  }, [shouldShowWarning, warningMessage])
+  // Story 4.9: Performance warning is now displayed inline via RenderModeIndicator (AC3)
 
   // Story 4.9: Canvas mode node hover handler
   const handleCanvasNodeHover = useCallback(
@@ -989,6 +984,7 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
           mode={renderMode}
           nodeCount={visibleNodes.length}
           isForced={isForced}
+          warningMessage={shouldShowWarning ? warningMessage : null}
         />
       )}
 

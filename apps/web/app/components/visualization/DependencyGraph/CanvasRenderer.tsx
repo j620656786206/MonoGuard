@@ -81,6 +81,7 @@ export const CanvasRenderer = React.memo(function CanvasRenderer({
   const viewportRef = useRef<ViewportState>(viewport)
   const selectedNodeIdRef = useRef<string | null>(selectedNodeId)
   const animationFrameRef = useRef<number | null>(null)
+  const isPanningRef = useRef(false)
 
   // Keep refs in sync
   useEffect(() => {
@@ -209,6 +210,10 @@ export const CanvasRenderer = React.memo(function CanvasRenderer({
   }, [width, height, circularNodeIds, circularEdgePairs])
 
   // Force simulation setup
+  // NOTE: This recreates the simulation when nodes/links change (e.g., expand/collapse).
+  // D3Node objects retain their x/y positions so transitions are smooth, but for very large
+  // graphs a future optimization could split this into a stable simulation lifecycle effect
+  // and a separate data-update effect using simulation.nodes() / forceLink.links().
   useEffect(() => {
     if (nodes.length === 0) return
 
@@ -260,7 +265,7 @@ export const CanvasRenderer = React.memo(function CanvasRenderer({
     render()
   }, [viewport, selectedNodeId, render])
 
-  // Zoom handling via mouse wheel
+  // Zoom handling via mouse wheel (reads viewport from ref to avoid listener churn)
   useEffect(() => {
     if (!canvasRef.current) return
 
@@ -268,16 +273,17 @@ export const CanvasRenderer = React.memo(function CanvasRenderer({
 
     const handleWheel = (e: WheelEvent) => {
       e.preventDefault()
+      const v = viewportRef.current
       const scaleFactor = e.deltaY > 0 ? 0.9 : 1.1
-      const newZoom = Math.max(0.1, Math.min(4, viewport.zoom * scaleFactor))
+      const newZoom = Math.max(0.1, Math.min(4, v.zoom * scaleFactor))
 
       // Zoom toward mouse position
       const rect = canvas.getBoundingClientRect()
       const mouseX = e.clientX - rect.left
       const mouseY = e.clientY - rect.top
 
-      const newPanX = mouseX - ((mouseX - viewport.panX) / viewport.zoom) * newZoom
-      const newPanY = mouseY - ((mouseY - viewport.panY) / viewport.zoom) * newZoom
+      const newPanX = mouseX - ((mouseX - v.panX) / v.zoom) * newZoom
+      const newPanY = mouseY - ((mouseY - v.panY) / v.zoom) * newZoom
 
       onViewportChange({ zoom: newZoom, panX: newPanX, panY: newPanY })
     }
@@ -287,14 +293,15 @@ export const CanvasRenderer = React.memo(function CanvasRenderer({
     return () => {
       canvas.removeEventListener('wheel', handleWheel)
     }
-  }, [viewport, onViewportChange])
+  }, [onViewportChange])
 
-  // Pan handling via mouse drag
+  // Pan handling via mouse drag (reads viewport from ref to avoid listener churn)
   useEffect(() => {
     if (!canvasRef.current) return
 
     const canvas = canvasRef.current
     let isPanning = false
+    let didDrag = false
     let startX = 0
     let startY = 0
     let startPanX = 0
@@ -303,12 +310,13 @@ export const CanvasRenderer = React.memo(function CanvasRenderer({
     const handleMouseDown = (e: MouseEvent) => {
       // Only pan on middle-click or when not on a node
       if (e.button === 1 || (e.button === 0 && !e.shiftKey)) {
+        const v = viewportRef.current
         // Check if we're clicking a node - if so, don't pan
         const rect = canvas.getBoundingClientRect()
         const x = e.clientX - rect.left
         const y = e.clientY - rect.top
-        const graphX = (x - viewport.panX) / viewport.zoom
-        const graphY = (y - viewport.panY) / viewport.zoom
+        const graphX = (x - v.panX) / v.zoom
+        const graphY = (y - v.panY) / v.zoom
 
         const nodes = nodesRef.current
         let onNode = false
@@ -327,10 +335,11 @@ export const CanvasRenderer = React.memo(function CanvasRenderer({
 
         if (!onNode) {
           isPanning = true
+          didDrag = false
           startX = e.clientX
           startY = e.clientY
-          startPanX = viewport.panX
-          startPanY = viewport.panY
+          startPanX = v.panX
+          startPanY = v.panY
           canvas.style.cursor = 'grabbing'
         }
       }
@@ -338,10 +347,11 @@ export const CanvasRenderer = React.memo(function CanvasRenderer({
 
     const handleMouseMoveForPan = (e: MouseEvent) => {
       if (!isPanning) return
+      didDrag = true
       const dx = e.clientX - startX
       const dy = e.clientY - startY
       onViewportChange({
-        ...viewport,
+        zoom: viewportRef.current.zoom,
         panX: startPanX + dx,
         panY: startPanY + dy,
       })
@@ -350,6 +360,14 @@ export const CanvasRenderer = React.memo(function CanvasRenderer({
     const handleMouseUp = () => {
       if (isPanning) {
         isPanning = false
+        // If the user dragged, suppress the upcoming React click event
+        if (didDrag) {
+          isPanningRef.current = true
+          requestAnimationFrame(() => {
+            isPanningRef.current = false
+          })
+        }
+        didDrag = false
         canvas.style.cursor = 'crosshair'
       }
     }
@@ -363,7 +381,7 @@ export const CanvasRenderer = React.memo(function CanvasRenderer({
       window.removeEventListener('mousemove', handleMouseMoveForPan)
       window.removeEventListener('mouseup', handleMouseUp)
     }
-  }, [viewport, onViewportChange])
+  }, [onViewportChange])
 
   return (
     <canvas
@@ -375,7 +393,10 @@ export const CanvasRenderer = React.memo(function CanvasRenderer({
         touchAction: 'none',
       }}
       onMouseMove={handleMouseMove}
-      onClick={handleMouseClick}
+      onClick={(e) => {
+        if (isPanningRef.current) return
+        handleMouseClick(e)
+      }}
     />
   )
 })
