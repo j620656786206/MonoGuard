@@ -2,7 +2,9 @@
  * DependencyGraphViz - Force-directed dependency graph visualization
  *
  * Renders package dependencies as an interactive force-directed graph using D3.js.
- * Uses SVG rendering for graphs with < 500 nodes (per architecture.md).
+ * Uses hybrid SVG/Canvas rendering (Story 4.9):
+ * - SVG rendering for < 500 nodes (better interactivity)
+ * - Canvas rendering for >= 500 nodes (better performance)
  * Highlights circular dependencies with distinct styling (Story 4.2).
  * Supports expand/collapse of nodes with depth-based controls (Story 4.3).
  * Includes zoom, pan, minimap navigation, and zoom controls (Story 4.4).
@@ -13,16 +15,19 @@
  * @see Story 4.3: Implement Node Expand/Collapse Functionality
  * @see Story 4.4: Add Zoom, Pan, and Navigation Controls
  * @see Story 4.5: Implement Hover Details and Tooltips
+ * @see Story 4.9: Implement Hybrid SVG/Canvas Rendering
  */
 'use client'
 
 import * as d3 from 'd3'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { CanvasRenderer } from './CanvasRenderer'
 import { ExportMenu } from './ExportMenu'
 import { GraphControls } from './GraphControls'
 import { GraphLegend } from './GraphLegend'
 import { GraphMinimap } from './GraphMinimap'
 import { NodeTooltip } from './NodeTooltip'
+import { RenderModeIndicator } from './RenderModeIndicator'
 import {
   ANIMATION,
   COLLAPSED_STYLES,
@@ -38,6 +43,8 @@ import { transformToD3Data, truncatePackageName } from './useForceSimulation'
 import { useGraphExport } from './useGraphExport'
 import { useNodeExpandCollapse } from './useNodeExpandCollapse'
 import { useNodeHover } from './useNodeHover'
+import { useRenderMode } from './useRenderMode'
+import { useViewportState } from './useViewportState'
 import { useZoomPan, ZOOM_CONFIG } from './useZoomPan'
 import { calculateNodeBounds, calculateViewportBounds } from './utils/calculateBounds'
 import { calculateNodeDepths } from './utils/calculateDepth'
@@ -49,6 +56,7 @@ import { ZoomControls } from './ZoomControls'
  * DependencyGraphViz component
  *
  * Renders a force-directed graph visualization of package dependencies.
+ * Automatically selects SVG or Canvas rendering based on node count (Story 4.9).
  * Uses React.memo to prevent unnecessary re-renders (per project-context.md).
  */
 export const DependencyGraphViz = React.memo(function DependencyGraphViz({
@@ -69,7 +77,15 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
   const [graphBounds, setGraphBounds] = useState({ x: 0, y: 0, width: 0, height: 0 })
   const [isExportMenuOpen, setIsExportMenuOpen] = useState(false)
 
-  // Story 4.4: Zoom and pan state management
+  // Story 4.9: Canvas mode state for hover/selection
+  const [canvasSelectedNodeId, setCanvasSelectedNodeId] = useState<string | null>(null)
+  const [canvasHoverNode, setCanvasHoverNode] = useState<D3Node | null>(null)
+  const [canvasHoverPosition, setCanvasHoverPosition] = useState<{
+    x: number
+    y: number
+  } | null>(null)
+
+  // Story 4.4: Zoom and pan state management (SVG mode)
   const {
     zoomState,
     zoomPercent,
@@ -85,6 +101,13 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
     svgRef,
     containerRef: graphContainerRef,
   })
+
+  // Story 4.9: Viewport state for Canvas mode
+  const {
+    viewport: canvasViewport,
+    setViewport: setCanvasViewport,
+    resetViewport: resetCanvasViewport,
+  } = useViewportState()
 
   // Refs to store D3 selections for style updates without full redraw
   const nodeSelectionRef = useRef<d3.Selection<SVGGElement, D3Node, SVGGElement, unknown> | null>(
@@ -111,6 +134,36 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
     if (!data) return { nodes: [], links: [] }
     return transformToD3Data(data, { circularDependencies })
   }, [data, circularDependencies])
+
+  // Story 4.9: Determine render mode based on node count and user preference
+  const {
+    mode: renderMode,
+    isForced,
+    shouldShowWarning,
+    warningMessage,
+  } = useRenderMode(fullGraphData.nodes.length)
+  const isSvgMode = renderMode === 'svg'
+
+  // Story 4.9: Extract circular node/edge sets for Canvas renderer
+  const circularNodeIds = useMemo(() => {
+    const ids = new Set<string>()
+    for (const node of fullGraphData.nodes) {
+      if (node.inCycle) ids.add(node.id)
+    }
+    return ids
+  }, [fullGraphData.nodes])
+
+  const circularEdgePairs = useMemo(() => {
+    const pairs = new Set<string>()
+    for (const link of fullGraphData.links) {
+      if (link.inCycle) {
+        const sourceId = typeof link.source === 'string' ? link.source : link.source.id
+        const targetId = typeof link.target === 'string' ? link.target : link.target.id
+        pairs.add(`${sourceId}->${targetId}`)
+      }
+    }
+    return pairs
+  }, [fullGraphData.links])
 
   // Calculate node depths for depth-based controls
   const nodeDepths = useMemo(() => {
@@ -143,7 +196,7 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
     return computeVisibleNodes(fullGraphData.nodes, fullGraphData.links, collapsedNodeIds)
   }, [fullGraphData, collapsedNodeIds])
 
-  // Story 4.5: Node hover state management
+  // Story 4.5: Node hover state management (SVG mode)
   const {
     hoverState,
     connectedNodeIds,
@@ -162,19 +215,38 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
     isDarkMode: false,
   })
 
-  // Story 4.5: Compute tooltip data for hovered node
+  // Story 4.5: Compute tooltip data for hovered node (SVG or Canvas mode)
   const tooltipData = useMemo(() => {
-    if (!hoverState.nodeId) return null
+    // In Canvas mode, use canvasHoverNode
+    if (!isSvgMode) {
+      if (!canvasHoverNode) return null
+      return computeTooltipData({
+        node: canvasHoverNode,
+        links: visibleLinks,
+        circularDependencies: circularDependencies ?? [],
+      })
+    }
 
+    // In SVG mode, use hoverState
+    if (!hoverState.nodeId) return null
     const node = visibleNodes.find((n) => n.id === hoverState.nodeId)
     if (!node) return null
-
     return computeTooltipData({
       node,
       links: visibleLinks,
       circularDependencies: circularDependencies ?? [],
     })
-  }, [hoverState.nodeId, visibleNodes, visibleLinks, circularDependencies])
+  }, [
+    isSvgMode,
+    canvasHoverNode,
+    hoverState.nodeId,
+    visibleNodes,
+    visibleLinks,
+    circularDependencies,
+  ])
+
+  // Tooltip position (SVG or Canvas)
+  const tooltipPosition = isSvgMode ? hoverState.position : canvasHoverPosition
 
   // Handle depth change from controls
   const handleDepthChange = useCallback(
@@ -227,8 +299,51 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
     }
   }, [height])
 
-  // Main D3 initialization effect - only runs when data/dimensions change
+  // Story 4.9: Performance warning for forced SVG on large graphs
   useEffect(() => {
+    if (shouldShowWarning && warningMessage) {
+      console.warn(`[MonoGuard] ${warningMessage}`)
+    }
+  }, [shouldShowWarning, warningMessage])
+
+  // Story 4.9: Canvas mode node hover handler
+  const handleCanvasNodeHover = useCallback(
+    (node: D3Node | null, position: { x: number; y: number } | null) => {
+      setCanvasHoverNode(node)
+      setCanvasHoverPosition(position)
+    },
+    []
+  )
+
+  // Story 4.9: Canvas mode node select handler
+  const handleCanvasNodeSelect = useCallback((nodeId: string | null) => {
+    setCanvasSelectedNodeId(nodeId)
+  }, [])
+
+  // Story 4.9: Canvas mode zoom controls
+  const canvasZoomPercent = Math.round(canvasViewport.zoom * 100)
+  const canvasZoomIn = useCallback(() => {
+    setCanvasViewport((prev) => ({
+      ...prev,
+      zoom: Math.min(4, prev.zoom * 1.2),
+    }))
+  }, [setCanvasViewport])
+
+  const canvasZoomOut = useCallback(() => {
+    setCanvasViewport((prev) => ({
+      ...prev,
+      zoom: Math.max(0.1, prev.zoom / 1.2),
+    }))
+  }, [setCanvasViewport])
+
+  const canvasFitToScreen = useCallback(() => {
+    resetCanvasViewport()
+  }, [resetCanvasViewport])
+
+  // Main D3 initialization effect - only runs in SVG mode
+  useEffect(() => {
+    // Story 4.9: Skip SVG initialization when in Canvas mode
+    if (!isSvgMode) return
     if (!svgRef.current || !data) return
 
     const svg = d3.select(svgRef.current)
@@ -522,8 +637,6 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
       node.attr('transform', (d) => `translate(${d.x ?? 0},${d.y ?? 0})`)
 
       // Update badge positions (Story 4.3)
-      // Note: badge data elements ARE nodes (from collapsedNodesWithCount),
-      // so d.x/d.y are updated directly by the simulation - no lookup needed
       badge.attr(
         'transform',
         (d) =>
@@ -599,6 +712,7 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
       graphContainerRef.current = null
     }
   }, [
+    isSvgMode,
     data,
     visibleNodes,
     visibleLinks,
@@ -616,6 +730,8 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
   // Separate effect for style updates when selection changes (performance optimization)
   // This avoids recreating the entire graph when just the selection changes
   useEffect(() => {
+    if (!isSvgMode) return
+
     const nodeSelection = nodeSelectionRef.current
     const normalLinkSelection = normalLinkSelectionRef.current
     const cycleLinkSelection = cycleLinkSelectionRef.current
@@ -686,10 +802,12 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
       .attr('stroke', (d) => getEdgeStyle(d).stroke)
       .attr('stroke-opacity', (d) => getEdgeStyle(d).opacity)
       .attr('stroke-width', (d) => getEdgeStyle(d).width)
-  }, [selectedCycleIndex, collapsedNodeIds])
+  }, [isSvgMode, selectedCycleIndex, collapsedNodeIds])
 
   // Story 4.5: Effect to update visual highlighting when hover changes (AC4)
   useEffect(() => {
+    if (!isSvgMode) return
+
     const nodeSelection = nodeSelectionRef.current
     const normalLinkSelection = normalLinkSelectionRef.current
     const cycleLinkSelection = cycleLinkSelectionRef.current
@@ -766,23 +884,42 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
         .attr('stroke-opacity', EDGE_COLORS.cycle.opacity)
         .attr('stroke-width', EDGE_COLORS.cycle.width)
     }
-  }, [hoverState.nodeId, connectedNodeIds, selectedCycleIndex])
+  }, [isSvgMode, hoverState.nodeId, connectedNodeIds, selectedCycleIndex])
 
   // Determine if there are any cycles to display in legend
   const hasCycles = circularDependencies && circularDependencies.length > 0
 
-  // Story 4.4: Calculate viewport bounds for minimap
+  // Story 4.4: Calculate viewport bounds for minimap (SVG mode)
   const viewportBounds = useMemo(() => {
+    if (!isSvgMode) {
+      // Canvas mode viewport bounds
+      return {
+        x: -canvasViewport.panX / canvasViewport.zoom,
+        y: -canvasViewport.panY / canvasViewport.zoom,
+        width: dimensions.width / canvasViewport.zoom,
+        height: dimensions.height / canvasViewport.zoom,
+      }
+    }
     return calculateViewportBounds(
       { k: zoomState.scale, x: zoomState.translateX, y: zoomState.translateY },
       dimensions.width,
       dimensions.height
     )
-  }, [zoomState, dimensions])
+  }, [isSvgMode, zoomState, canvasViewport, dimensions])
 
   // Story 4.4: Navigate from minimap click
   const handleMinimapNavigate = useCallback(
     (x: number, y: number) => {
+      if (!isSvgMode) {
+        // Canvas mode: update viewport to center on clicked position
+        setCanvasViewport((prev) => ({
+          ...prev,
+          panX: dimensions.width / 2 - x * prev.zoom,
+          panY: dimensions.height / 2 - y * prev.zoom,
+        }))
+        return
+      }
+
       if (!svgRef.current || !zoomBehaviorRef.current) return
 
       const svg = d3.select(svgRef.current)
@@ -795,7 +932,7 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
 
       svg.transition().duration(300).call(zoomBehaviorRef.current.transform, transform)
     },
-    [dimensions, zoomState.scale]
+    [isSvgMode, dimensions, zoomState.scale, setCanvasViewport]
   )
 
   return (
@@ -808,29 +945,59 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
         minHeight: '500px',
       }}
     >
-      {/* CSS animation for cycle edge flow effect (AC3) */}
-      <style>
-        {`
-          @keyframes flowAnimation {
-            0% { stroke-dashoffset: ${ANIMATION.dashOffset}; }
-            100% { stroke-dashoffset: 0; }
-          }
-        `}
-      </style>
-      <svg
-        ref={svgRef}
-        className="h-full w-full"
-        style={{
-          width: '100%',
-          height: '100%',
-        }}
-      />
+      {/* CSS animation for cycle edge flow effect (AC3) - SVG mode only */}
+      {isSvgMode && (
+        <style>
+          {`
+            @keyframes flowAnimation {
+              0% { stroke-dashoffset: ${ANIMATION.dashOffset}; }
+              100% { stroke-dashoffset: 0; }
+            }
+          `}
+        </style>
+      )}
+
+      {/* Story 4.9: Conditional SVG or Canvas rendering */}
+      {isSvgMode ? (
+        <svg
+          ref={svgRef}
+          className="h-full w-full"
+          style={{
+            width: '100%',
+            height: '100%',
+          }}
+        />
+      ) : (
+        <CanvasRenderer
+          nodes={visibleNodes}
+          links={visibleLinks}
+          circularNodeIds={circularNodeIds}
+          circularEdgePairs={circularEdgePairs}
+          viewport={canvasViewport}
+          onViewportChange={setCanvasViewport}
+          selectedNodeId={canvasSelectedNodeId}
+          onNodeSelect={handleCanvasNodeSelect}
+          onNodeHover={handleCanvasNodeHover}
+          width={dimensions.width}
+          height={dimensions.height}
+        />
+      )}
+
+      {/* Story 4.9: Render mode indicator (AC2) */}
+      {fullGraphData.nodes.length > 0 && (
+        <RenderModeIndicator
+          mode={renderMode}
+          nodeCount={visibleNodes.length}
+          isForced={isForced}
+        />
+      )}
+
       {/* Story 4.6: Export button and menu */}
       {fullGraphData.nodes.length > 0 && (
         <button
           type="button"
           onClick={() => setIsExportMenuOpen(true)}
-          className="absolute right-4 top-4 flex items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 text-gray-700 shadow-md transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+          className="absolute right-4 top-12 flex items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 text-gray-700 shadow-md transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
           aria-label="Export graph"
         >
           <svg
@@ -882,13 +1049,13 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
       {/* Story 4.4 AC3, AC6: Zoom controls with level display */}
       {fullGraphData.nodes.length > 0 && (
         <ZoomControls
-          zoomPercent={zoomPercent}
-          onZoomIn={zoomIn}
-          onZoomOut={zoomOut}
-          onFitToScreen={fitToScreen}
-          onResetZoom={resetZoom}
-          canZoomIn={canZoomIn}
-          canZoomOut={canZoomOut}
+          zoomPercent={isSvgMode ? zoomPercent : canvasZoomPercent}
+          onZoomIn={isSvgMode ? zoomIn : canvasZoomIn}
+          onZoomOut={isSvgMode ? zoomOut : canvasZoomOut}
+          onFitToScreen={isSvgMode ? fitToScreen : canvasFitToScreen}
+          onResetZoom={isSvgMode ? resetZoom : resetCanvasViewport}
+          canZoomIn={isSvgMode ? canZoomIn : canvasViewport.zoom < 4}
+          canZoomOut={isSvgMode ? canZoomOut : canvasViewport.zoom > 0.1}
         />
       )}
 
@@ -896,11 +1063,13 @@ export const DependencyGraphViz = React.memo(function DependencyGraphViz({
       <GraphLegend position="bottom-left" hasCycles={hasCycles} />
 
       {/* Story 4.5: Node tooltip on hover (AC1, AC2, AC3, AC7) */}
-      <NodeTooltip data={tooltipData} position={hoverState.position} containerRef={containerRef} />
+      <NodeTooltip data={tooltipData} position={tooltipPosition} containerRef={containerRef} />
     </div>
   )
 })
 
+// Story 4.9: New exports
+export { CanvasRenderer } from './CanvasRenderer'
 export type { ExportMenuProps } from './ExportMenu'
 export { ExportMenu } from './ExportMenu'
 export type { GraphControlsProps } from './GraphControls'
@@ -911,8 +1080,11 @@ export type { GraphMinimapProps } from './GraphMinimap'
 export { GraphMinimap } from './GraphMinimap'
 export type { NodeTooltipProps } from './NodeTooltip'
 export { NodeTooltip } from './NodeTooltip'
+export type { RenderModeIndicatorProps } from './RenderModeIndicator'
+export { RenderModeIndicator } from './RenderModeIndicator'
 // Re-export types and utilities
 export type {
+  CanvasRendererProps,
   D3GraphData,
   D3Link,
   D3Node,
@@ -923,6 +1095,9 @@ export type {
   ExportResolution,
   ExportResult,
   ExportScope,
+  RenderMode,
+  RenderModePreference,
+  ViewportState,
 } from './types'
 export type { CycleHighlightResult } from './useCycleHighlight'
 export { useCycleHighlight } from './useCycleHighlight'
@@ -933,6 +1108,10 @@ export type { ExpandCollapseState, UseNodeExpandCollapseProps } from './useNodeE
 export { useNodeExpandCollapse } from './useNodeExpandCollapse'
 export type { UseNodeHoverProps, UseNodeHoverResult } from './useNodeHover'
 export { useNodeHover } from './useNodeHover'
+export type { UseRenderModeResult } from './useRenderMode'
+export { useRenderMode } from './useRenderMode'
+export type { UseViewportStateResult } from './useViewportState'
+export { useViewportState } from './useViewportState'
 export type {
   UseZoomPanProps,
   UseZoomPanResult,

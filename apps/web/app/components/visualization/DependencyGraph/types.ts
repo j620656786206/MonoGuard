@@ -132,6 +132,59 @@ export interface TooltipPosition {
 }
 
 /**
+ * ViewportState - Shared viewport state for SVG and Canvas renderers (Story 4.9)
+ */
+export interface ViewportState {
+  /** Current zoom level (1 = 100%) */
+  zoom: number
+  /** Horizontal pan offset in pixels */
+  panX: number
+  /** Vertical pan offset in pixels */
+  panY: number
+}
+
+/**
+ * Default viewport state
+ */
+export const DEFAULT_VIEWPORT: ViewportState = {
+  zoom: 1,
+  panX: 0,
+  panY: 0,
+}
+
+/**
+ * RenderMode - Rendering technology for the graph (Story 4.9)
+ */
+export type RenderMode = 'svg' | 'canvas'
+
+/**
+ * RenderModePreference - User's preferred render mode (Story 4.9)
+ */
+export type RenderModePreference = 'auto' | 'force-svg' | 'force-canvas'
+
+/**
+ * NODE_THRESHOLD - Node count threshold for switching from SVG to Canvas (Story 4.9)
+ */
+export const NODE_THRESHOLD = 500
+
+/**
+ * CanvasRendererProps - Props for the Canvas rendering component (Story 4.9)
+ */
+export interface CanvasRendererProps {
+  nodes: D3Node[]
+  links: D3Link[]
+  circularNodeIds: Set<string>
+  circularEdgePairs: Set<string>
+  viewport: ViewportState
+  onViewportChange: (viewport: ViewportState) => void
+  selectedNodeId: string | null
+  onNodeSelect: (nodeId: string | null) => void
+  onNodeHover: (node: D3Node | null, position: { x: number; y: number } | null) => void
+  width: number
+  height: number
+}
+
+/**
  * HoverState - Tracks which node is being hovered (Story 4.5)
  */
 export interface HoverState {
