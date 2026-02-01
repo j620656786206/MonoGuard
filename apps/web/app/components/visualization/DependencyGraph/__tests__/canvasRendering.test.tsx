@@ -34,7 +34,7 @@ vi.mock('d3', () => {
   return {
     forceSimulation: vi.fn(() => {
       // Trigger tick callback after a microtask so render function is set up
-      queueMicrotask(() => {
+      globalThis.queueMicrotask(() => {
         if (tickCallback) tickCallback()
       })
       return mockSimulation
@@ -108,7 +108,7 @@ describe('CanvasRenderer Drawing Logic', () => {
     vi.stubGlobal('devicePixelRatio', 1)
 
     // Mock requestAnimationFrame to run synchronously
-    vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => {
+    vi.stubGlobal('requestAnimationFrame', (cb: (time: number) => void) => {
       cb(0)
       return 0
     })

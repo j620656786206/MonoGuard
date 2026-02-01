@@ -27,11 +27,7 @@ function createNode(id: string, x: number, y: number): D3Node {
 }
 
 // Helper: create a minimal React.MouseEvent-like object for canvas
-function createMouseEvent(
-  clientX: number,
-  clientY: number,
-  rectOverride?: Partial<DOMRect>
-): React.MouseEvent<HTMLCanvasElement> {
+function createMouseEvent(clientX: number, clientY: number): React.MouseEvent<HTMLCanvasElement> {
   return {
     clientX,
     clientY,
