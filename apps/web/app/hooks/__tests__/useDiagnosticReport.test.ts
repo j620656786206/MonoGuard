@@ -1,6 +1,6 @@
 import type { CircularDependencyInfo, DependencyGraph } from '@monoguard/types'
 import { act, renderHook } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import * as diagnosticModule from '../../lib/diagnostics/generateDiagnosticReport'
 import { useDiagnosticReport } from '../useDiagnosticReport'
 
@@ -49,6 +49,14 @@ const defaultOptions = {
 }
 
 describe('useDiagnosticReport', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   it('should initialize with default state', () => {
     const { result } = renderHook(() => useDiagnosticReport(defaultOptions))
     expect(result.current.state.report).toBeNull()
@@ -63,6 +71,9 @@ describe('useDiagnosticReport', () => {
     act(() => {
       result.current.generateReport(mockCycle)
     })
+    act(() => {
+      vi.advanceTimersByTime(0)
+    })
 
     expect(result.current.state.report).not.toBeNull()
     expect(result.current.state.isGenerating).toBe(false)
@@ -76,6 +87,9 @@ describe('useDiagnosticReport', () => {
 
     act(() => {
       result.current.generateReport(mockCycle)
+    })
+    act(() => {
+      vi.advanceTimersByTime(0)
     })
     expect(result.current.state.isModalOpen).toBe(true)
 
@@ -106,6 +120,9 @@ describe('useDiagnosticReport', () => {
 
     act(() => {
       result.current.generateReport(mockCycle)
+    })
+    act(() => {
+      vi.advanceTimersByTime(0)
     })
 
     act(() => {
@@ -142,6 +159,9 @@ describe('useDiagnosticReport', () => {
     act(() => {
       result.current.generateReport(mockCycle)
     })
+    act(() => {
+      vi.advanceTimersByTime(0)
+    })
 
     const report = result.current.state.report
     expect(report).not.toBeNull()
@@ -164,6 +184,9 @@ describe('useDiagnosticReport', () => {
     act(() => {
       result.current.generateReport(mockCycle)
     })
+    act(() => {
+      vi.advanceTimersByTime(0)
+    })
 
     expect(result.current.state.error).toBe('Generation failed')
     expect(result.current.state.isGenerating).toBe(false)
@@ -181,6 +204,9 @@ describe('useDiagnosticReport', () => {
 
     act(() => {
       result.current.generateReport(mockCycle)
+    })
+    act(() => {
+      vi.advanceTimersByTime(0)
     })
 
     expect(result.current.state.error).toBe('Failed to generate report')
@@ -200,6 +226,9 @@ describe('useDiagnosticReport', () => {
 
     act(() => {
       result.current.generateReport(mockCycle)
+    })
+    act(() => {
+      vi.advanceTimersByTime(0)
     })
     expect(result.current.state.report).not.toBeNull()
 
@@ -223,6 +252,9 @@ describe('useDiagnosticReport', () => {
 
     act(() => {
       result.current.generateReport(mockCycle)
+    })
+    act(() => {
+      vi.advanceTimersByTime(0)
     })
 
     act(() => {

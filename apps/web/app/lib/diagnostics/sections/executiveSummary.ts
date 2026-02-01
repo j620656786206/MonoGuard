@@ -1,5 +1,6 @@
 import type { CircularDependencyInfo, EffortLevel } from '@monoguard/types'
 import type { ExecutiveSummary } from '../types'
+import { getCyclePackages } from '../types'
 
 /**
  * Generate an executive summary for a circular dependency
@@ -22,16 +23,6 @@ export function generateExecutiveSummary(cycle: CircularDependencyInfo): Executi
     affectedPackagesCount,
     cycleLength,
   }
-}
-
-/** Extract unique packages from cycle (cycle array repeats first element) */
-function getCyclePackages(cycle: CircularDependencyInfo): string[] {
-  const packages = cycle.cycle
-  // cycle array typically ends with first package repeated; deduplicate
-  if (packages.length > 1 && packages[packages.length - 1] === packages[0]) {
-    return packages.slice(0, -1)
-  }
-  return packages
 }
 
 function classifySeverity(cycle: CircularDependencyInfo): 'critical' | 'high' | 'medium' | 'low' {

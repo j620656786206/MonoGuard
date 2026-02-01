@@ -1,9 +1,18 @@
-import type { EffortLevel, FixStrategyType } from '@monoguard/types'
+import type { CircularDependencyInfo, EffortLevel, FixStrategyType } from '@monoguard/types'
 
 /**
  * MonoGuard version used in diagnostic report metadata
  */
 export const MONOGUARD_VERSION = '0.1.0'
+
+/** Extract unique packages from cycle array (which typically repeats first element at end) */
+export function getCyclePackages(cycle: CircularDependencyInfo): string[] {
+  const packages = cycle.cycle
+  if (packages.length > 1 && packages[packages.length - 1] === packages[0]) {
+    return packages.slice(0, -1)
+  }
+  return packages
+}
 
 /**
  * DiagnosticReport - Complete diagnostic report for a single circular dependency

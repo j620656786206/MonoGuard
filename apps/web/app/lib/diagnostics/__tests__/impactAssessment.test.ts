@@ -302,10 +302,12 @@ describe('generateImpactAssessment', () => {
     expect(impact.rippleEffectTree.package).toBe('Cycle')
     expect(impact.rippleEffectTree.depth).toBe(0)
     // Direct participants as children at depth 1
-    expect(impact.rippleEffectTree.dependents.length).toBeGreaterThan(3)
-    // Indirect layers (distance > 1) added
-    const deepNodes = impact.rippleEffectTree.dependents.filter((d) => d.depth > 1)
-    expect(deepNodes.length).toBeGreaterThan(0)
+    expect(impact.rippleEffectTree.dependents).toHaveLength(3)
+    // Indirect layers nested hierarchically under participants
+    const hasNestedDependents = impact.rippleEffectTree.dependents.some(
+      (d) => d.dependents.length > 0
+    )
+    expect(hasNestedDependents).toBe(true)
   })
 
   it('should build ripple tree from existing impact without ripple effect', () => {

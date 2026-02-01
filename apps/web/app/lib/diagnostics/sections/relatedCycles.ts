@@ -1,5 +1,6 @@
 import type { CircularDependencyInfo } from '@monoguard/types'
 import type { RelatedCycleInfo } from '../types'
+import { getCyclePackages } from '../types'
 
 /**
  * Find cycles that share packages with the target cycle
@@ -28,8 +29,10 @@ export function findRelatedCycles(
 
     const recommendFixTogether = overlapPercentage >= 30 || sharedPackages.length >= 2
 
+    const stableCycleId = otherPackages.map((p) => p.split('/').pop() || p).join('-')
+
     relatedCycles.push({
-      cycleId: `cycle-${i + 1}`,
+      cycleId: stableCycleId,
       sharedPackages,
       overlapPercentage,
       recommendFixTogether,
@@ -40,12 +43,4 @@ export function findRelatedCycles(
   }
 
   return relatedCycles
-}
-
-function getCyclePackages(cycle: CircularDependencyInfo): string[] {
-  const packages = cycle.cycle
-  if (packages.length > 1 && packages[packages.length - 1] === packages[0]) {
-    return packages.slice(0, -1)
-  }
-  return packages
 }

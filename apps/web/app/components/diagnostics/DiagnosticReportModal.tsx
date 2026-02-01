@@ -1,5 +1,5 @@
 import type React from 'react'
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect } from 'react'
 import type { DiagnosticReport } from '../../lib/diagnostics/types'
 
 export interface DiagnosticReportModalProps {
@@ -21,14 +21,6 @@ export const DiagnosticReportModal: React.FC<DiagnosticReportModalProps> = ({
   report,
   isGenerating,
 }) => {
-  const svgContainerRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (svgContainerRef.current && report) {
-      svgContainerRef.current.innerHTML = report.cyclePath.svgDiagram
-    }
-  }, [report])
-
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose()
@@ -74,6 +66,15 @@ export const DiagnosticReportModal: React.FC<DiagnosticReportModalProps> = ({
             )}
           </h2>
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => window.print()}
+              disabled={!report || isGenerating}
+              className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+              data-testid="print-button"
+            >
+              Print
+            </button>
             <button
               type="button"
               onClick={onExportHtml}
@@ -157,7 +158,7 @@ export const DiagnosticReportModal: React.FC<DiagnosticReportModalProps> = ({
                 <h3 className="mb-3 text-base font-semibold text-gray-900 dark:text-gray-100">
                   Cycle Path
                 </h3>
-                <div ref={svgContainerRef} className="mb-3 flex justify-center" />
+                <InternalSvg html={report?.cyclePath.svgDiagram} />
                 <div className="rounded-md bg-gray-50 p-3 dark:bg-gray-700/50">
                   <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
                     Breaking Point:
@@ -358,6 +359,13 @@ function SeverityBadge({ severity }: { severity: string }) {
       {severity}
     </span>
   )
+}
+
+/** Renders internally-generated SVG content (not user input) */
+function InternalSvg({ html }: { html?: string }) {
+  if (!html) return <div className="mb-3 flex justify-center" />
+  // biome-ignore lint/security/noDangerouslySetInnerHtml: SVG is generated internally by cycleSvg.ts, not from user input
+  return <div className="mb-3 flex justify-center" dangerouslySetInnerHTML={{ __html: html }} />
 }
 
 function MetricCard({ label, value }: { label: string; value: string | number }) {

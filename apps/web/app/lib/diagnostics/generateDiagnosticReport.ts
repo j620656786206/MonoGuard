@@ -42,11 +42,12 @@ export function generateDiagnosticReport(
   const relatedCycles = findRelatedCycles(cycle, allCycles)
 
   const endTime = performance.now()
+  const generatedAt = new Date().toISOString()
 
   return {
     id: reportId,
     cycleId,
-    generatedAt: new Date().toISOString(),
+    generatedAt,
     monoguardVersion: MONOGUARD_VERSION,
     projectName,
 
@@ -58,7 +59,7 @@ export function generateDiagnosticReport(
     relatedCycles,
 
     metadata: {
-      generatedAt: new Date().toISOString(),
+      generatedAt,
       generationDurationMs: Math.round(endTime - startTime),
       monoguardVersion: MONOGUARD_VERSION,
       projectName,

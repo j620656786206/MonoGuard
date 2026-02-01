@@ -46,31 +46,36 @@ export function useDiagnosticReport(
       setState((prev) => ({
         ...prev,
         isGenerating: true,
+        isModalOpen: true,
         error: null,
       }))
 
-      try {
-        const report = generateDiagnosticReport({
-          cycle,
-          graph: options.graph,
-          allCycles: options.allCycles,
-          totalPackages: options.totalPackages,
-          projectName: options.projectName,
-        })
+      // Defer computation to allow React to render the loading state first
+      setTimeout(() => {
+        try {
+          const report = generateDiagnosticReport({
+            cycle,
+            graph: options.graph,
+            allCycles: options.allCycles,
+            totalPackages: options.totalPackages,
+            projectName: options.projectName,
+          })
 
-        setState({
-          report,
-          isGenerating: false,
-          isModalOpen: true,
-          error: null,
-        })
-      } catch (err) {
-        setState((prev) => ({
-          ...prev,
-          isGenerating: false,
-          error: err instanceof Error ? err.message : 'Failed to generate report',
-        }))
-      }
+          setState({
+            report,
+            isGenerating: false,
+            isModalOpen: true,
+            error: null,
+          })
+        } catch (err) {
+          setState((prev) => ({
+            ...prev,
+            isGenerating: false,
+            isModalOpen: false,
+            error: err instanceof Error ? err.message : 'Failed to generate report',
+          }))
+        }
+      }, 0)
     },
     [options.graph, options.allCycles, options.totalPackages, options.projectName]
   )

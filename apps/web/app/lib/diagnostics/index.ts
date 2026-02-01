@@ -24,4 +24,4 @@ export type {
   RippleNode,
   RootCauseDetails,
 } from './types'
-export { MONOGUARD_VERSION } from './types'
+export { getCyclePackages, MONOGUARD_VERSION } from './types'

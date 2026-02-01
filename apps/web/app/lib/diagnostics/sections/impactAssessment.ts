@@ -1,5 +1,6 @@
 import type { CircularDependencyInfo, DependencyGraph } from '@monoguard/types'
 import type { ImpactAssessmentDetails, RippleNode } from '../types'
+import { getCyclePackages } from '../types'
 
 /**
  * Generate impact assessment details for the diagnostic report
@@ -49,21 +50,14 @@ export function generateImpactAssessment(
   }
 }
 
-function getCyclePackages(cycle: CircularDependencyInfo): string[] {
-  const packages = cycle.cycle
-  if (packages.length > 1 && packages[packages.length - 1] === packages[0]) {
-    return packages.slice(0, -1)
-  }
-  return packages
-}
-
 function findIndirectDependents(cyclePackages: string[], graph: DependencyGraph): string[] {
   const visited = new Set<string>(cyclePackages)
   const queue = [...cyclePackages]
   const indirectDependents: string[] = []
 
   while (queue.length > 0) {
-    const current = queue.shift()!
+    const current = queue.shift()
+    if (!current) break
 
     // Find packages that depend on current (reverse edges)
     const dependents = graph.edges.filter((edge) => edge.to === current).map((edge) => edge.from)
@@ -173,28 +167,38 @@ function buildRippleTreeFromEffect(
     totalLayers: number
   }
 ): RippleNode {
+  const participantNodes: RippleNode[] = directParticipants.map((pkg) => ({
+    package: pkg,
+    depth: 1,
+    dependents: [],
+  }))
+
   const root: RippleNode = {
     package: 'Cycle',
     depth: 0,
-    dependents: directParticipants.map((pkg) => ({
-      package: pkg,
-      depth: 1,
-      dependents: [],
-    })),
+    dependents: participantNodes,
   }
 
   if (!rippleEffect) return root
 
-  // Add indirect dependents from ripple layers
+  // Build hierarchical tree: attach each layer's packages as children of the previous layer
+  let parentNodes = participantNodes
+
   for (const layer of rippleEffect.layers) {
     if (layer.distance <= 1) continue
-    for (const pkg of layer.packages.slice(0, 5)) {
-      root.dependents.push({
-        package: pkg,
-        depth: layer.distance,
-        dependents: [],
-      })
+    const layerNodes: RippleNode[] = layer.packages.slice(0, 5).map((pkg) => ({
+      package: pkg,
+      depth: layer.distance,
+      dependents: [],
+    }))
+
+    // Distribute layer nodes across parent nodes
+    for (let i = 0; i < layerNodes.length; i++) {
+      const parentIdx = i % parentNodes.length
+      parentNodes[parentIdx].dependents.push(layerNodes[i])
     }
+
+    parentNodes = layerNodes
   }
 
   return root

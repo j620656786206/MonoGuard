@@ -1631,11 +1631,39 @@ Claude Opus 4.5 (claude-opus-4-5-20251101)
 
 - All 13 tasks completed with TDD (red-green-refactor)
 - 96 new tests across 10 test files, all passing
-- 642 total web app tests passing (42 test files)
+- 703 total web app tests passing (43 test files)
 - Lint: 0 errors (only pre-existing warnings)
 - Type-check: passes cleanly
 - Mapped story Dev Notes types to actual codebase types (CircularDependencyInfo vs CircularDependency, cycle vs packages, criticalEdge vs recommendedBreakPoint)
 - onDiagnosticReport prop is optional, backward-compatible integration
+
+### Code Review Fixes Applied
+
+**H1: DRY — getCyclePackages duplicated in 4 files**
+- Extracted shared `getCyclePackages()` to `types.ts`, exported from `index.ts`
+- Removed local duplicates from executiveSummary, cyclePath, impactAssessment, relatedCycles
+
+**H2: Algorithmic — buildRippleTreeFromEffect flattened tree**
+- Rewrote to build hierarchical tree: child nodes distributed across parent nodes per layer
+
+**H3: UX — synchronous report generation blocked UI**
+- Wrapped `generateDiagnosticReport()` in `setTimeout(0)` to defer computation
+- Modal opens immediately with loading state; updated tests with `vi.useFakeTimers()`
+
+**H4: Security — SVG innerHTML injection**
+- Replaced `useRef` + `useEffect` innerHTML with React `dangerouslySetInnerHTML`
+
+**M1: Duplicate generatedAt timestamps**
+- Single `const generatedAt` used for both root and metadata fields
+
+**M2: Unstable array-index cycleId in relatedCycles**
+- Replaced `cycle-${i+1}` with stable content-based ID from package names
+
+**M3: Missing print button**
+- Added Print button with `window.print()` and `data-testid="print-button"`
+
+**M4: Missing ESC key and print button tests**
+- Added 3 new tests: ESC key close, print button exists, print button disabled when generating
 
 ### File List
 

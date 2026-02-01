@@ -288,4 +288,46 @@ describe('DiagnosticReportModal', () => {
     fireEvent.click(screen.getByTestId('diagnostic-modal'))
     expect(onClose).toHaveBeenCalled()
   })
+
+  it('should close on Escape key', () => {
+    const onClose = vi.fn()
+    render(
+      <DiagnosticReportModal
+        isOpen={true}
+        onClose={onClose}
+        onExportHtml={vi.fn()}
+        report={mockReport}
+        isGenerating={false}
+      />
+    )
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(onClose).toHaveBeenCalled()
+  })
+
+  it('should have a print button', () => {
+    render(
+      <DiagnosticReportModal
+        isOpen={true}
+        onClose={vi.fn()}
+        onExportHtml={vi.fn()}
+        report={mockReport}
+        isGenerating={false}
+      />
+    )
+    expect(screen.getByTestId('print-button')).toBeInTheDocument()
+    expect(screen.getByTestId('print-button')).not.toBeDisabled()
+  })
+
+  it('should disable print button when generating', () => {
+    render(
+      <DiagnosticReportModal
+        isOpen={true}
+        onClose={vi.fn()}
+        onExportHtml={vi.fn()}
+        report={null}
+        isGenerating={true}
+      />
+    )
+    expect(screen.getByTestId('print-button')).toBeDisabled()
+  })
 })

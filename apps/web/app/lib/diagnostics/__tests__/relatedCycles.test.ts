@@ -108,7 +108,7 @@ describe('findRelatedCycles', () => {
       cycle: ['pkg-a', 'pkg-c', 'pkg-a'],
     }
     const related = findRelatedCycles(targetCycle, [targetCycle, relatedCycle])
-    expect(related[0].cycleId).toBe('cycle-2')
+    expect(related[0].cycleId).toBe('pkg-a-pkg-c')
   })
 
   it('should handle non-repeating cycle array', () => {

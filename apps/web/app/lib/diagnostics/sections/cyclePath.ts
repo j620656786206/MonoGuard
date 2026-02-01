@@ -1,5 +1,6 @@
 import type { CircularDependencyInfo } from '@monoguard/types'
 import type { CycleEdge, CycleNode, CyclePathVisualization } from '../types'
+import { getCyclePackages } from '../types'
 import { generateCycleAscii } from '../visualizations/cycleAscii'
 import { generateCycleSvg } from '../visualizations/cycleSvg'
 
@@ -31,14 +32,6 @@ export function generateCyclePath(
     svgDiagram,
     asciiDiagram,
   }
-}
-
-function getCyclePackages(cycle: CircularDependencyInfo): string[] {
-  const packages = cycle.cycle
-  if (packages.length > 1 && packages[packages.length - 1] === packages[0]) {
-    return packages.slice(0, -1)
-  }
-  return packages
 }
 
 function createNodes(packages: string[]): CycleNode[] {
