@@ -320,5 +320,84 @@ describe('computeTooltipData', () => {
       // THEN: Should report 2 cycles
       expect(result.cycleInfo?.cycleCount).toBe(2)
     })
+
+    it('[P2] should apply extra penalty for hub nodes in cycle (> 3 connections)', () => {
+      // GIVEN: Node in cycle that is a hub with > 3 incoming connections
+      const hubNode = createMockNode('HUB', true, [0])
+      const hubLinks: D3Link[] = [
+        { source: 'HUB', target: 'B', type: 'production', inCycle: true, cycleIds: [0] },
+        { source: 'HUB', target: 'C', type: 'production', inCycle: false, cycleIds: [] },
+        { source: 'HUB', target: 'D', type: 'production', inCycle: false, cycleIds: [] },
+        { source: 'HUB', target: 'E', type: 'production', inCycle: false, cycleIds: [] },
+        { source: 'F', target: 'HUB', type: 'production', inCycle: false, cycleIds: [] },
+      ]
+      const cycles: CircularDependencyInfo[] = [
+        {
+          cycle: ['HUB', 'B', 'HUB'],
+          type: 'direct',
+          severity: 'critical',
+          depth: 2,
+          impact: 'High',
+          complexity: 5,
+          priorityScore: 80,
+        },
+      ]
+
+      // WHEN: Computing tooltip data
+      const result = computeTooltipData({
+        node: hubNode,
+        links: hubLinks,
+        circularDependencies: cycles,
+      })
+
+      // THEN: Hub in cycle should have even more negative health contribution
+      // Base: -5 for cycle, extra -2 for being hub
+      expect(result.healthContribution).toBeLessThan(-5)
+    })
+
+    it('[P2] should return moderate positive health for nodes with 4-6 connections', () => {
+      // GIVEN: Node not in cycle with moderate connections (total 4-6)
+      const moderateNode = createMockNode('MOD')
+      const moderateLinks: D3Link[] = [
+        { source: 'MOD', target: 'B', type: 'production', inCycle: false, cycleIds: [] },
+        { source: 'MOD', target: 'C', type: 'production', inCycle: false, cycleIds: [] },
+        { source: 'MOD', target: 'D', type: 'production', inCycle: false, cycleIds: [] },
+        { source: 'E', target: 'MOD', type: 'production', inCycle: false, cycleIds: [] },
+      ]
+
+      // WHEN: Computing tooltip data (4 total connections)
+      const result = computeTooltipData({
+        node: moderateNode,
+        links: moderateLinks,
+        circularDependencies: [],
+      })
+
+      // THEN: Health contribution should be 1 (moderate coupling)
+      expect(result.healthContribution).toBe(1)
+    })
+
+    it('[P2] should return zero health contribution for highly coupled non-cycle nodes', () => {
+      // GIVEN: Node not in cycle but with > 6 connections
+      const coupledNode = createMockNode('COUPLED')
+      const coupledLinks: D3Link[] = [
+        { source: 'COUPLED', target: 'A', type: 'production', inCycle: false, cycleIds: [] },
+        { source: 'COUPLED', target: 'B', type: 'production', inCycle: false, cycleIds: [] },
+        { source: 'COUPLED', target: 'C', type: 'production', inCycle: false, cycleIds: [] },
+        { source: 'COUPLED', target: 'D', type: 'production', inCycle: false, cycleIds: [] },
+        { source: 'E', target: 'COUPLED', type: 'production', inCycle: false, cycleIds: [] },
+        { source: 'F', target: 'COUPLED', type: 'production', inCycle: false, cycleIds: [] },
+        { source: 'G', target: 'COUPLED', type: 'production', inCycle: false, cycleIds: [] },
+      ]
+
+      // WHEN: Computing tooltip data (7 total connections)
+      const result = computeTooltipData({
+        node: coupledNode,
+        links: coupledLinks,
+        circularDependencies: [],
+      })
+
+      // THEN: Health contribution should be 0 (high coupling)
+      expect(result.healthContribution).toBe(0)
+    })
   })
 })

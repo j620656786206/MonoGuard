@@ -1,6 +1,7 @@
 import type { CircularDependencyInfo, DependencyGraph } from '@monoguard/types'
 import { act, renderHook } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
+import * as diagnosticModule from '../../lib/diagnostics/generateDiagnosticReport'
 import { useDiagnosticReport } from '../useDiagnosticReport'
 
 const mockGraph: DependencyGraph = {
@@ -151,5 +152,85 @@ describe('useDiagnosticReport', () => {
     expect(report?.impactAssessment).toBeDefined()
     expect(report?.relatedCycles).toBeDefined()
     expect(report?.metadata).toBeDefined()
+  })
+
+  it('should handle error during report generation', () => {
+    const spy = vi.spyOn(diagnosticModule, 'generateDiagnosticReport').mockImplementation(() => {
+      throw new Error('Generation failed')
+    })
+
+    const { result } = renderHook(() => useDiagnosticReport(defaultOptions))
+
+    act(() => {
+      result.current.generateReport(mockCycle)
+    })
+
+    expect(result.current.state.error).toBe('Generation failed')
+    expect(result.current.state.isGenerating).toBe(false)
+    expect(result.current.state.isModalOpen).toBe(false)
+
+    spy.mockRestore()
+  })
+
+  it('should handle non-Error thrown during report generation', () => {
+    const spy = vi.spyOn(diagnosticModule, 'generateDiagnosticReport').mockImplementation(() => {
+      throw 'string error'
+    })
+
+    const { result } = renderHook(() => useDiagnosticReport(defaultOptions))
+
+    act(() => {
+      result.current.generateReport(mockCycle)
+    })
+
+    expect(result.current.state.error).toBe('Failed to generate report')
+    expect(result.current.state.isGenerating).toBe(false)
+
+    spy.mockRestore()
+  })
+
+  it('should handle error during HTML export', () => {
+    const exportSpy = vi
+      .spyOn(diagnosticModule, 'exportDiagnosticReportAsHtml')
+      .mockImplementation(() => {
+        throw new Error('Export failed')
+      })
+
+    const { result } = renderHook(() => useDiagnosticReport(defaultOptions))
+
+    act(() => {
+      result.current.generateReport(mockCycle)
+    })
+    expect(result.current.state.report).not.toBeNull()
+
+    act(() => {
+      result.current.exportAsHtml()
+    })
+
+    expect(result.current.state.error).toBe('Export failed')
+
+    exportSpy.mockRestore()
+  })
+
+  it('should handle non-Error thrown during HTML export', () => {
+    const exportSpy = vi
+      .spyOn(diagnosticModule, 'exportDiagnosticReportAsHtml')
+      .mockImplementation(() => {
+        throw 42
+      })
+
+    const { result } = renderHook(() => useDiagnosticReport(defaultOptions))
+
+    act(() => {
+      result.current.generateReport(mockCycle)
+    })
+
+    act(() => {
+      result.current.exportAsHtml()
+    })
+
+    expect(result.current.state.error).toBe('Failed to export report')
+
+    exportSpy.mockRestore()
   })
 })

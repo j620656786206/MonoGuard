@@ -155,4 +155,14 @@ describe('generateExecutiveSummary', () => {
     const summary = generateExecutiveSummary(withImpact)
     expect(summary.affectedPackagesCount).toBe(5)
   })
+
+  it('should handle non-repeating cycle array', () => {
+    const nonRepeating: CircularDependencyInfo = {
+      ...baseCycle,
+      cycle: ['pkg-a', 'pkg-b', 'pkg-c'],
+    }
+    const summary = generateExecutiveSummary(nonRepeating)
+    expect(summary.cycleLength).toBe(3)
+    expect(summary.description).toBeTruthy()
+  })
 })

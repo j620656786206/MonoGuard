@@ -1,7 +1,9 @@
-import type { AnalysisResult } from '@monoguard/types'
+import type { AnalysisResult, ComprehensiveAnalysisResult } from '@monoguard/types'
+import { Status } from '@monoguard/types'
 import { describe, expect, it } from 'vitest'
 import {
   buildReportData,
+  buildReportDataFromComprehensive,
   DEFAULT_REPORT_SECTIONS,
   getHealthScoreRating,
   MONOGUARD_VERSION,
@@ -330,6 +332,432 @@ describe('Report Types', () => {
       const reportData = buildReportData(withMultipleStrategies, 'test')
       expect(reportData.fixRecommendations.recommendations[0].title).toBe('High Priority')
       expect(reportData.fixRecommendations.recommendations[1].title).toBe('Low Priority')
+    })
+
+    it('should classify info severity as medium in circular deps', () => {
+      const withInfo: AnalysisResult = {
+        healthScore: 50,
+        packages: 5,
+        circularDependencies: [
+          {
+            cycle: ['a', 'b', 'a'],
+            type: 'direct',
+            severity: 'info',
+            depth: 2,
+            impact: 'test',
+            complexity: 3,
+            priorityScore: 3,
+          },
+        ],
+      }
+      const reportData = buildReportData(withInfo, 'test')
+      expect(reportData.circularDependencies.bySeverity.medium).toBe(1)
+    })
+
+    it('should classify unknown severity as low in circular deps', () => {
+      const withUnknown: AnalysisResult = {
+        healthScore: 50,
+        packages: 5,
+        circularDependencies: [
+          {
+            cycle: ['a', 'b', 'a'],
+            type: 'direct',
+            severity: 'unknown' as never,
+            depth: 2,
+            impact: 'test',
+            complexity: 3,
+            priorityScore: 1,
+          },
+        ],
+      }
+      const reportData = buildReportData(withUnknown, 'test')
+      expect(reportData.circularDependencies.bySeverity.low).toBe(1)
+    })
+
+    it('should classify info severity as medium in version conflicts', () => {
+      const withInfo: AnalysisResult = {
+        healthScore: 50,
+        packages: 5,
+        versionConflicts: [
+          {
+            packageName: 'test',
+            conflictingVersions: [
+              { version: '1.0.0', packages: ['a'], isBreaking: false, depType: 'production' },
+              { version: '2.0.0', packages: ['b'], isBreaking: false, depType: 'production' },
+            ],
+            severity: 'info',
+            resolution: 'Upgrade',
+            impact: 'Minor',
+          },
+        ],
+      }
+      const reportData = buildReportData(withInfo, 'test')
+      expect(reportData.versionConflicts.byRiskLevel.medium).toBe(1)
+    })
+
+    it('should classify unknown severity as low in version conflicts', () => {
+      const withUnknown: AnalysisResult = {
+        healthScore: 50,
+        packages: 5,
+        versionConflicts: [
+          {
+            packageName: 'test',
+            conflictingVersions: [
+              { version: '1.0.0', packages: ['a'], isBreaking: false, depType: 'production' },
+              { version: '2.0.0', packages: ['b'], isBreaking: false, depType: 'production' },
+            ],
+            severity: 'unknown' as never,
+            resolution: 'Upgrade',
+            impact: 'Minor',
+          },
+        ],
+      }
+      const reportData = buildReportData(withUnknown, 'test')
+      expect(reportData.versionConflicts.byRiskLevel.low).toBe(1)
+    })
+
+    it('should handle metadata without durationMs', () => {
+      const noMeta: AnalysisResult = {
+        healthScore: 50,
+        packages: 5,
+      }
+      const reportData = buildReportData(noMeta, 'test')
+      expect(reportData.metadata.analysisDuration).toBe(0)
+    })
+
+    it('should skip fix strategies for deps without strategies', () => {
+      const noStrategies: AnalysisResult = {
+        healthScore: 50,
+        packages: 5,
+        circularDependencies: [
+          {
+            cycle: ['a', 'b', 'a'],
+            type: 'direct',
+            severity: 'warning',
+            depth: 2,
+            impact: 'test',
+            complexity: 3,
+            priorityScore: 5,
+          },
+        ],
+      }
+      const reportData = buildReportData(noStrategies, 'test')
+      expect(reportData.fixRecommendations.totalCount).toBe(0)
+      expect(reportData.fixRecommendations.quickWins).toBe(0)
+    })
+
+    it('should classify medium impact for mid-range suitability', () => {
+      const midSuitability: AnalysisResult = {
+        healthScore: 50,
+        packages: 5,
+        circularDependencies: [
+          {
+            cycle: ['a', 'b', 'a'],
+            type: 'direct',
+            severity: 'warning',
+            depth: 2,
+            impact: 'test',
+            complexity: 3,
+            priorityScore: 5,
+            fixStrategies: [
+              {
+                type: 'extract-module',
+                name: 'Medium Impact',
+                description: 'Medium suitability',
+                suitability: 5,
+                effort: 'medium',
+                pros: [],
+                cons: [],
+                recommended: false,
+                targetPackages: ['a'],
+              },
+            ],
+          },
+        ],
+      }
+      const reportData = buildReportData(midSuitability, 'test')
+      expect(reportData.fixRecommendations.recommendations[0].impact).toBe('medium')
+    })
+
+    it('should classify low impact for low suitability', () => {
+      const lowSuitability: AnalysisResult = {
+        healthScore: 50,
+        packages: 5,
+        circularDependencies: [
+          {
+            cycle: ['a', 'b', 'a'],
+            type: 'direct',
+            severity: 'warning',
+            depth: 2,
+            impact: 'test',
+            complexity: 3,
+            priorityScore: 5,
+            fixStrategies: [
+              {
+                type: 'extract-module',
+                name: 'Low Impact',
+                description: 'Low suitability',
+                suitability: 2,
+                effort: 'high',
+                pros: [],
+                cons: [],
+                recommended: false,
+                targetPackages: ['a'],
+              },
+            ],
+          },
+        ],
+      }
+      const reportData = buildReportData(lowSuitability, 'test')
+      expect(reportData.fixRecommendations.recommendations[0].impact).toBe('low')
+    })
+  })
+
+  describe('buildReportDataFromComprehensive', () => {
+    it('should build report data from comprehensive result with HealthScore object', () => {
+      const analysis: ComprehensiveAnalysisResult = {
+        id: 'test-1',
+        uploadId: 'upload-1',
+        status: Status.COMPLETED,
+        startedAt: new Date().toISOString(),
+        progress: 100,
+        results: {
+          summary: {
+            totalPackages: 10,
+            duplicateCount: 1,
+            conflictCount: 1,
+            unusedCount: 0,
+            circularCount: 1,
+            healthScore: 75,
+          },
+          healthScore: {
+            overall: 80,
+            dependencies: 85,
+            architecture: 75,
+            maintainability: 80,
+            security: 90,
+            performance: 85,
+            lastUpdated: new Date().toISOString(),
+            trend: 'stable',
+            factors: [
+              {
+                name: 'Dependencies',
+                score: 85,
+                weight: 0.4,
+                weightedScore: 34,
+                description: 'Good dep health',
+                recommendations: [],
+              },
+              {
+                name: 'Architecture',
+                score: 75,
+                weight: 0.3,
+                weightedScore: 22.5,
+                description: 'Architecture ok',
+                recommendations: [],
+              },
+            ],
+          },
+          circularDependencies: [
+            {
+              cycle: ['pkg-a', 'pkg-b', 'pkg-a'],
+              type: 'direct',
+              severity: 'critical',
+              impact: 'High',
+            },
+          ],
+          versionConflicts: [
+            {
+              packageName: 'lodash',
+              conflictingVersions: [
+                { version: '4.17.21', packages: ['a'], isBreaking: false },
+                { version: '3.10.1', packages: ['b'], isBreaking: true },
+              ],
+              riskLevel: 'high',
+              resolution: 'Upgrade to 4.17.21',
+              impact: 'Breaking change',
+            },
+          ],
+        },
+      }
+
+      const reportData = buildReportDataFromComprehensive(analysis, 'test-project')
+
+      expect(reportData.metadata.projectName).toBe('test-project')
+      expect(reportData.metadata.monoguardVersion).toBe(MONOGUARD_VERSION)
+      expect(reportData.metadata.packageCount).toBe(10)
+      expect(reportData.healthScore.overall).toBe(80)
+      expect(reportData.healthScore.breakdown).toHaveLength(2)
+      expect(reportData.healthScore.breakdown[0].category).toBe('Dependencies')
+      expect(reportData.healthScore.breakdown[0].weight).toBe(40)
+      expect(reportData.circularDependencies.totalCount).toBe(1)
+      expect(reportData.circularDependencies.bySeverity.critical).toBe(1)
+      expect(reportData.versionConflicts.totalCount).toBe(1)
+      expect(reportData.versionConflicts.byRiskLevel.high).toBe(1)
+      expect(reportData.fixRecommendations.totalCount).toBe(0)
+    })
+
+    it('should handle numeric healthScore (no HealthScore object)', () => {
+      const analysis: ComprehensiveAnalysisResult = {
+        id: 'test-2',
+        uploadId: 'upload-2',
+        status: Status.COMPLETED,
+        startedAt: new Date().toISOString(),
+        progress: 100,
+        results: {
+          summary: {
+            totalPackages: 5,
+            duplicateCount: 0,
+            conflictCount: 0,
+            unusedCount: 0,
+            circularCount: 0,
+            healthScore: 60,
+          },
+          healthScore: 60 as never,
+        },
+      }
+
+      const reportData = buildReportDataFromComprehensive(analysis, 'test')
+
+      expect(reportData.healthScore.overall).toBe(60)
+      expect(reportData.healthScore.rating).toBe('fair')
+      expect(reportData.healthScore.breakdown).toHaveLength(1)
+      expect(reportData.healthScore.breakdown[0].category).toBe('Overall')
+    })
+
+    it('should fall back to summary healthScore when healthScore object is undefined', () => {
+      const analysis: ComprehensiveAnalysisResult = {
+        id: 'test-3',
+        uploadId: 'upload-3',
+        status: Status.COMPLETED,
+        startedAt: new Date().toISOString(),
+        progress: 100,
+        results: {
+          summary: {
+            totalPackages: 3,
+            duplicateCount: 0,
+            conflictCount: 0,
+            unusedCount: 0,
+            circularCount: 0,
+            healthScore: 45,
+          },
+        },
+      }
+
+      const reportData = buildReportDataFromComprehensive(analysis, 'test')
+
+      expect(reportData.healthScore.overall).toBe(45)
+      expect(reportData.healthScore.rating).toBe('poor')
+    })
+
+    it('should handle empty results', () => {
+      const analysis: ComprehensiveAnalysisResult = {
+        id: 'test-4',
+        uploadId: 'upload-4',
+        status: Status.COMPLETED,
+        startedAt: new Date().toISOString(),
+        progress: 100,
+        results: {},
+      }
+
+      const reportData = buildReportDataFromComprehensive(analysis, 'empty-test')
+
+      expect(reportData.metadata.packageCount).toBe(0)
+      expect(reportData.healthScore.overall).toBe(0)
+      expect(reportData.healthScore.rating).toBe('critical')
+      expect(reportData.circularDependencies.totalCount).toBe(0)
+      expect(reportData.versionConflicts.totalCount).toBe(0)
+    })
+
+    it('should handle undefined results', () => {
+      const analysis: ComprehensiveAnalysisResult = {
+        id: 'test-5',
+        uploadId: 'upload-5',
+        status: Status.IN_PROGRESS,
+        startedAt: new Date().toISOString(),
+        progress: 50,
+      }
+
+      const reportData = buildReportDataFromComprehensive(analysis, 'in-progress')
+
+      expect(reportData.metadata.packageCount).toBe(0)
+      expect(reportData.healthScore.overall).toBe(0)
+      expect(reportData.circularDependencies.totalCount).toBe(0)
+      expect(reportData.versionConflicts.totalCount).toBe(0)
+    })
+
+    it('should classify severity levels correctly for circular deps', () => {
+      const analysis: ComprehensiveAnalysisResult = {
+        id: 'test-6',
+        uploadId: 'upload-6',
+        status: Status.COMPLETED,
+        startedAt: new Date().toISOString(),
+        progress: 100,
+        results: {
+          circularDependencies: [
+            { cycle: ['a', 'b', 'a'], type: 'direct', severity: 'critical', impact: '' },
+            { cycle: ['c', 'd', 'c'], type: 'direct', severity: 'high', impact: '' },
+            { cycle: ['e', 'f', 'e'], type: 'direct', severity: 'medium', impact: '' },
+            { cycle: ['g', 'h', 'g'], type: 'direct', severity: 'low', impact: '' },
+          ],
+        },
+      }
+
+      const reportData = buildReportDataFromComprehensive(analysis, 'test')
+
+      expect(reportData.circularDependencies.bySeverity.critical).toBe(1)
+      expect(reportData.circularDependencies.bySeverity.high).toBe(1)
+      expect(reportData.circularDependencies.bySeverity.medium).toBe(1)
+      expect(reportData.circularDependencies.bySeverity.low).toBe(1)
+    })
+
+    it('should classify risk levels correctly for version conflicts', () => {
+      const analysis: ComprehensiveAnalysisResult = {
+        id: 'test-7',
+        uploadId: 'upload-7',
+        status: Status.COMPLETED,
+        startedAt: new Date().toISOString(),
+        progress: 100,
+        results: {
+          versionConflicts: [
+            {
+              packageName: 'a',
+              conflictingVersions: [{ version: '1.0.0', packages: ['x'], isBreaking: false }],
+              riskLevel: 'critical',
+              resolution: '',
+              impact: '',
+            },
+            {
+              packageName: 'b',
+              conflictingVersions: [{ version: '1.0.0', packages: ['x'], isBreaking: false }],
+              riskLevel: 'high',
+              resolution: '',
+              impact: '',
+            },
+            {
+              packageName: 'c',
+              conflictingVersions: [{ version: '1.0.0', packages: ['x'], isBreaking: false }],
+              riskLevel: 'medium',
+              resolution: '',
+              impact: '',
+            },
+            {
+              packageName: 'd',
+              conflictingVersions: [{ version: '1.0.0', packages: ['x'], isBreaking: false }],
+              riskLevel: 'low',
+              resolution: '',
+              impact: '',
+            },
+          ],
+        },
+      }
+
+      const reportData = buildReportDataFromComprehensive(analysis, 'test')
+
+      expect(reportData.versionConflicts.byRiskLevel.critical).toBe(1)
+      expect(reportData.versionConflicts.byRiskLevel.high).toBe(1)
+      expect(reportData.versionConflicts.byRiskLevel.medium).toBe(1)
+      expect(reportData.versionConflicts.byRiskLevel.low).toBe(1)
     })
   })
 })

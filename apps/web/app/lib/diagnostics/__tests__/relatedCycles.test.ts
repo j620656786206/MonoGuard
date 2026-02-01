@@ -110,4 +110,18 @@ describe('findRelatedCycles', () => {
     const related = findRelatedCycles(targetCycle, [targetCycle, relatedCycle])
     expect(related[0].cycleId).toBe('cycle-2')
   })
+
+  it('should handle non-repeating cycle array', () => {
+    const targetCycle: CircularDependencyInfo = {
+      ...baseCycleFields,
+      cycle: ['pkg-a', 'pkg-b'],
+    }
+    const relatedCycle: CircularDependencyInfo = {
+      ...baseCycleFields,
+      cycle: ['pkg-a', 'pkg-c'],
+    }
+    const related = findRelatedCycles(targetCycle, [targetCycle, relatedCycle])
+    expect(related).toHaveLength(1)
+    expect(related[0].sharedPackages).toContain('pkg-a')
+  })
 })

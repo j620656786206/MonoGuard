@@ -130,4 +130,16 @@ describe('generateCyclePath', () => {
     expect(path.edges).toHaveLength(3)
     expect(path.edges[0].importStatement).toBeUndefined()
   })
+
+  it('should handle non-repeating cycle array', () => {
+    const nonRepeating: CircularDependencyInfo = {
+      ...baseCycle,
+      cycle: ['pkg-a', 'pkg-b', 'pkg-c'],
+      importTraces: undefined,
+    }
+    const path = generateCyclePath(nonRepeating)
+    expect(path.nodes).toHaveLength(3)
+    expect(path.nodes.map((n) => n.id)).toEqual(['pkg-a', 'pkg-b', 'pkg-c'])
+    expect(path.edges).toHaveLength(3)
+  })
 })

@@ -191,4 +191,25 @@ describe('renderFixStrategies', () => {
     expect(result[0].codeSnippets.before).toBe("import { foo } from 'pkg-b'")
     expect(result[0].codeSnippets.after).toBe("import { foo } from 'shared'")
   })
+
+  it('should return Unknown for unrecognized effort level', () => {
+    const withUnknownEffort: CircularDependencyInfo = {
+      ...baseCycle,
+      fixStrategies: [
+        {
+          type: 'extract-module',
+          name: 'Unknown Effort',
+          description: 'Strategy with unknown effort',
+          suitability: 5,
+          effort: 'unknown' as never,
+          pros: [],
+          cons: [],
+          recommended: false,
+          targetPackages: [],
+        },
+      ],
+    }
+    const result = renderFixStrategies(withUnknownEffort)
+    expect(result[0].estimatedTime).toBe('Unknown')
+  })
 })

@@ -189,6 +189,39 @@ describe('generateDiagnosticReport', () => {
 
     expect(report.cyclePath.svgDiagram).toContain('#1f2937')
   })
+
+  it('should handle non-repeating cycle array for cycle ID', () => {
+    const nonRepeatingCycle: CircularDependencyInfo = {
+      ...mockCycle,
+      cycle: ['pkg-a', 'pkg-b', 'pkg-c'],
+    }
+    const report = generateDiagnosticReport({
+      cycle: nonRepeatingCycle,
+      graph: mockGraph,
+      allCycles: [nonRepeatingCycle],
+      totalPackages: 3,
+      projectName: 'test-project',
+    })
+
+    expect(report.cycleId).toBe('pkg-a-pkg-b-pkg-c')
+  })
+
+  it('should handle scoped package names in cycle ID', () => {
+    const scopedCycle: CircularDependencyInfo = {
+      ...mockCycle,
+      cycle: ['@scope/pkg-a', '@scope/pkg-b', '@scope/pkg-a'],
+    }
+    const report = generateDiagnosticReport({
+      cycle: scopedCycle,
+      graph: mockGraph,
+      allCycles: [scopedCycle],
+      totalPackages: 3,
+      projectName: 'test-project',
+    })
+
+    // buildCycleId should extract the part after the last /
+    expect(report.cycleId).toBe('pkg-a-pkg-b')
+  })
 })
 
 describe('exportDiagnosticReportAsHtml', () => {

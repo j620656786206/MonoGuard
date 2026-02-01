@@ -503,4 +503,53 @@ describe('exportSvg', () => {
       expect(svgContent).not.toContain('legend-group')
     })
   })
+
+  describe('width/height fallback branches', () => {
+    it('should use fallback 800x600 for viewport scope when SVG has no width/height', async () => {
+      const svgNoSize = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+      // Deliberately no width/height attributes
+
+      const result = await exportSvg({
+        svgElement: svgNoSize,
+        options: {
+          format: 'svg',
+          scope: 'viewport',
+          resolution: 1,
+          includeLegend: false,
+          includeWatermark: false,
+          backgroundColor: 'transparent',
+        },
+        projectName: 'test',
+      })
+
+      expect(result.width).toBe(800)
+      expect(result.height).toBe(600)
+    })
+
+    it('should use fallback dimensions for legend positioning when SVG has no width/height', async () => {
+      const svgNoSize = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+      // No width/height → parseLegendSvg uses fallback 800/600
+
+      const legendSvg = '<svg xmlns="http://www.w3.org/2000/svg"><text>Legend</text></svg>'
+
+      const result = await exportSvg({
+        svgElement: svgNoSize,
+        options: {
+          format: 'svg',
+          scope: 'viewport',
+          resolution: 1,
+          includeLegend: true,
+          includeWatermark: false,
+          backgroundColor: 'transparent',
+        },
+        projectName: 'test',
+        legendSvg,
+      })
+
+      const svgContent = await readBlobAsText(result.blob)
+      expect(svgContent).toContain('legend-group')
+      // Legend positioning should use fallback values (800 - 150 - 20 = 630, 600 - 100 - 20 = 480)
+      expect(svgContent).toContain('translate(630, 480)')
+    })
+  })
 })

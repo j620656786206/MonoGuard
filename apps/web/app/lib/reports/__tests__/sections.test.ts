@@ -267,4 +267,111 @@ describe('Section Renderers', () => {
       expect(md).toContain('`pkg-b`')
     })
   })
+
+  describe('Severity and risk level branch coverage', () => {
+    it('should map info severity in circular deps HTML', () => {
+      const withInfo: CircularDependencyReport = {
+        totalCount: 1,
+        bySeverity: { critical: 0, high: 0, medium: 1, low: 0 },
+        cycles: [{ id: 'cycle-1', packages: ['a', 'b', 'a'], severity: 'info', type: 'direct' }],
+      }
+      const html = renderCircularDepsHtml(withInfo)
+      // mapSeverityClass('info') → 'medium' → class="severity-medium"
+      expect(html).toContain('severity-medium')
+    })
+
+    it('should map unknown severity to low in circular deps HTML', () => {
+      const withUnknown: CircularDependencyReport = {
+        totalCount: 1,
+        bySeverity: { critical: 0, high: 0, medium: 0, low: 1 },
+        cycles: [{ id: 'cycle-1', packages: ['a', 'b', 'a'], severity: 'unknown', type: 'direct' }],
+      }
+      const html = renderCircularDepsHtml(withUnknown)
+      // mapSeverityClass('unknown') → default → 'low' → class="severity-low"
+      expect(html).toContain('severity-low')
+    })
+
+    it('should map info risk level in version conflicts HTML', () => {
+      const withInfo: VersionConflictReport = {
+        totalCount: 1,
+        byRiskLevel: { critical: 0, high: 0, medium: 1, low: 0 },
+        conflicts: [
+          {
+            packageName: 'test',
+            versions: ['1.0', '2.0'],
+            riskLevel: 'info',
+            recommendedVersion: '2.0',
+          },
+        ],
+      }
+      const html = renderVersionConflictsHtml(withInfo)
+      // mapRiskClass('info') → 'medium' → class="severity-medium"
+      expect(html).toContain('severity-medium')
+    })
+
+    it('should map unknown risk level to low in version conflicts HTML', () => {
+      const withUnknown: VersionConflictReport = {
+        totalCount: 1,
+        byRiskLevel: { critical: 0, high: 0, medium: 0, low: 1 },
+        conflicts: [
+          {
+            packageName: 'test',
+            versions: ['1.0', '2.0'],
+            riskLevel: 'unknown',
+            recommendedVersion: '2.0',
+          },
+        ],
+      }
+      const html = renderVersionConflictsHtml(withUnknown)
+      // mapRiskClass('unknown') → default → 'low' → class="severity-low"
+      expect(html).toContain('severity-low')
+    })
+
+    it('should map high risk level in version conflicts', () => {
+      const withHigh: VersionConflictReport = {
+        totalCount: 1,
+        byRiskLevel: { critical: 0, high: 1, medium: 0, low: 0 },
+        conflicts: [
+          {
+            packageName: 'test',
+            versions: ['1.0', '2.0'],
+            riskLevel: 'high',
+            recommendedVersion: '2.0',
+          },
+        ],
+      }
+      const html = renderVersionConflictsHtml(withHigh)
+      // mapRiskClass('high') → 'high' → class="severity-high"
+      expect(html).toContain('severity-high')
+    })
+
+    it('should map warning risk level as high in version conflicts', () => {
+      const withWarning: VersionConflictReport = {
+        totalCount: 1,
+        byRiskLevel: { critical: 0, high: 1, medium: 0, low: 0 },
+        conflicts: [
+          {
+            packageName: 'test',
+            versions: ['1.0', '2.0'],
+            riskLevel: 'warning',
+            recommendedVersion: '2.0',
+          },
+        ],
+      }
+      const html = renderVersionConflictsHtml(withWarning)
+      // mapRiskClass('warning') → 'high' → class="severity-high"
+      expect(html).toContain('severity-high')
+    })
+
+    it('should handle unrecognized health score rating in markdown', () => {
+      const unknownRating: HealthScoreReport = {
+        ...mockHealthScore,
+        rating: 'unknown' as never,
+      }
+      const md = renderHealthScoreMd(unknownRating)
+      // Should fallback gracefully - no emoji but still render
+      expect(md).toContain('UNKNOWN')
+      expect(md).toContain('Health Score')
+    })
+  })
 })
