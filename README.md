@@ -11,7 +11,7 @@
 [![Go](https://img.shields.io/badge/Go-1.21-00ADD8.svg)](https://go.dev/)
 [![pnpm](https://img.shields.io/badge/pnpm-9.0-F69220.svg)](https://pnpm.io/)
 
-[Demo](https://monoguard.dev) · [Documentation](docs/) · [Report Bug](https://github.com/user/monoguard/issues)
+[Demo](https://monoguard-web.onrender.com) · [Documentation](docs/) · [Report Bug](https://github.com/user/monoguard/issues)
 
 </div>
 
@@ -39,7 +39,7 @@ MonoGuard is an open-source tool that helps you understand and improve your mono
 
 ### Try the Demo
 
-Visit [monoguard.dev](https://monoguard.dev) and click **"Start Demo Analysis"** — no signup required.
+Visit [monoguard-web.onrender.com](https://monoguard-web.onrender.com) and click **"Start Demo Analysis"** — no signup required.
 
 ### Run Locally
 
@@ -154,7 +154,7 @@ MIT License — see [LICENSE](LICENSE) for details.
 
 <div align="center">
 
-**[Try MonoGuard Now →](https://monoguard.dev)**
+**[Try MonoGuard Now →](https://monoguard-web.onrender.com)**
 
 Built with care by the MonoGuard team
 
