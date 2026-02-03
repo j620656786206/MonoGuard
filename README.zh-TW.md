@@ -19,7 +19,11 @@
 
 ## MonoGuard 是什麼？
 
-MonoGuard 是一個開源工具，幫助你了解並改善 monorepo 的相依性健康狀況。上傳你的 workspace 設定檔，即可獲得即時分析：
+MonoGuard 是一個開源工具，幫助你了解並改善 monorepo 的相依性健康狀況。
+
+> **注意**：目前這是一個 **UI 原型**，使用的是 demo 資料。分析引擎尚未實作——你無法上傳自己的專案進行分析。Demo 展示的是規劃中的功能和視覺化效果。
+
+這個工具的設計目標是提供以下即時分析：
 
 - **循環相依性偵測** — 找出造成建置問題和緊密耦合的相依性循環
 - **相依性圖表視覺化** — 互動式 D3.js 圖表顯示套件關係
@@ -39,7 +43,7 @@ MonoGuard 是一個開源工具，幫助你了解並改善 monorepo 的相依性
 
 ### 試用 Demo
 
-造訪 [monoguard-web.onrender.com](https://monoguard-web.onrender.com) 並點擊 **「開始 Demo 分析」** — 無需註冊。
+造訪 [monoguard-web.onrender.com](https://monoguard-web.onrender.com) 並點擊 **「開始 Demo 分析」**，用範例資料體驗 UI 功能。
 
 ### 本機執行
 

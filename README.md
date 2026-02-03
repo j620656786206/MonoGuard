@@ -19,7 +19,11 @@
 
 ## What is MonoGuard?
 
-MonoGuard is an open-source tool that helps you understand and improve your monorepo's dependency health. Upload your workspace configuration and get instant insights into:
+MonoGuard is an open-source tool that helps you understand and improve your monorepo's dependency health.
+
+> **Note**: This is currently a **UI prototype** with demo data. The analysis engine is not yet implemented — you cannot upload your own projects for analysis. The demo showcases the planned features and visualization capabilities.
+
+The tool is designed to provide instant insights into:
 
 - **Circular Dependencies** — Detect dependency cycles that cause build issues and tight coupling
 - **Dependency Graph Visualization** — Interactive D3.js graph showing package relationships
@@ -39,7 +43,7 @@ MonoGuard is an open-source tool that helps you understand and improve your mono
 
 ### Try the Demo
 
-Visit [monoguard-web.onrender.com](https://monoguard-web.onrender.com) and click **"Start Demo Analysis"** — no signup required.
+Visit [monoguard-web.onrender.com](https://monoguard-web.onrender.com) and click **"Start Demo Analysis"** to see the UI in action with sample data.
 
 ### Run Locally
 
