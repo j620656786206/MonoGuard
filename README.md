@@ -128,6 +128,8 @@ monoguard/
 - [ ] CI/CD integration (GitHub Actions, etc.)
 - [ ] VS Code extension
 
+See [ROADMAP.md](ROADMAP.md) for the full roadmap with details.
+
 ## Contributing
 
 We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
