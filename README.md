@@ -29,7 +29,7 @@ MonoGuard is an open-source tool that helps you understand and improve your mono
 
 <div align="center">
 
-![MonoGuard Demo](docs/assets/demo-placeholder.png)
+![MonoGuard Demo](docs/assets/demo.gif)
 
 *Interactive dependency graph with circular dependency highlighting*
 
