@@ -53,11 +53,11 @@
     "code-quality"
   ],
   "author": "Alex Yu <alex@monoguard.dev>",
-  "license": "MIT",
-  "homepage": "https://mono-guard-frontend.vercel.app",
+  "license": "Apache-2.0",
+  "homepage": "https://monoguard-web.onrender.com",
   "repository": {
     "type": "git",
-    "url": "https://github.com/alexyu/mono-guard.git"
+    "url": "https://github.com/j620656786206/MonoGuard.git"
   },
   "bugs": {
     "url": "https://github.com/alexyu/mono-guard/issues"

@@ -6,7 +6,7 @@
 
 **Analyze your monorepo health in seconds.**
 
-[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Apache 2.0 License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
 [![Go](https://img.shields.io/badge/Go-1.21-00ADD8.svg)](https://go.dev/)
 [![pnpm](https://img.shields.io/badge/pnpm-9.0-F69220.svg)](https://pnpm.io/)
@@ -148,7 +148,7 @@ pnpm type-check
 
 ## License
 
-MIT License — see [LICENSE](LICENSE) for details.
+Apache License 2.0 — see [LICENSE](LICENSE) for details.
 
 ---
 
