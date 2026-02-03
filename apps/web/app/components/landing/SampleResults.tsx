@@ -1,15 +1,23 @@
 'use client'
 
-import React, { useState } from 'react'
+import { useNavigate } from '@tanstack/react-router'
+import { useState } from 'react'
 import { useAnalytics } from '../../hooks/useAnalytics'
 
+type TabId = 'overview' | 'dependencies' | 'architecture'
+
+const TABS: Array<{ id: TabId; name: string; icon: string }> = [
+  { id: 'overview', name: 'Overview', icon: '📊' },
+  { id: 'dependencies', name: 'Dependencies', icon: '📦' },
+  { id: 'architecture', name: 'Architecture', icon: '🏗️' },
+]
+
 export function SampleResults() {
-  const [activeTab, setActiveTab] = useState<'overview' | 'dependencies' | 'architecture'>(
-    'overview'
-  )
+  const navigate = useNavigate()
+  const [activeTab, setActiveTab] = useState<TabId>('overview')
   const { trackClick, trackFeatureView } = useAnalytics()
 
-  const handleTabChange = (tab: 'overview' | 'dependencies' | 'architecture') => {
+  const handleTabChange = (tab: TabId) => {
     setActiveTab(tab)
     trackClick(`sample_results_tab_${tab}`, tab)
     trackFeatureView(`sample_results_${tab}`)
@@ -28,22 +36,22 @@ export function SampleResults() {
         name: '@types/node',
         current: '14.2.1',
         latest: '20.10.5',
-        severity: 'medium',
+        severity: 'medium' as const,
       },
       {
         name: 'lodash',
         current: '4.17.15',
         latest: '4.17.21',
-        severity: 'high',
+        severity: 'high' as const,
       },
-      { name: 'express', current: '4.18.1', latest: '4.18.2', severity: 'low' },
+      { name: 'express', current: '4.18.1', latest: '4.18.2', severity: 'low' as const },
       { name: 'react', current: '18.2.0', latest: '18.2.0', severity: null },
     ],
     architecture: [
-      { rule: 'Layer separation', status: 'passed', violations: 0 },
-      { rule: 'Circular dependencies', status: 'warning', violations: 2 },
-      { rule: 'Import restrictions', status: 'passed', violations: 0 },
-      { rule: 'Package boundaries', status: 'failed', violations: 5 },
+      { rule: 'Layer separation', status: 'passed' as const, violations: 0 },
+      { rule: 'Circular dependencies', status: 'warning' as const, violations: 2 },
+      { rule: 'Import restrictions', status: 'passed' as const, violations: 0 },
+      { rule: 'Package boundaries', status: 'failed' as const, violations: 5 },
     ],
   }
 
@@ -64,14 +72,11 @@ export function SampleResults() {
             {/* Tabs Header */}
             <div className="border-b border-gray-200">
               <nav className="flex space-x-8 px-6" aria-label="Tabs">
-                {[
-                  { id: 'overview', name: 'Overview', icon: '📊' },
-                  { id: 'dependencies', name: 'Dependencies', icon: '📦' },
-                  { id: 'architecture', name: 'Architecture', icon: '🏗️' },
-                ].map((tab) => (
+                {TABS.map((tab) => (
                   <button
                     key={tab.id}
-                    onClick={() => handleTabChange(tab.id as any)}
+                    type="button"
+                    onClick={() => handleTabChange(tab.id)}
                     className={`border-b-2 px-1 py-4 text-sm font-medium transition-colors ${
                       activeTab === tab.id
                         ? 'border-indigo-500 text-indigo-600'
@@ -156,7 +161,10 @@ export function SampleResults() {
                       </thead>
                       <tbody className="divide-y divide-gray-200 bg-white">
                         {sampleData.dependencies.map((dep, index) => (
-                          <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                          <tr
+                            key={dep.name}
+                            className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
+                          >
                             <td className="whitespace-nowrap px-6 py-4 font-medium text-gray-900">
                               {dep.name}
                             </td>
@@ -197,9 +205,9 @@ export function SampleResults() {
                 <div>
                   <h3 className="mb-6 text-2xl font-bold text-gray-900">Architecture Validation</h3>
                   <div className="space-y-4">
-                    {sampleData.architecture.map((rule, index) => (
+                    {sampleData.architecture.map((rule) => (
                       <div
-                        key={index}
+                        key={rule.rule}
                         className="flex items-center justify-between rounded-lg border p-4"
                       >
                         <div className="flex items-center space-x-3">
@@ -211,7 +219,7 @@ export function SampleResults() {
                                   ? 'bg-yellow-500'
                                   : 'bg-red-500'
                             }`}
-                          ></div>
+                          />
                           <span className="font-medium text-gray-900">{rule.rule}</span>
                         </div>
                         <div className="flex items-center space-x-2">
@@ -247,15 +255,14 @@ export function SampleResults() {
             This is just a sample. Your actual results will be tailored to your repository.
           </p>
           <button
+            type="button"
             onClick={() => {
               trackClick('try_analysis_sample_results')
-              if (typeof window !== 'undefined') {
-                document.getElementById('hero-section')?.scrollIntoView({ behavior: 'smooth' })
-              }
+              navigate({ to: '/analyze' })
             }}
             className="transform rounded-full bg-indigo-600 px-8 py-3 font-semibold text-white shadow-lg transition-all duration-200 hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-xl"
           >
-            Analyze Your Repository
+            Try Demo Analysis
           </button>
         </div>
       </div>
