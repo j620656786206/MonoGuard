@@ -59,9 +59,7 @@ Render 是現代化的雲端平台，提供簡單的部署流程、自動 HTTPS 
 # 設定必要的環境變數
 export DB_PASSWORD="secure-db-password"
 export JWT_SECRET="your-jwt-secret-key"
-export NEXTAUTH_SECRET="your-nextauth-secret"
-export API_URL="https://api.yourmonroguard.com"
-export NEXTAUTH_URL="https://yourmonoguard.com"
+export API_URL="https://api.monoguard-web.onrender.com"
 
 # 部署
 ./scripts/prod-deploy.sh
@@ -207,16 +205,8 @@ REDIS_DB=0                         # Redis 資料庫編號
 
 #### 前端設定
 ```bash
-NEXT_PUBLIC_API_URL=https://api.yourdomain.com    # API URL
-NEXT_PUBLIC_APP_ENV=production                    # 應用程式環境
-NEXTAUTH_SECRET=your-nextauth-secret              # NextAuth 金鑰（必填）
-NEXTAUTH_URL=https://yourdomain.com               # NextAuth URL
-```
-
-#### 選用 OAuth 設定
-```bash
-GITHUB_CLIENT_ID=your-github-client-id
-GITHUB_CLIENT_SECRET=your-github-client-secret
+VITE_API_URL=https://api.yourdomain.com    # API URL
+VITE_APP_ENV=production                    # 應用程式環境
 ```
 
 ### 正式環境安全設定

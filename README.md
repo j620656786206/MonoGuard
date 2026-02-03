@@ -55,7 +55,7 @@ pnpm install
 pnpm dev:web
 ```
 
-Open [http://localhost:3000](http://localhost:3000) and start analyzing.
+Open [http://localhost:5173](http://localhost:5173) and start analyzing.
 
 ## Features
 
