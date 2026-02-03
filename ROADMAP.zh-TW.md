@@ -126,4 +126,4 @@
 
 ## 意見回饋
 
-有新功能的想法嗎？請開啟 [GitHub Discussion](https://github.com/user/monoguard/discussions) 或 [Issue](https://github.com/user/monoguard/issues)。
+有新功能的想法嗎？請開啟 [GitHub Discussion](https://github.com/j620656786206/MonoGuard/discussions) 或 [Issue](https://github.com/j620656786206/MonoGuard/issues)。

@@ -10,8 +10,8 @@ Please be respectful and constructive in all interactions. We're building someth
 
 ### Reporting Bugs
 
-1. Search [existing issues](https://github.com/user/monoguard/issues) to avoid duplicates
-2. If not found, [open a new issue](https://github.com/user/monoguard/issues/new) with:
+1. Search [existing issues](https://github.com/j620656786206/MonoGuard/issues) to avoid duplicates
+2. If not found, [open a new issue](https://github.com/j620656786206/MonoGuard/issues/new) with:
    - Clear, descriptive title
    - Steps to reproduce
    - Expected vs actual behavior
@@ -151,7 +151,7 @@ test(web): add integration tests for analysis flow
 
 ## Questions?
 
-- Open a [Discussion](https://github.com/user/monoguard/discussions) for general questions
+- Open a [Discussion](https://github.com/j620656786206/MonoGuard/discussions) for general questions
 - Tag maintainers in issues if blocked
 
 ---

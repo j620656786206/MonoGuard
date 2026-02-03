@@ -11,7 +11,7 @@
 [![Go](https://img.shields.io/badge/Go-1.21-00ADD8.svg)](https://go.dev/)
 [![pnpm](https://img.shields.io/badge/pnpm-9.0-F69220.svg)](https://pnpm.io/)
 
-[Demo](https://monoguard-web.onrender.com) · [文件](docs/) · [回報問題](https://github.com/user/monoguard/issues)
+[Demo](https://monoguard-web.onrender.com) · [文件](docs/) · [回報問題](https://github.com/j620656786206/MonoGuard/issues)
 
 </div>
 
@@ -45,7 +45,7 @@ MonoGuard 是一個開源工具，幫助你了解並改善 monorepo 的相依性
 
 ```bash
 # 複製專案
-git clone https://github.com/user/monoguard.git
+git clone https://github.com/j620656786206/MonoGuard.git
 cd monoguard
 
 # 安裝相依套件

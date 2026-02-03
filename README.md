@@ -11,7 +11,7 @@
 [![Go](https://img.shields.io/badge/Go-1.21-00ADD8.svg)](https://go.dev/)
 [![pnpm](https://img.shields.io/badge/pnpm-9.0-F69220.svg)](https://pnpm.io/)
 
-[Demo](https://monoguard-web.onrender.com) · [Documentation](docs/) · [Report Bug](https://github.com/user/monoguard/issues)
+[Demo](https://monoguard-web.onrender.com) · [Documentation](docs/) · [Report Bug](https://github.com/j620656786206/MonoGuard/issues)
 
 </div>
 
@@ -45,7 +45,7 @@ Visit [monoguard-web.onrender.com](https://monoguard-web.onrender.com) and click
 
 ```bash
 # Clone the repository
-git clone https://github.com/user/monoguard.git
+git clone https://github.com/j620656786206/MonoGuard.git
 cd monoguard
 
 # Install dependencies

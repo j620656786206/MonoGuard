@@ -126,4 +126,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## Feedback
 
-Have ideas for new features? Open a [GitHub Discussion](https://github.com/user/monoguard/discussions) or [Issue](https://github.com/user/monoguard/issues).
+Have ideas for new features? Open a [GitHub Discussion](https://github.com/j620656786206/MonoGuard/discussions) or [Issue](https://github.com/j620656786206/MonoGuard/issues).

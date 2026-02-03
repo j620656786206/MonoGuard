@@ -10,8 +10,8 @@
 
 ### 回報錯誤
 
-1. 搜尋[現有的 Issues](https://github.com/user/monoguard/issues) 以避免重複
-2. 如果沒有找到，[開啟新的 Issue](https://github.com/user/monoguard/issues/new)，包含：
+1. 搜尋[現有的 Issues](https://github.com/j620656786206/MonoGuard/issues) 以避免重複
+2. 如果沒有找到，[開啟新的 Issue](https://github.com/j620656786206/MonoGuard/issues/new)，包含：
    - 清晰、描述性的標題
    - 重現步驟
    - 預期行為與實際行為
@@ -151,7 +151,7 @@ test(web): add integration tests for analysis flow
 
 ## 有問題嗎？
 
-- 開啟 [Discussion](https://github.com/user/monoguard/discussions) 詢問一般問題
+- 開啟 [Discussion](https://github.com/j620656786206/MonoGuard/discussions) 詢問一般問題
 - 如果遇到阻礙，在 Issue 中標記維護者
 
 ---
