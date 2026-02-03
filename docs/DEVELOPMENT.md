@@ -78,8 +78,7 @@ mono-guard/
    cp .env.example .env
    # 編輯 .env 檔案設定本機環境
    
-   # 如果計劃部署至 Zeabur，可參考 Zeabur 格式設定
-   # 詳見 .env.example 中的 Zeabur 設定區塊
+   # 如果計劃部署至 Render，可參考 .env.example 中的設定
    ```
 
 3. **啟動開發基礎設施：**
@@ -223,14 +222,12 @@ docker-compose build frontend
 
 ### 正式環境部署
 
-#### 推薦：Zeabur 部署
-```bash
-# 準備 Zeabur 部署
-./scripts/setup-zeabur.sh
+#### 推薦：Render 部署
 
-# 推送至 GitHub 並連接到 Zeabur
-# 詳細步驟請參考 docs/ZEABUR_DEPLOYMENT.md
-```
+1. 將專案推送至 GitHub
+2. 在 [Render Dashboard](https://dashboard.render.com) 建立新服務
+3. 連接 GitHub 儲存庫並設定環境變數
+4. 詳細步驟請參考 [docs/DEPLOYMENT.md](DEPLOYMENT.md)
 
 #### 替代：Docker 部署
 ```bash

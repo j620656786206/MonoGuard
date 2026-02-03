@@ -31,28 +31,24 @@
 
 ## 🚀 部署選項
 
-### 1. Zeabur 部署（推薦）
+### 1. Render 部署（推薦）
 
-Zeabur 是專為現代應用程式設計的雲端平台，提供自動擴展、內建 CI/CD 和簡單的部署流程。
+Render 是現代化的雲端平台，提供簡單的部署流程、自動 HTTPS 和免費方案。
 
 #### 快速部署
-```bash
-# 準備 Zeabur 部署
-./scripts/setup-zeabur.sh
 
-# 推送至 GitHub 並連接到 Zeabur
-# 詳細步驟請參考 ZEABUR_DEPLOYMENT.md
-```
+1. 將專案推送至 GitHub
+2. 在 [Render Dashboard](https://dashboard.render.com) 建立新服務
+3. 連接 GitHub 儲存庫
+4. 設定環境變數
+5. 部署！
 
 #### 優勢
 - ✅ **一鍵部署** - GitHub 整合自動部署
-- ✅ **自動擴展** - 根據流量自動調整資源
-- ✅ **內建監控** - 即時效能與日誌監控
-- ✅ **免費開始** - 提供免費方案用於測試
-- ✅ **PostgreSQL + Redis** - 託管資料庫服務
-- ✅ **自訂網域** - 支援 HTTPS 憑證
-
-詳細部署指南請參考：[ZEABUR_DEPLOYMENT.md](ZEABUR_DEPLOYMENT.md)
+- ✅ **免費方案** - 適合小型專案和測試
+- ✅ **自動 HTTPS** - 免費 SSL 憑證
+- ✅ **PostgreSQL** - 託管資料庫服務
+- ✅ **自訂網域** - 支援自訂域名
 
 ### 2. Docker Compose（自托管）
 

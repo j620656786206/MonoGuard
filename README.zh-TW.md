@@ -66,14 +66,9 @@ mono-guard/
 
 ### 正式環境部署
 
-#### Zeabur 部署 (推薦)
+#### Render 部署 (推薦)
 
-```bash
-# 準備 Zeabur 部署
-./scripts/setup-zeabur.sh
-```
-
-然後將專案推送到 GitHub 並連接到 [Zeabur](https://zeabur.com)。詳細步驟請參見 [docs/ZEABUR_DEPLOYMENT.md](docs/ZEABUR_DEPLOYMENT.md)。
+將專案推送到 GitHub 並連接到 [Render](https://render.com)。Render 提供免費方案，支援自動部署。
 
 #### Docker 部署
 
@@ -212,7 +207,7 @@ MonoGuard 採用統一的 PostgreSQL 架構，確保開發和生產環境完全�
 
 ### 統一資料庫策略
 - **開發環境：** Docker Compose PostgreSQL 15
-- **生產環境：** Railway PostgreSQL 15
+- **生產環境：** Render PostgreSQL 15
 - **測試環境：** Docker PostgreSQL (CI/CD)
 
 ### 關鍵特性
