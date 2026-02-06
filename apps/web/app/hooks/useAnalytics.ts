@@ -1,13 +1,9 @@
-import { usePathname } from 'next/navigation'
+import { useLocation } from '@tanstack/react-router'
 import { useCallback, useEffect, useRef } from 'react'
-import {
-  AnalyticsService,
-  type EventProperties,
-  type EventType,
-} from '../lib/api/services/analytics'
+import type { EventProperties, EventType } from '../lib/api/services/analytics'
 
 export function useAnalytics() {
-  const pathname = usePathname()
+  const { pathname } = useLocation()
   const previousPathname = useRef<string | null>(null)
 
   // Track page views automatically (simplified for MVP - no session required)

@@ -1,9 +1,10 @@
 'use client'
 
-import React from 'react'
+import { useNavigate } from '@tanstack/react-router'
 import { useAnalytics } from '../../hooks/useAnalytics'
 
 export function FeaturesSection() {
+  const navigate = useNavigate()
   const { trackFeatureView, trackClick } = useAnalytics()
 
   const handleFeatureClick = (featureName: string) => {
@@ -217,11 +218,10 @@ export function FeaturesSection() {
               your codebase health.
             </p>
             <button
+              type="button"
               onClick={() => {
                 trackClick('get_started_features_cta')
-                if (typeof window !== 'undefined') {
-                  document.getElementById('hero-section')?.scrollIntoView({ behavior: 'smooth' })
-                }
+                navigate({ to: '/analyze' })
               }}
               className="transform rounded-full bg-indigo-600 px-8 py-3 font-semibold text-white shadow-lg transition-all duration-200 hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-xl"
             >

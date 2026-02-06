@@ -16,23 +16,19 @@ MonoGuard 採用 **整合套件策略**，旨在最大化可維護性和部署�
 ```
 mono-guard/
 ├── apps/
-│   ├── frontend/           # Next.js 14 網頁應用程式
-│   │   ├── src/
-│   │   │   ├── app/        # Next.js App Router 頁面
+│   ├── web/                # React + Vite 網頁應用程式
+│   │   ├── app/
+│   │   │   ├── routes/     # TanStack Router 路由
 │   │   │   ├── components/ # React 元件（按領域組織）
 │   │   │   ├── hooks/      # 自訂 React hooks
 │   │   │   ├── lib/        # 工具函數與設定
-│   │   │   ├── store/      # Zustand 狀態管理
-│   │   │   └── types/      # 應用程式專用型別定義
-│   │   ├── tests/          # 測試檔案
+│   │   │   └── store/      # Zustand 狀態管理
+│   │   ├── src/            # 測試與工具
 │   │   └── public/         # 靜態資源
 │   │
-│   ├── cli/                # Node.js CLI 工具
-│   │   ├── src/
-│   │   │   ├── commands/   # CLI 指令實作
-│   │   │   ├── lib/        # 核心 CLI 邏輯
-│   │   │   └── utils/      # CLI 工具
-│   │   └── tests/          # CLI 測試
+│   ├── cli/                # Go CLI 工具
+│   │   ├── cmd/            # CLI 指令實作
+│   │   └── internal/       # 核心 CLI 邏輯
 │   │
 │   └── api/                # Go API 服務
 │       ├── cmd/server/     # 應用程式進入點
@@ -43,13 +39,12 @@ mono-guard/
 │       │   └── config/     # 設定
 │       └── pkg/            # 公用套件
 │
-├── libs/
-│   └── shared-types/       # TypeScript 型別定義
+├── packages/
+│   └── types/              # 共用 TypeScript 型別定義
 │       └── src/
-│           ├── api.ts      # API 合約型別
-│           ├── domain.ts   # 領域模型型別
-│           ├── auth.ts     # 認證型別
-│           └── common.ts   # 通用工具型別
+│           ├── analysis.ts # 分析結果型別
+│           ├── graph.ts    # 圖表相關型別
+│           └── index.ts    # 匯出入口
 │
 ├── tools/                  # 開發工具與腳本
 ├── scripts/                # 建置與部署腳本
@@ -78,8 +73,7 @@ mono-guard/
    cp .env.example .env
    # 編輯 .env 檔案設定本機環境
    
-   # 如果計劃部署至 Zeabur，可參考 Zeabur 格式設定
-   # 詳見 .env.example 中的 Zeabur 設定區塊
+   # 如果計劃部署至 Render，可參考 .env.example 中的設定
    ```
 
 3. **啟動開發基礎設施：**
@@ -91,21 +85,21 @@ mono-guard/
 
 #### 前端開發
 ```bash
-# 啟動前端開發伺服器
-pnpm dev:frontend
+# 啟動前端開發伺服器（Vite，埠號 5173）
+pnpm dev:web
 
 # 執行測試
-pnpm nx test frontend
-pnpm nx test frontend --watch
+pnpm nx test web
+pnpm nx test web --watch
 
 # 端對端測試
-pnpm nx e2e frontend-e2e
+pnpm nx e2e web-e2e
 
 # 型別檢查
-pnpm nx type-check frontend
+pnpm nx type-check web
 
 # 程式碼檢查
-pnpm nx lint frontend --fix
+pnpm nx lint web --fix
 ```
 
 #### API 開發
@@ -223,14 +217,12 @@ docker-compose build frontend
 
 ### 正式環境部署
 
-#### 推薦：Zeabur 部署
-```bash
-# 準備 Zeabur 部署
-./scripts/setup-zeabur.sh
+#### 推薦：Render 部署
 
-# 推送至 GitHub 並連接到 Zeabur
-# 詳細步驟請參考 docs/ZEABUR_DEPLOYMENT.md
-```
+1. 將專案推送至 GitHub
+2. 在 [Render Dashboard](https://dashboard.render.com) 建立新服務
+3. 連接 GitHub 儲存庫並設定環境變數
+4. 詳細步驟請參考 [docs/DEPLOYMENT.md](DEPLOYMENT.md)
 
 #### 替代：Docker 部署
 ```bash
@@ -270,7 +262,6 @@ interface UIStore {
 
 ### 認證與授權
 - 使用 JWT 權杖進行 API 認證
-- 使用 NextAuth.js 進行前端認證
 - 角色型存取控制（RBAC）
 - 安全的權杖儲存
 
@@ -290,11 +281,11 @@ interface UIStore {
 ## 🚀 效能最佳化
 
 ### 前端效能
-- Next.js 自動最佳化
-- 按路由進行程式碼分割
-- 使用 Next.js Image 進行圖像最佳化
-- 使用 webpack-bundle-analyzer 進行套件分析
+- Vite 自動最佳化與快速 HMR
+- 按路由進行程式碼分割（TanStack Router）
+- 使用 rollup-plugin-visualizer 進行套件分析
 - 對昂貴的元件使用 React.memo
+- D3.js 混合 SVG/Canvas 渲染
 
 ### API 效能
 - 資料庫連線池
@@ -313,7 +304,7 @@ interface UIStore {
 
 ### 前端除錯
 - React Developer Tools
-- Next.js 內建除錯
+- Vite 內建除錯與 HMR
 - 瀏覽器開發工具
 - VS Code 除錯設定
 
@@ -324,8 +315,8 @@ interface UIStore {
 - 指標收集
 
 ### CLI 除錯
-- Node.js 除錯
-- 詳細日誌標誌
+- Go 除錯器（delve）
+- 詳細日誌標誌（-v, --verbose）
 - 進度指示器
 - 錯誤處理與回報
 
@@ -403,9 +394,10 @@ refactor: 簡化認證流程
 
 ## 🔗 實用連結
 
-- [Next.js 文件](https://nextjs.org/docs)
+- [Vite 文件](https://vitejs.dev/guide/)
+- [TanStack Router 文件](https://tanstack.com/router/latest)
 - [Go 文件](https://golang.org/doc/)
-- [Nx 文件](https://nx.dev)
+- [D3.js 文件](https://d3js.org/)
 - [Docker 文件](https://docs.docker.com)
 - [PostgreSQL 文件](https://www.postgresql.org/docs/)
 - [Redis 文件](https://redis.io/documentation)
