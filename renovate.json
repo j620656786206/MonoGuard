@@ -6,55 +6,34 @@
     ":semanticCommitScope(deps)"
   ],
   "timezone": "Asia/Taipei",
-  "schedule": [
-    "before 9am on monday"
-  ],
+  "schedule": ["before 9am on monday"],
   "minimumReleaseAge": "3 days",
   "prConcurrentLimit": 3,
-  "labels": [
-    "dependencies"
-  ],
+  "labels": ["dependencies"],
   "dependencyDashboard": true,
   "osvVulnerabilityAlerts": true,
   "vulnerabilityAlerts": {
     "enabled": true,
-    "labels": [
-      "dependencies",
-      "security"
-    ],
-    "schedule": [
-      "at any time"
-    ],
+    "labels": ["dependencies", "security"],
+    "schedule": ["at any time"],
     "minimumReleaseAge": null
   },
   "lockFileMaintenance": {
     "enabled": true,
-    "schedule": [
-      "before 9am on the first day of the month"
-    ]
+    "schedule": ["before 9am on the first day of the month"]
   },
   "packageRules": [
     {
       "description": "小版本、修補版：每週一合成一張 PR，不要一個套件一張",
-      "matchUpdateTypes": [
-        "minor",
-        "patch",
-        "digest",
-        "pin",
-        "pinDigest"
-      ],
+      "matchUpdateTypes": ["minor", "patch", "digest", "pin", "pinDigest"],
       "groupName": "non-major dependencies",
       "groupSlug": "non-major"
     },
     {
       "description": "大版本：不自動開 PR，要在 Dependency Dashboard 勾了才開",
-      "matchUpdateTypes": [
-        "major"
-      ],
+      "matchUpdateTypes": ["major"],
       "dependencyDashboardApproval": true
     }
   ],
-  "postUpdateOptions": [
-    "gomodTidy"
-  ]
+  "postUpdateOptions": ["gomodTidy"]
 }
