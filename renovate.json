@@ -10,7 +10,7 @@
   "minimumReleaseAge": "3 days",
   "prConcurrentLimit": 3,
   "labels": ["dependencies"],
-  "assignees": ["j620656786206"],
+  "reviewers": ["j620656786206"],
   "dependencyDashboard": true,
   "osvVulnerabilityAlerts": true,
   "vulnerabilityAlerts": {
