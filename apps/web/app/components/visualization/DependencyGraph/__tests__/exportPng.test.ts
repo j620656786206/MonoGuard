@@ -44,7 +44,8 @@ describe('exportPng', () => {
       },
     }
 
-    vi.spyOn(globalThis, 'Image').mockImplementation(() => {
+    // biome-ignore lint/complexity/useArrowFunction: Vitest 4 的 mock 要能被 new，不能用箭頭函式
+    vi.spyOn(globalThis, 'Image').mockImplementation(function () {
       // Trigger onload asynchronously when src is set
       const img = mockImage as unknown as HTMLImageElement
       Object.defineProperty(img, 'src', {
@@ -288,7 +289,8 @@ describe('exportPng', () => {
 
   it('should reject when image fails to load', async () => {
     // Override Image to trigger onerror
-    vi.spyOn(globalThis, 'Image').mockImplementation(() => {
+    // biome-ignore lint/complexity/useArrowFunction: Vitest 4 的 mock 要能被 new，不能用箭頭函式
+    vi.spyOn(globalThis, 'Image').mockImplementation(function () {
       const img = {
         onload: null as (() => void) | null,
         onerror: null as (() => void) | null,

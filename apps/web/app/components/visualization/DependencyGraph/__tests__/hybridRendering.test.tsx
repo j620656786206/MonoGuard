@@ -15,11 +15,14 @@ import { DependencyGraphViz } from '../index'
 
 // Mock ResizeObserver
 beforeEach(() => {
-  global.ResizeObserver = vi.fn().mockImplementation(() => ({
-    observe: vi.fn(),
-    unobserve: vi.fn(),
-    disconnect: vi.fn(),
-  }))
+  // biome-ignore lint/complexity/useArrowFunction: Vitest 4 的 mock 要能被 new，不能用箭頭函式
+  global.ResizeObserver = vi.fn().mockImplementation(function () {
+    return {
+      observe: vi.fn(),
+      unobserve: vi.fn(),
+      disconnect: vi.fn(),
+    }
+  })
 
   // Mock canvas context for Canvas mode
   HTMLCanvasElement.prototype.getContext = vi.fn(() => ({
