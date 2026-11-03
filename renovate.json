@@ -1,40 +1,13 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:recommended",
-    ":semanticCommitTypeAll(chore)",
-    ":semanticCommitScope(deps)"
-  ],
-  "timezone": "Asia/Taipei",
-  "schedule": ["before 9am on monday"],
-  "minimumReleaseAge": "3 days",
-  "prConcurrentLimit": 3,
-  "labels": ["dependencies"],
-  "reviewers": ["j620656786206"],
+  "extends": ["security:only-security-updates"],
   "dependencyDashboard": true,
-  "osvVulnerabilityAlerts": true,
+  "prHourlyLimit": 0,
+  "timezone": "Asia/Taipei",
+  "reviewers": ["j620656786206"],
   "vulnerabilityAlerts": {
     "enabled": true,
-    "labels": ["dependencies", "security"],
-    "schedule": ["at any time"],
-    "minimumReleaseAge": null
+    "labels": ["dependencies", "security"]
   },
-  "lockFileMaintenance": {
-    "enabled": true,
-    "schedule": ["before 9am on the first day of the month"]
-  },
-  "packageRules": [
-    {
-      "description": "小版本、修補版：每週一合成一張 PR，不要一個套件一張",
-      "matchUpdateTypes": ["minor", "patch", "digest", "pin", "pinDigest"],
-      "groupName": "non-major dependencies",
-      "groupSlug": "non-major"
-    },
-    {
-      "description": "大版本：不自動開 PR，要在 Dependency Dashboard 勾了才開",
-      "matchUpdateTypes": ["major"],
-      "dependencyDashboardApproval": true
-    }
-  ],
   "postUpdateOptions": ["gomodTidy"]
 }
