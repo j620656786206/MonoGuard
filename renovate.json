@@ -1,0 +1,13 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["security:only-security-updates"],
+  "dependencyDashboard": true,
+  "prHourlyLimit": 0,
+  "timezone": "Asia/Taipei",
+  "reviewers": ["j620656786206"],
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "labels": ["dependencies", "security"]
+  },
+  "postUpdateOptions": ["gomodTidy"]
+}
